@@ -14,10 +14,11 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import debounce from '@/debounce';
-import { destroy as assetsDestroy, search as assetsSearch, store as assetsStore, storeFromUrl } from '@/routes/app/assets';
+import { destroy as assetsDestroy, search as assetsSearch, storeChunked as assetsStoreChunked, storeFromUrl } from '@/routes/app/assets';
 import { search as giphySearch, trending as giphyTrending } from '@/routes/app/assets/giphy';
 import { search as unsplashSearch, trending as unsplashTrending } from '@/routes/app/assets/unsplash';
 import { store as storePost } from '@/routes/app/posts';
+import { uploadChunked } from '@/utils/chunkedUpload';
 
 interface AssetMedia {
     id: string;
@@ -152,7 +153,6 @@ const fileInput = ref<HTMLInputElement | null>(null);
 const uploadsSentinel = useTemplateRef<HTMLDivElement>('uploadsSentinel');
 const isDragging = ref(false);
 const uploading = ref(false);
-const httpUpload = useHttp<{ media: File | null }>({ media: null });
 let uploadsObserver: IntersectionObserver | null = null;
 
 const fetchUploads = async (page: number, term: string) => {
@@ -236,8 +236,11 @@ const uploadFiles = async (files: File[]) => {
     uploading.value = true;
     for (const file of files) {
         try {
-            httpUpload.media = file;
-            await httpUpload.post(assetsStore.url());
+            await uploadChunked({
+                file,
+                url: assetsStoreChunked.url(),
+                collection: 'assets',
+            });
         } catch {
             // ignore individual failure
         }

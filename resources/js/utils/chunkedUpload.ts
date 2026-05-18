@@ -85,9 +85,3 @@ export const uploadChunked = async (options: ChunkedUploadOptions): Promise<Chun
         throw error;
     }
 };
-
-const CHUNKED_UPLOAD_THRESHOLD = 10 * 1024 * 1024; // 10MB
-
-export const shouldUseChunkedUpload = (file: File): boolean => {
-    return file.size > CHUNKED_UPLOAD_THRESHOLD;
-};
