@@ -28,7 +28,7 @@ abstract class SocialPublishException extends RuntimeException
             'category' => $this->category->value,
             'platform_error_code' => $this->platformErrorCode,
             'user_message' => $this->userMessage,
-            'raw_response' => $this->rawResponse !== null ? TokenRedactor::redact($this->rawResponse) : null,
+            'raw_response' => TokenRedactor::redact($this->rawResponse),
         ];
     }
 

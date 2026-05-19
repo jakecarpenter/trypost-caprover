@@ -12,8 +12,12 @@ namespace App\Services\Social;
  */
 class TokenRedactor
 {
-    public static function redact(string $body): string
+    public static function redact(?string $body): ?string
     {
+        if ($body === null) {
+            return null;
+        }
+
         return preg_replace(
             [
                 '/access_token=([^&"\s]+)/',
