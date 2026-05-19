@@ -18,7 +18,7 @@ return new class extends Migration
             $table->uuid('workspace_id');
             $table->uuid('user_id')->nullable();
             $table->text('content')->nullable();
-            $table->json('media')->default('[]');
+            $table->json('media')->nullable()->default(null);
             $table->string('status')->default('draft');
             $table->timestamp('scheduled_at')->nullable();
             $table->timestamp('published_at')->nullable();
