@@ -903,7 +903,7 @@ test('show page renders for non-editable posts', function () {
 });
 
 test('show page redirects editable posts to edit', function () {
-    foreach ([PostStatus::Draft, PostStatus::Scheduled, PostStatus::Failed] as $status) {
+    foreach ([PostStatus::Draft, PostStatus::Scheduled] as $status) {
         $post = Post::factory()->create([
             'workspace_id' => $this->workspace->id,
             'user_id' => $this->user->id,
@@ -914,6 +914,18 @@ test('show page redirects editable posts to edit', function () {
             ->get(route('app.posts.show', $post))
             ->assertRedirect(route('app.posts.edit', $post));
     }
+});
+
+test('failed posts render show without redirecting to edit', function () {
+    $post = Post::factory()->create([
+        'workspace_id' => $this->workspace->id,
+        'user_id' => $this->user->id,
+        'status' => PostStatus::Failed,
+    ]);
+
+    $this->actingAs($this->user)
+        ->get(route('app.posts.show', $post))
+        ->assertOk();
 });
 
 test('destroy blocks published posts', function () {

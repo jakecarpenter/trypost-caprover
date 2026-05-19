@@ -270,6 +270,7 @@ return [
         'platform_status' => 'Platform status',
         'compliance_incomplete' => 'Some platform settings are incomplete or incompatible with the attached media.',
         'compliance' => [
+            'requires_content_or_media' => 'Add text or media to publish.',
             'requires_media' => 'Add an image or video to publish here.',
             'too_many_files' => 'Only :max file(s) allowed for this format.',
             'too_few_files' => 'Add at least :min files for this format.',

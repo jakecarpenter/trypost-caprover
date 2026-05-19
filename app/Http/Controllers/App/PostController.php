@@ -197,7 +197,7 @@ class PostController extends Controller
 
         $this->authorize('view', $post);
 
-        if (in_array($post->status, [PostStatus::Draft, PostStatus::Scheduled, PostStatus::Failed], true)) {
+        if (in_array($post->status, [PostStatus::Draft, PostStatus::Scheduled], true)) {
             return redirect()->route('app.posts.edit', $post);
         }
 

@@ -16,6 +16,7 @@ import { getMediaRulesForContentType } from '@/composables/useMediaRules';
 import { getPlatformLabel } from '@/composables/usePlatformLogo';
 import dayjs from '@/dayjs';
 import debounce from '@/debounce';
+import { ContentType } from '@/enums/content-type';
 import { Platform } from '@/enums/platform';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { destroy as destroyPost, update as updatePost } from '@/routes/app/posts';
@@ -211,18 +212,12 @@ const getMediaIncompatibilityReason = (contentType: string, mediaItems: MediaIte
     return null;
 };
 
-// Platforms whose default content_type doesn't accept every media type,
-// so the tile would otherwise block silently when the user attaches the
-// "wrong" kind. List the variants that should be considered at the tile
-// level — togglePlatform snaps content_type to whichever fits the media.
-//
-// Instagram/Facebook/LinkedIn are intentionally NOT here: their defaults
-// already accept image and video, and their secondary variants (Reel,
-// Carousel) are picked manually by the user. Including them would hide
-// real picker errors (e.g. Reel + image incompatibility) at the tile level.
 const PLATFORM_VARIANTS: Record<string, string[]> = {
-    [Platform.TikTok]: ['tiktok_video', 'tiktok_photo'],
-    [Platform.Pinterest]: ['pinterest_pin', 'pinterest_video_pin', 'pinterest_carousel'],
+    [Platform.Facebook]: [ContentType.FacebookPost, ContentType.FacebookReel, ContentType.FacebookStory],
+    [Platform.Instagram]: [ContentType.InstagramFeed, ContentType.InstagramReel, ContentType.InstagramStory],
+    [Platform.LinkedIn]: [ContentType.LinkedInPost, ContentType.LinkedInCarousel, ContentType.LinkedInPagePost, ContentType.LinkedInPageCarousel],
+    [Platform.TikTok]: [ContentType.TikTokVideo, ContentType.TikTokPhoto],
+    [Platform.Pinterest]: [ContentType.PinterestPin, ContentType.PinterestVideoPin, ContentType.PinterestCarousel],
 };
 
 const firstCompatibleVariant = (platform: string, mediaItems: MediaItem[]): string | null => {
@@ -241,18 +236,15 @@ const platformIssues = computed<Record<string, string>>(() => {
             continue;
         }
 
-        // For platforms that expose multiple content types via a variant picker,
-        // the tile is only blocked when no variant fits — togglePlatform will
-        // switch to a compatible variant on selection.
-        if (PLATFORM_VARIANTS[pp.platform]) {
-            if (!firstCompatibleVariant(pp.platform, media.value)) {
-                issues[pp.id] = getMediaIncompatibilityReason(contentType, media.value) ?? '';
-            }
+        const reason = getMediaIncompatibilityReason(contentType, media.value);
+        if (!reason) continue;
+
+        const isSelected = selectedPlatformIds.value.includes(pp.id);
+        if (!isSelected && firstCompatibleVariant(pp.platform, media.value)) {
             continue;
         }
 
-        const reason = getMediaIncompatibilityReason(contentType, media.value);
-        if (reason) issues[pp.id] = reason;
+        issues[pp.id] = reason;
     }
 
     return issues;
@@ -285,6 +277,10 @@ const pinterestComplianceValid = computed(() => {
     return pinterestPlatforms.every((pp) => Boolean(platformMeta.value[pp.id]?.board_id));
 });
 
+const hasContentOrMedia = computed(
+    () => content.value.trim().length > 0 || media.value.length > 0,
+);
+
 const contentLengthOverflows = computed(() => {
     const len = content.value.length;
     return platformLimits.value
@@ -296,6 +292,7 @@ const canSchedule = computed(
     () => mediaCompliancePerPlatformValid.value
         && tiktokComplianceValid.value
         && pinterestComplianceValid.value
+        && hasContentOrMedia.value
         && contentLengthOverflows.value.length === 0,
 );
 
@@ -333,6 +330,10 @@ const postActionTooltip = computed(() => {
 
     if (!pinterestComplianceValid.value) {
         return trans('posts.form.pinterest.board_required');
+    }
+
+    if (!hasContentOrMedia.value) {
+        return trans('posts.edit.compliance.requires_content_or_media');
     }
 
     return trans('posts.edit.compliance_incomplete');
@@ -388,12 +389,15 @@ const togglePlatform = (platformId: string) => {
     if (isLocked.value) return;
     const index = selectedPlatformIds.value.indexOf(platformId);
     if (index === -1) {
-        // For platforms with a variant picker, snap the post-platform's
-        // content_type to one that fits the current media before selection.
         const pp = post.value.post_platforms.find((p) => p.id === platformId);
-        const variant = pp ? firstCompatibleVariant(pp.platform, media.value) : null;
-        if (variant && platformContentTypes.value[platformId] !== variant) {
-            platformContentTypes.value = { ...platformContentTypes.value, [platformId]: variant };
+        const currentVariant = platformContentTypes.value[platformId];
+        const currentIncompatible = pp && currentVariant
+            && getMediaIncompatibilityReason(currentVariant, media.value) !== null;
+        if (pp && currentIncompatible) {
+            const fallback = firstCompatibleVariant(pp.platform, media.value);
+            if (fallback) {
+                platformContentTypes.value = { ...platformContentTypes.value, [platformId]: fallback };
+            }
         }
         selectedPlatformIds.value.push(platformId);
     } else {

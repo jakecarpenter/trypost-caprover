@@ -270,6 +270,7 @@ return [
         'platform_status' => 'Estado de la plataforma',
         'compliance_incomplete' => 'Algunas configuraciones de plataforma están incompletas o son incompatibles con los medios adjuntos.',
         'compliance' => [
+            'requires_content_or_media' => 'Agrega texto o multimedia para publicar.',
             'requires_media' => 'Agrega una imagen o video para publicar aquí.',
             'too_many_files' => 'Solo se permiten :max archivo(s) en este formato.',
             'too_few_files' => 'Agrega al menos :min archivos para este formato.',
