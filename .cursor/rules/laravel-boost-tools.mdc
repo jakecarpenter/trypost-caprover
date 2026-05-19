@@ -1,0 +1,47 @@
+---
+description: Laravel Boost MCP tools, search-docs usage, Artisan and Tinker conventions
+alwaysApply: true
+---
+
+# Laravel Boost Tools
+
+Laravel Boost is an MCP server with tools tuned for this application. Prefer Boost tools over manual shell/file alternatives.
+
+## Tools to prefer
+
+- `database-query` — run read-only queries against the database instead of writing raw SQL in tinker.
+- `database-schema` — inspect table structure before writing migrations or models.
+- `get-absolute-url` — resolve the correct scheme/domain/port for project URLs. Always use this before sharing a URL.
+- `browser-logs` — read browser logs, errors, exceptions. Only recent entries are useful.
+
+## search-docs (IMPORTANT)
+
+- Always call `search-docs` before making code changes. It returns version-specific docs for installed packages automatically.
+- Pass a `packages` array to scope results when you know which packages are relevant.
+- Use multiple broad, topic-based queries: `['rate limiting', 'routing rate limiting', 'routing']`.
+- Do not add package names to queries; package info is already shared. Use `test resource table`, not `filament 4 test resource table`.
+
+### Query syntax
+
+1. Words = auto-stemmed AND logic: `rate limit` matches both "rate" AND "limit".
+2. `"quoted phrases"` = exact position matching.
+3. Mix: `middleware "rate limit"`.
+4. OR logic: pass multiple queries — `queries=["authentication", "middleware"]`.
+
+## Artisan
+
+- Run commands directly: `php artisan route:list`. Discover with `php artisan list`, inspect with `php artisan [command] --help`.
+- Filter routes: `--method=GET`, `--name=users`, `--path=api`, `--except-vendor`, `--only-vendor`.
+- Read config with dot notation: `php artisan config:show app.name`. Or read files in `config/`.
+- Read environment variables directly from `.env`.
+
+## Tinker
+
+- Use single quotes around the snippet to prevent shell expansion: `php artisan tinker --execute 'Your::code();'`.
+- Use double quotes for PHP strings inside: `php artisan tinker --execute 'User::where("active", true)->count();'`.
+- Do not create models via tinker without user approval — prefer tests with factories.
+
+## Herd
+
+- Site is served by Laravel Herd at `https?://[kebab-case-project-dir].test`. Use `get-absolute-url` for valid URLs. Never run commands to serve the site.
+- Use the `herd` CLI for services, PHP versions and sites (`herd sites`, `herd services:start <service>`, `herd php:list`). `herd list` shows all commands.

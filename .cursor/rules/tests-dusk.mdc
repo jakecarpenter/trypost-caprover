@@ -1,0 +1,43 @@
+---
+description: Laravel Dusk browser tests — named routes, dusk selectors, no CSS/text-based assertions
+globs: tests/Browser/**/*.php
+alwaysApply: false
+---
+
+# Dusk Browser Tests
+
+## Named routes (IMPORTANT)
+
+ALWAYS use named routes via the `route()` helper. NEVER hardcode URLs like `'https://trypost.test/login'`.
+
+```php
+// BAD
+$browser->visit('https://trypost.test/login');
+
+// GOOD
+$browser->visit(route('login'));
+```
+
+## Dusk selectors
+
+ALWAYS use `dusk` selectors (`@selector-name`) for interactions and assertions. NEVER use CSS classes (`.text-red-600`), tag names, or text strings.
+
+Add `dusk="my-element"` attributes to Vue components and target them with `$browser->click('@my-element')`, `$browser->waitFor('@my-element')`, etc.
+
+```php
+// BAD
+$browser->waitFor('.text-red-600');
+$browser->click('button.primary');
+$browser->assertSee('Welcome');
+
+// GOOD
+$browser->waitFor('@input-error');
+$browser->click('@submit-button');
+$browser->assertVisible('@welcome-message');
+```
+
+```vue
+<!-- Vue component -->
+<button dusk="submit-button" @click="handleSubmit">Submit</button>
+<span dusk="input-error" v-if="error">{{ error }}</span>
+```

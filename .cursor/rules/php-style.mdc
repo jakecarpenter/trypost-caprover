@@ -1,0 +1,77 @@
+---
+description: PHP coding style — control structures, types, imports, interpolation, status codes
+globs: **/*.php
+alwaysApply: false
+---
+
+# PHP Style
+
+- Always use curly braces for control structures, even for single-line bodies.
+- Use PHP 8 constructor property promotion: `public function __construct(public GitHub $github) {}`. Don't leave empty zero-parameter `__construct()` methods unless the constructor is private.
+- Always use explicit return types and parameter type hints: `function isAccessible(User $user, ?string $path = null): bool`.
+- Use TitleCase for Enum keys: `FavoritePerson`, `BestLake`, `Monthly`.
+- Prefer PHPDoc blocks over inline comments. Only add inline comments for exceptionally complex logic.
+- Use array shape type definitions in PHPDoc blocks.
+
+## Imports
+
+NEVER use inline class references. Always import at the top with `use`.
+
+```php
+// BAD
+\DB::listen(...);
+\Str::uuid();
+
+// GOOD
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+
+DB::listen(...);
+Str::uuid();
+```
+
+## String interpolation
+
+Prefer double-quoted interpolation with curly braces over concatenation with `.`.
+
+```php
+// BAD
+'workspace.'.$workspace->id
+
+// GOOD
+"workspace.{$workspace->id}"
+```
+
+Single quotes are still preferred when the string has no interpolation. Always wrap interpolated variables in `{}` even for simple variables — keeps the boundary explicit and supports object/array access.
+
+## HTTP status codes in JSON responses
+
+Always use `Symfony\Component\HttpFoundation\Response` constants instead of magic numbers.
+
+```php
+// BAD
+return response()->json($data, 201);
+
+// GOOD
+use Symfony\Component\HttpFoundation\Response;
+
+return response()->json($data, Response::HTTP_CREATED);
+```
+
+## Array data access in Actions / services
+
+Use `data_get()` instead of direct array access.
+
+```php
+// BAD
+$name = $data['name'];
+$username = $data['username'] ?? $sender->username;
+
+// GOOD
+$name = data_get($data, 'name');
+$username = data_get($data, 'username', $sender->username);
+```
+
+## Pint formatting
+
+After modifying any PHP file, run `vendor/bin/pint --dirty --format agent` before finalizing changes. Never run `--test`; just run the formatter and let it fix issues.

@@ -1,0 +1,63 @@
+---
+description: Laravel patterns — Artisan generators, models, APIs, routes, validation, deployment
+globs: **/*.php
+alwaysApply: false
+---
+
+# Laravel Patterns
+
+## Do things the Laravel way
+
+- Use `php artisan make:` commands to create new files (migrations, controllers, models, etc.). Discover via `php artisan list`, check options with `--help`.
+- For a generic PHP class, use `php artisan make:class`.
+- Pass `--no-interaction` to all Artisan commands. Also pass the correct `--options` to ensure correct behavior.
+
+## Model creation
+
+When creating new models, also create useful factories and seeders. Ask the user if they need anything else (use `php artisan make:model --help`).
+
+## APIs & Eloquent Resources
+
+For APIs, default to Eloquent API Resources and API versioning — unless existing routes already deviate, in which case follow the existing convention.
+
+## URL generation
+
+When generating links between pages, prefer named routes and the `route()` function.
+
+## Backend validation
+
+Validation rules always live in a dedicated `Illuminate\Foundation\Http\FormRequest` subclass under `app/Http/Requests/App/<Group>/`. Controller actions must type-hint the FormRequest as the parameter.
+
+NEVER call `$request->validate([...])` inline in the controller.
+
+Naming: `<Verb><Resource>Request.php` — `StorePostRequest`, `ApplyPostTemplateRequest`, `IndexPostTemplateRequest`.
+
+```php
+// BAD
+public function store(Request $request)
+{
+    $data = $request->validate(['title' => 'required']);
+    // ...
+}
+
+// GOOD
+public function store(StorePostRequest $request)
+{
+    $data = $request->validated();
+    // ...
+}
+```
+
+## Testing
+
+- When creating models for tests, use factories. Check for custom states before manually setting up the model.
+- Faker: use `$this->faker->word()` or `fake()->randomDigit()` — follow existing convention in the file.
+- Create tests via `php artisan make:test [options] {name}`. Use `--unit` for unit tests. Most tests should be feature tests.
+
+## Vite error
+
+If you hit `Illuminate\Foundation\ViteException: Unable to locate file in Vite manifest`, ask the user to run `npm run dev` or `composer run dev`, or run `npm run build`.
+
+## Deployment
+
+Laravel can be deployed using [Laravel Cloud](https://cloud.laravel.com/) — the fastest path to production for Laravel apps.

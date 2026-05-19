@@ -1,0 +1,65 @@
+---
+description: Vue 3 + TypeScript conventions — arrow functions, icons, dates, wayfinder, form validation, imports
+globs: **/*.{vue,ts}
+alwaysApply: false
+---
+
+# Vue / TypeScript
+
+Vue components must have a single root element.
+
+## Arrow functions
+
+Always use arrow functions in Vue components and TypeScript files. Never use `function` declarations.
+
+```ts
+// BAD
+function handleClick() {}
+
+// GOOD
+const handleClick = () => {}
+```
+
+## Icons (@tabler/icons-vue)
+
+This project uses `@tabler/icons-vue` for all icons. NEVER use `lucide-vue-next`.
+
+- All Tabler icons are prefixed with `Icon` — `IconCheck`, `IconChevronRight`, `IconMail`.
+- Import from `@tabler/icons-vue`: `import { IconCheck, IconX } from '@tabler/icons-vue'`.
+- Browse available icons at https://tabler.io/icons.
+
+## Dates
+
+- For date manipulation, always use `@/dayjs` (pre-configured with utc, timezone, relativeTime plugins).
+- For formatting (`formatDate`, `formatDateTime`, `formatTime`, `diffForHumans`), always use `@/date` — it centralizes formatting with proper timezone handling.
+- NEVER use raw `new Date()` for date calculations. Use dayjs.
+
+## Routing (Wayfinder)
+
+- This project uses Laravel Wayfinder for type-safe frontend routing.
+- ALWAYS use Wayfinder-generated route helpers in Vue pages (`register()`, `login()`, `dashboard()`). NEVER hardcode URL strings like `href="/register"`.
+- After creating or modifying PHP routes/controllers, run `php artisan wayfinder:generate` to regenerate the TypeScript route helpers.
+- Import routes from `@/routes/...` — e.g. `import { store } from '@/routes/login'`.
+- Import controller actions from `@/actions/...`.
+
+## Form validation
+
+NEVER use HTML5 validation attributes (`required`, `minlength`, `pattern`, etc.) on form inputs. Always rely solely on backend validation.
+
+```vue
+<!-- BAD -->
+<input type="email" required minlength="3" />
+
+<!-- GOOD -->
+<input type="email" />
+```
+
+## Imports
+
+Always import at the top of the file with `import` statements. Never use inline references.
+
+```ts
+// GOOD
+import { ref } from 'vue'
+const count = ref(0)
+```

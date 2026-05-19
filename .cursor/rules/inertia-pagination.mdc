@@ -1,0 +1,26 @@
+---
+description: Pagination conventions — backend (Inertia scroll) and frontend (InfiniteScroll)
+globs: **/*.{php,vue,ts}
+alwaysApply: false
+---
+
+# Pagination
+
+- Always use normal pagination (`->paginate()`). NEVER use `->cursorPaginate()`.
+- All paginated lists must use Inertia's scroll pagination: `Inertia::scroll()` on the backend with `<InfiniteScroll>` on the frontend. NEVER use traditional page-based pagination with page links/buttons.
+
+```php
+// GOOD — backend
+return Inertia::render('Posts/Index', [
+    'posts' => Inertia::scroll(fn () => PostResource::collection(
+        Post::query()->latest()->paginate(20)
+    )),
+]);
+```
+
+```vue
+<!-- GOOD — frontend -->
+<InfiniteScroll :data="posts">
+  <PostCard v-for="post in posts.data" :key="post.id" :post="post" />
+</InfiniteScroll>
+```

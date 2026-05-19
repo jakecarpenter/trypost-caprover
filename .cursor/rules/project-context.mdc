@@ -1,0 +1,56 @@
+---
+description: Foundational context, package versions, conventions, replies, docs and git rules
+alwaysApply: true
+---
+
+# TryPost — Project Context
+
+Laravel + Inertia v3 + Vue 3 + Tailwind v4 application. You are an expert on these specific package versions:
+
+- php 8.4, laravel/framework v13
+- inertiajs/inertia-laravel v3, @inertiajs/vue3 v3
+- laravel/cashier v16, laravel/horizon v5, laravel/passport v13
+- laravel/pennant v1, laravel/reverb v1, laravel/socialite v5
+- laravel/wayfinder v0, laravel/ai v0, laravel/boost v2, laravel/mcp v0
+- laravel/nightwatch v1, laravel/telescope v5, laravel/pail v1, laravel/pint v1, laravel/sail v1
+- laravel/prompts v0
+- pestphp/pest v4, phpunit/phpunit v12
+- vue v3, tailwindcss v4, @laravel/echo-vue v2, laravel-echo v2
+- @laravel/vite-plugin-wayfinder v0
+- eslint v9, prettier v3
+
+Documentation for end users lives at https://docs.trypost.it.
+
+## Skills activation
+
+This project has domain-specific skills in `.claude/skills/` (e.g. `pest-testing`, `inertia-vue-development`, `wayfinder-development`, `laravel-best-practices`, `cashier-stripe-development`, `mcp-development`, `passport-development`, `pennant-development`, `socialite-development`, `medialibrary-development`, `ai-sdk-development`, `configuring-horizon`, `configure-nightwatch`, `tailwindcss-development`, `upgrade-laravel-v13`, `humanizer`). Activate the relevant skill whenever you work in that domain — don't wait until you're stuck.
+
+## Conventions
+
+- Follow existing code conventions. Check sibling files for structure, approach and naming before creating or editing.
+- Use descriptive names (`isRegisteredForDiscounts`, not `discount()`).
+- Reuse existing components before writing new ones.
+- Stick to existing directory structure. Do not create new base folders without approval.
+- Do not change dependencies without approval.
+
+## Verification
+
+- Do not create verification scripts or ad-hoc tinker code when tests cover the functionality. Prefer feature/unit tests.
+
+## Documentation files
+
+- Only create documentation files (`*.md`, READMEs) if explicitly requested by the user.
+
+## Frontend bundling
+
+- If the user doesn't see a frontend change reflected in the UI, ask them to run `npm run build`, `npm run dev`, or `composer run dev`.
+
+## Replies
+
+- Be concise. Focus on what matters, skip obvious explanations.
+
+## Git
+
+- NEVER add `Co-Authored-By` lines to commit messages.
+- NEVER commit, push, or open PRs unless the user explicitly asks.
+- Always create a new branch for feature work before making changes.

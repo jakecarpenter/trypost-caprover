@@ -1,0 +1,36 @@
+---
+description: Pest 4 feature/unit tests — file location, named routes, factories
+globs: tests/**/*.php
+alwaysApply: false
+---
+
+# Pest Tests
+
+This project uses Pest for testing. Every change must be programmatically tested — write a new test or update an existing one, then run it.
+
+## Creating tests
+
+- Create tests via `php artisan make:test --pest {name}`. Do NOT include the test suite directory in the name. Use `php artisan make:test --pest SomeFeatureTest`, NOT `php artisan make:test --pest Feature/SomeFeatureTest`.
+- Run tests: `php artisan test --compact` or filter: `php artisan test --compact --filter=testName`.
+- Run the minimum number of tests needed for confidence. Prefer file or `--filter` over the whole suite.
+- Do NOT delete tests without approval.
+
+## Named routes (IMPORTANT)
+
+ALWAYS use named routes via the `route()` helper. NEVER hardcode URL strings.
+
+```php
+// BAD
+$this->postJson('/posts');
+$this->postJson('/posts/ai/create');
+
+// GOOD
+$this->postJson(route('app.posts.store'));
+$this->postJson(route('app.posts.ai.create.finalize', $creationId));
+```
+
+## Factories
+
+When creating models for tests, use factories. Check for custom states before manually setting up the model.
+
+Faker: use `$this->faker->word()` or `fake()->randomDigit()` — follow existing convention in the file you're editing.
