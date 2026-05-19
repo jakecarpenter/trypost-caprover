@@ -67,7 +67,7 @@ class PostController extends Controller
 
         $result = UpdatePost::execute($request->user()->currentWorkspace, $post, $request->validated());
 
-        if (in_array(data_get($result, 'action'), [PostAction::AlreadyPublished, PostAction::Finalized], true)) {
+        if (data_get($result, 'action') === PostAction::Finalized) {
             return response()->json(
                 ['message' => 'Cannot edit a published post.'],
                 Response::HTTP_UNPROCESSABLE_ENTITY

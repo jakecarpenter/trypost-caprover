@@ -282,13 +282,6 @@ class PostController extends Controller
 
         $action = data_get($result, 'action');
 
-        if ($action === PostAction::AlreadyPublished) {
-            session()->flash('flash.banner', __('posts.flash.cannot_edit_published'));
-            session()->flash('flash.bannerStyle', 'danger');
-
-            return back();
-        }
-
         if ($action === PostAction::Finalized) {
             session()->flash('flash.banner', __('posts.flash.cannot_edit_finalized'));
             session()->flash('flash.bannerStyle', 'danger');
