@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Enums\UserWorkspace\Role;
+use App\Models\Account;
 use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Http\UploadedFile;
@@ -250,3 +251,65 @@ test('delete account requires authentication', function () {
 
     $response->assertRedirect(route('login'));
 });
+
+test('member deleting profile does NOT destroy the shared account', function (bool $selfHosted) {
+    config()->set('trypost.self_hosted', $selfHosted);
+
+    $owner = User::factory()->create();
+    $member = User::factory()->create(['account_id' => $owner->account_id]);
+
+    $workspace = Workspace::factory()->create([
+        'account_id' => $owner->account_id,
+        'user_id' => $owner->id,
+    ]);
+    $owner->workspaces()->attach($workspace->id, ['role' => Role::Member->value]);
+    $member->workspaces()->attach($workspace->id, ['role' => Role::Member->value]);
+
+    $this->actingAs($member)->delete(route('app.profile.destroy'), [
+        'password' => 'password',
+    ]);
+
+    expect($member->fresh())->toBeNull();
+    expect(Account::find($owner->account_id))->not->toBeNull();
+    expect(Workspace::find($workspace->id))->not->toBeNull();
+    expect($owner->fresh())->not->toBeNull();
+})->with([true, false]);
+
+test('member deleting profile detaches them from workspaces', function (bool $selfHosted) {
+    config()->set('trypost.self_hosted', $selfHosted);
+
+    $owner = User::factory()->create();
+    $member = User::factory()->create(['account_id' => $owner->account_id]);
+
+    $workspace = Workspace::factory()->create([
+        'account_id' => $owner->account_id,
+        'user_id' => $owner->id,
+    ]);
+    $member->workspaces()->attach($workspace->id, ['role' => Role::Member->value]);
+
+    $this->actingAs($member)->delete(route('app.profile.destroy'), [
+        'password' => 'password',
+    ]);
+
+    expect($workspace->fresh()->members()->where('users.id', $member->id)->exists())->toBeFalse();
+})->with([true, false]);
+
+test('owner deleting profile destroys the account and cascades', function (bool $selfHosted) {
+    config()->set('trypost.self_hosted', $selfHosted);
+
+    $owner = User::factory()->create();
+    $accountId = $owner->account_id;
+
+    $workspace = Workspace::factory()->create([
+        'account_id' => $accountId,
+        'user_id' => $owner->id,
+    ]);
+    $owner->workspaces()->attach($workspace->id, ['role' => Role::Member->value]);
+
+    $this->actingAs($owner)->delete(route('app.profile.destroy'), [
+        'password' => 'password',
+    ]);
+
+    expect(Account::find($accountId))->toBeNull();
+    expect(Workspace::find($workspace->id))->toBeNull();
+})->with([true, false]);

@@ -94,15 +94,7 @@ class ProfileController extends Controller
             $user->update(['current_workspace_id' => null]);
 
             $account = $user->account;
-
-            // Cancel account subscription if exists
-            if ($account && $account->subscribed(Account::SUBSCRIPTION_NAME)) {
-                $account->subscription(Account::SUBSCRIPTION_NAME)->cancelNow();
-            }
-
-            if ($account) {
-                $account->subscriptions()->delete();
-            }
+            $isOwner = $user->isAccountOwner();
 
             $ownedWorkspaces = Workspace::where('user_id', $user->id)->get();
 
@@ -126,7 +118,12 @@ class ProfileController extends Controller
 
             $user->workspaces()->detach();
 
-            if ($account) {
+            if ($account && $isOwner) {
+                if ($account->subscribed(Account::SUBSCRIPTION_NAME)) {
+                    $account->subscription(Account::SUBSCRIPTION_NAME)->cancelNow();
+                }
+
+                $account->subscriptions()->delete();
                 $account->delete();
             }
         });
