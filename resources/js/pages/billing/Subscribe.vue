@@ -27,8 +27,9 @@ interface Highlight {
     tooltip?: string;
 }
 
-defineProps<{
+const { plans, trialDays } = defineProps<{
     plans: Plan[];
+    trialDays: number;
 }>();
 
 const isYearly = ref(true);
@@ -120,6 +121,9 @@ const planTones: Record<PlanSlug, string> = {
                 </h1>
                 <p class="mx-auto max-w-2xl text-balance text-base text-muted-foreground sm:text-lg">
                     {{ $t('billing.subscribe.description') }}
+                </p>
+                <p class="text-sm font-semibold text-foreground/70">
+                    {{ trans('billing.subscribe.trial_info', { days: String(trialDays) }) }}
                 </p>
             </div>
         </div>
@@ -227,7 +231,7 @@ const planTones: Record<PlanSlug, string> = {
                         ]"
                         @click="selectPlan(plan)"
                     >
-                        {{ $t('billing.subscribe.subscribe_cta') }}
+                        {{ trans('billing.subscribe.start_trial', { days: String(trialDays) }) }}
                         <IconArrowRight class="size-4" />
                     </button>
 

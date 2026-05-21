@@ -27,6 +27,7 @@ return [
         'eyebrow' => 'Pricing',
         'title' => 'Choose the right plan for you',
         'description' => 'Pick the plan that fits you. Billed monthly or annually.',
+        'trial_info' => ':days-day free trial, then billed automatically',
         'monthly' => 'Monthly',
         'yearly' => 'Yearly',
         'per_month' => 'monthly',
@@ -37,6 +38,7 @@ return [
         'everything_in' => 'Everything in :plan, plus:',
         'save_months' => '2 months free',
         'popular' => 'Most popular',
+        'start_trial' => 'Start :days-day free trial',
         'subscribe_cta' => 'Subscribe',
         'prices' => [
             'starter' => ['monthly' => '$19', 'yearly_per_month' => '$16', 'yearly' => '$190'],
