@@ -121,7 +121,14 @@ class RegeneratePostMediaImage implements ShouldQueue
      *   width: int,
      *   height: int
      * }  $baseContext
-     * @return array{title: string, body: string, keywords: array<int, string>, regenerate_image: bool}
+     * @return array{
+     *   title: string,
+     *   body: string,
+     *   keywords: array<int, string>,
+     *   regenerate_image: bool,
+     *   regenerate_text: bool,
+     *   change_mode: 'image_only'|'text_only'|'both'
+     * }
      */
     private function regenerateSlideCopy(Workspace $workspace, Post $post, array $baseContext): array
     {
@@ -161,22 +168,45 @@ class RegeneratePostMediaImage implements ShouldQueue
      *   height: int
      * }  $baseContext
      * @param  array<string, mixed>  $structured
-     * @return array{title: string, body: string, keywords: array<int, string>, regenerate_image: bool}
+     * @return array{
+     *   title: string,
+     *   body: string,
+     *   keywords: array<int, string>,
+     *   regenerate_image: bool,
+     *   regenerate_text: bool,
+     *   change_mode: 'image_only'|'text_only'|'both'
+     * }
      */
     private function mergeStructuredCopy(array $baseContext, array $structured): array
     {
+        $changeMode = $this->resolveChangeMode((string) data_get($structured, 'change_mode', 'both'));
+        $regenerateImage = in_array($changeMode, ['image_only', 'both'], true);
+        $regenerateText = in_array($changeMode, ['text_only', 'both'], true);
         $keywords = $this->normalizeKeywords(data_get($structured, 'keywords', $baseContext['keywords']));
 
         return [
-            'title' => trim((string) data_get($structured, 'title', $baseContext['title'])),
-            'body' => trim((string) data_get($structured, 'body', $baseContext['body'])),
-            'keywords' => $keywords !== [] ? $keywords : $baseContext['keywords'],
-            'regenerate_image' => (bool) data_get($structured, 'regenerate_image', true),
+            'title' => $regenerateText
+                ? trim((string) data_get($structured, 'title', $baseContext['title']))
+                : $baseContext['title'],
+            'body' => $regenerateText
+                ? trim((string) data_get($structured, 'body', $baseContext['body']))
+                : $baseContext['body'],
+            'keywords' => $regenerateImage && $keywords !== [] ? $keywords : $baseContext['keywords'],
+            'regenerate_image' => $regenerateImage,
+            'regenerate_text' => $regenerateText,
+            'change_mode' => $changeMode,
         ];
     }
 
     /**
-     * @param  array{title: string, body: string, keywords: array<int, string>, regenerate_image: bool}  $copy
+     * @param  array{
+     *   title: string,
+     *   body: string,
+     *   keywords: array<int, string>,
+     *   regenerate_image: bool,
+     *   regenerate_text: bool,
+     *   change_mode: 'image_only'|'text_only'|'both'
+     * }  $copy
      * @param  array{
      *   title: string,
      *   body: string,
@@ -375,6 +405,17 @@ class RegeneratePostMediaImage implements ShouldQueue
             ->map(fn (string $keyword) => trim($keyword))
             ->values()
             ->all();
+    }
+
+    /**
+     * @return 'image_only'|'text_only'|'both'
+     */
+    private function resolveChangeMode(string $value): string
+    {
+        return match ($value) {
+            'image_only', 'text_only', 'both' => $value,
+            default => 'both',
+        };
     }
 
     private function resolveSocialAccount(Post $post, Workspace $workspace): ?SocialAccount

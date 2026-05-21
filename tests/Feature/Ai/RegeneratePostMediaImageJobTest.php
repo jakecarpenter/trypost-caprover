@@ -41,3 +41,83 @@ test('job fallback source context uses post content when source_meta is missing'
     expect(data_get($context, 'width'))->toBe(1080);
     expect(data_get($context, 'height'))->toBe(1350);
 });
+
+test('merge structured copy keeps text unchanged for image_only mode', function () {
+    $job = new RegeneratePostMediaImage(
+        workspaceId: 'workspace-id',
+        postId: 'post-id',
+        userId: 'user-id',
+        mediaId: 'media-id',
+        regenerationId: 'regen-id',
+        instruction: 'change image only',
+    );
+
+    $method = new ReflectionMethod(RegeneratePostMediaImage::class, 'mergeStructuredCopy');
+    $method->setAccessible(true);
+
+    $baseContext = [
+        'title' => 'Keep THIS Text',
+        'body' => 'Body should remain exactly the same.',
+        'keywords' => ['saas', 'dashboard'],
+        'background_path' => 'ai-images/bg.webp',
+        'language' => 'en',
+        'width' => 1080,
+        'height' => 1350,
+    ];
+
+    $structured = [
+        'change_mode' => 'image_only',
+        'title' => 'Model tried to rewrite',
+        'body' => 'Model tried to rewrite body',
+        'keywords' => ['modern office', 'team'],
+    ];
+
+    $copy = $method->invoke($job, $baseContext, $structured);
+
+    expect(data_get($copy, 'title'))->toBe($baseContext['title'])
+        ->and(data_get($copy, 'body'))->toBe($baseContext['body'])
+        ->and(data_get($copy, 'keywords'))->toBe(['modern office', 'team'])
+        ->and(data_get($copy, 'regenerate_image'))->toBeTrue()
+        ->and(data_get($copy, 'regenerate_text'))->toBeFalse()
+        ->and(data_get($copy, 'change_mode'))->toBe('image_only');
+});
+
+test('merge structured copy keeps keywords unchanged for text_only mode', function () {
+    $job = new RegeneratePostMediaImage(
+        workspaceId: 'workspace-id',
+        postId: 'post-id',
+        userId: 'user-id',
+        mediaId: 'media-id',
+        regenerationId: 'regen-id',
+        instruction: 'change text only',
+    );
+
+    $method = new ReflectionMethod(RegeneratePostMediaImage::class, 'mergeStructuredCopy');
+    $method->setAccessible(true);
+
+    $baseContext = [
+        'title' => 'Old title',
+        'body' => 'Old body',
+        'keywords' => ['saas', 'dashboard'],
+        'background_path' => 'ai-images/bg.webp',
+        'language' => 'en',
+        'width' => 1080,
+        'height' => 1350,
+    ];
+
+    $structured = [
+        'change_mode' => 'text_only',
+        'title' => 'New title',
+        'body' => 'New body',
+        'keywords' => ['ignored', 'for', 'text-only'],
+    ];
+
+    $copy = $method->invoke($job, $baseContext, $structured);
+
+    expect(data_get($copy, 'title'))->toBe('New title')
+        ->and(data_get($copy, 'body'))->toBe('New body')
+        ->and(data_get($copy, 'keywords'))->toBe($baseContext['keywords'])
+        ->and(data_get($copy, 'regenerate_image'))->toBeFalse()
+        ->and(data_get($copy, 'regenerate_text'))->toBeTrue()
+        ->and(data_get($copy, 'change_mode'))->toBe('text_only');
+});
