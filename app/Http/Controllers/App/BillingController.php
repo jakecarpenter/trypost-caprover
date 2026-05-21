@@ -28,8 +28,11 @@ class BillingController extends Controller
             return redirect()->route('app.billing.index');
         }
 
+        $requiresCardForTrial = (bool) config('trypost.billing.require_card_for_trial', true);
+
         return Inertia::render('billing/Subscribe', [
             'plans' => Plan::active()->orderBy('sort')->get(),
+            'trialDays' => $requiresCardForTrial ? config('cashier.trial_days') : null,
         ]);
     }
 
@@ -63,6 +66,10 @@ class BillingController extends Controller
 
         $subscription = $account->newSubscription(Account::SUBSCRIPTION_NAME, $priceId)
             ->allowPromotionCodes();
+
+        if ((bool) config('trypost.billing.require_card_for_trial', true)) {
+            $subscription->trialDays(config('cashier.trial_days'));
+        }
 
         $checkoutSession = $subscription->checkout([
             'success_url' => route('app.billing.processing').'?session_id={CHECKOUT_SESSION_ID}',

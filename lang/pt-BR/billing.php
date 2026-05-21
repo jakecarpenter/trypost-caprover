@@ -27,6 +27,7 @@ return [
         'eyebrow' => 'Preços',
         'title' => 'Escolha o plano ideal pra você',
         'description' => 'Escolha o plano que combina com você. Cobrança mensal ou anual.',
+        'trial_info' => ':days dias grátis, depois cobrança automática',
         'monthly' => 'Mensal',
         'yearly' => 'Anual',
         'per_month' => 'mensal',
@@ -37,6 +38,7 @@ return [
         'everything_in' => 'Tudo do :plan, mais:',
         'save_months' => '2 meses grátis',
         'popular' => 'Mais popular',
+        'start_trial' => 'Iniciar teste de :days dias',
         'subscribe_cta' => 'Assinar',
         'prices' => [
             'starter' => ['monthly' => 'R$ 95', 'yearly_per_month' => 'R$ 79', 'yearly' => 'R$ 950'],

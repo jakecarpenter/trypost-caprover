@@ -22,13 +22,18 @@ class CreateUser
     {
         $user = DB::transaction(function () use ($data, $utmParameters): User {
             $isInviteRegistration = data_get($data, 'is_invite', false);
-
-            $account = Account::create([
+            $requiresCardForTrial = (bool) config('trypost.billing.require_card_for_trial', true);
+            $accountAttributes = [
                 'name' => data_get($data, 'name')."'s Account",
                 'billing_email' => data_get($data, 'email'),
-                'plan_id' => Plan::where('slug', Slug::Starter)->value('id'),
-                'trial_ends_at' => now()->addDays(config('cashier.trial_days')),
-            ]);
+            ];
+
+            if (! $requiresCardForTrial) {
+                $accountAttributes['plan_id'] = Plan::where('slug', Slug::Starter)->value('id');
+                $accountAttributes['trial_ends_at'] = now()->addDays(config('cashier.trial_days', 7));
+            }
+
+            $account = Account::create($accountAttributes);
 
             $user = User::create(array_merge([
                 'name' => data_get($data, 'name'),

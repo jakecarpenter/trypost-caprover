@@ -93,7 +93,7 @@ class Account extends Model
 
     public function isOnTrial(): bool
     {
-        if ($this->onGenericTrial()) {
+        if (! (bool) config('trypost.billing.require_card_for_trial', true) && $this->onGenericTrial()) {
             return true;
         }
 
@@ -104,11 +104,15 @@ class Account extends Model
     {
         $subscription = $this->subscription(self::SUBSCRIPTION_NAME);
 
-        return match (true) {
-            (bool) $subscription?->onTrial() => $subscription->trial_ends_at,
-            $this->onGenericTrial() => $this->trial_ends_at,
-            default => null,
-        };
+        if (! $subscription?->onTrial()) {
+            if (! (bool) config('trypost.billing.require_card_for_trial', true) && $this->onGenericTrial()) {
+                return $this->trial_ends_at;
+            }
+
+            return null;
+        }
+
+        return $subscription->trial_ends_at;
     }
 
     /**

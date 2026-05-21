@@ -9,24 +9,23 @@ use Carbon\Carbon;
 use Database\Seeders\PlanSeeder;
 
 beforeEach(function () {
+    config(['trypost.billing.require_card_for_trial' => true]);
     $this->seed(PlanSeeder::class);
     Carbon::setTestNow('2026-05-14 12:00:00');
 });
 
-test('isOnTrial returns true for account on generic trial', function () {
-    $account = Account::factory()->create([
-        'trial_ends_at' => now()->addDays(7),
-    ]);
-
-    expect($account->isOnTrial())->toBeTrue();
-});
-
-test('isOnTrial returns false when generic trial has expired and there is no subscription', function () {
-    $account = Account::factory()->create([
-        'trial_ends_at' => now()->subDay(),
-    ]);
+test('isOnTrial ignores generic trial when there is no subscription', function () {
+    $account = Account::factory()->create(['trial_ends_at' => now()->addDays(7)]);
 
     expect($account->isOnTrial())->toBeFalse();
+});
+
+test('isOnTrial includes generic trial when card is not required', function () {
+    config(['trypost.billing.require_card_for_trial' => false]);
+
+    $account = Account::factory()->create(['trial_ends_at' => now()->addDays(7)]);
+
+    expect($account->isOnTrial())->toBeTrue();
 });
 
 test('isOnTrial returns false for account without trial or subscription', function () {
@@ -61,6 +60,15 @@ test('activeTrialEndsAt returns generic trial date when only generic is active',
     $endsAt = now()->addDays(7);
     $account = Account::factory()->create(['trial_ends_at' => $endsAt]);
 
+    expect($account->activeTrialEndsAt())->toBeNull();
+});
+
+test('activeTrialEndsAt returns generic trial date when card is not required', function () {
+    config(['trypost.billing.require_card_for_trial' => false]);
+
+    $endsAt = now()->addDays(7);
+    $account = Account::factory()->create(['trial_ends_at' => $endsAt]);
+
     expect($account->activeTrialEndsAt()?->toDateTimeString())
         ->toBe($endsAt->toDateTimeString());
 });
@@ -83,7 +91,7 @@ test('activeTrialEndsAt returns subscription date when only subscription trial i
         ->toBe($subscriptionEndsAt->toDateTimeString());
 });
 
-test('activeTrialEndsAt prefers subscription date over generic when both active', function () {
+test('activeTrialEndsAt returns subscription date when both generic and subscription trials are present', function () {
     $genericEndsAt = now()->addDays(7);
     $subscriptionEndsAt = now()->addDays(14);
 

@@ -18,6 +18,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Billing
+    |--------------------------------------------------------------------------
+    |
+    | Control trial behavior for SaaS billing:
+    | - true: require card at checkout to start trial (Stripe trialing)
+    | - false: grant generic trial at signup without card
+    |
+    */
+
+    'billing' => [
+        'require_card_for_trial' => true,
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Media Size Limits
     |--------------------------------------------------------------------------
     |

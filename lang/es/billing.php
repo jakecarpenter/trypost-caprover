@@ -27,6 +27,7 @@ return [
         'eyebrow' => 'Precios',
         'title' => 'Elige el plan ideal para ti',
         'description' => 'Elige el plan que te queda. Facturación mensual o anual.',
+        'trial_info' => 'Prueba gratuita de :days días, luego se cobra automáticamente',
         'monthly' => 'Mensual',
         'yearly' => 'Anual',
         'per_month' => 'mensual',
@@ -37,6 +38,7 @@ return [
         'everything_in' => 'Todo lo de :plan, más:',
         'save_months' => '2 meses gratis',
         'popular' => 'Más popular',
+        'start_trial' => 'Comenzar prueba de :days días',
         'subscribe_cta' => 'Suscribirse',
         'prices' => [
             'starter' => ['monthly' => '$19', 'yearly_per_month' => '$16', 'yearly' => '$190'],

@@ -25,9 +25,10 @@ class EnsureAccountReady
         $account = $user->account;
 
         if (! config('trypost.self_hosted')) {
+            $requiresCardForTrial = (bool) config('trypost.billing.require_card_for_trial', true);
             $hasAccess = $account && (
                 $account->subscribed(Account::SUBSCRIPTION_NAME)
-                || $account->isOnTrial()
+                || (! $requiresCardForTrial && $account->isOnTrial())
             );
 
             if (! $hasAccess) {

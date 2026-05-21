@@ -9,6 +9,8 @@ use App\Models\User;
 use App\Models\Workspace;
 
 beforeEach(function () {
+    config(['trypost.billing.require_card_for_trial' => true]);
+
     $this->account = Account::factory()->create();
     $this->user = User::factory()->create([
         'account_id' => $this->account->id,
@@ -92,22 +94,6 @@ test('billing index shows billing dashboard', function () {
     );
 });
 
-test('billing index exposes onTrial=true and trialEndsAt for generic-trial-only account', function () {
-    config(['trypost.self_hosted' => false]);
-
-    $endsAt = now()->addDays(7)->startOfSecond();
-    $this->account->update(['trial_ends_at' => $endsAt]);
-
-    $response = $this->actingAs($this->user->fresh())->get(route('app.billing.index'));
-
-    $response->assertInertia(fn ($page) => $page
-        ->component('settings/account/Billing', false)
-        ->where('hasSubscription', false)
-        ->where('onTrial', true)
-        ->where('trialEndsAt', $endsAt->toIso8601ZuluString('microsecond'))
-    );
-});
-
 test('billing index exposes onTrial=true and trialEndsAt for subscription-trial account', function () {
     config(['trypost.self_hosted' => false]);
 
@@ -148,14 +134,28 @@ test('billing index exposes onTrial=false and trialEndsAt=null for paying subscr
     );
 });
 
-test('subscribe page does not expose trialDays prop anymore', function () {
+test('subscribe page exposes trialDays prop', function () {
     config(['trypost.self_hosted' => false]);
 
     $response = $this->actingAs($this->user)->get(route('app.subscribe'));
 
     $response->assertInertia(fn ($page) => $page
         ->component('billing/Subscribe', false)
-        ->missing('trialDays')
+        ->where('trialDays', config('cashier.trial_days'))
+    );
+});
+
+test('subscribe page exposes null trialDays when card is not required', function () {
+    config([
+        'trypost.self_hosted' => false,
+        'trypost.billing.require_card_for_trial' => false,
+    ]);
+
+    $response = $this->actingAs($this->user)->get(route('app.subscribe'));
+
+    $response->assertInertia(fn ($page) => $page
+        ->component('billing/Subscribe', false)
+        ->where('trialDays', null)
     );
 });
 
