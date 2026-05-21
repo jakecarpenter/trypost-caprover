@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Actions\Post;
+namespace App\Support;
 
 use App\Enums\Post\Status as PostStatus;
 use App\Models\Post;
 
-class PostStatusGuard
+class PostStatusRules
 {
     private const EDIT_BLOCKED_MESSAGE_KEY = 'posts.cannot_edit_finalized';
 

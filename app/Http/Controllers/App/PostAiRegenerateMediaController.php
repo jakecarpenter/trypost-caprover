@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\App;
 
-use App\Actions\Post\PostStatusGuard;
 use App\Enums\Media\Source;
 use App\Http\Requests\App\Ai\RegeneratePostMediaImageRequest;
 use App\Jobs\Ai\RegeneratePostMediaImage;
 use App\Models\Post;
+use App\Support\PostStatusRules;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
@@ -22,9 +22,9 @@ class PostAiRegenerateMediaController extends Controller
 
         $workspace = $request->user()->currentWorkspace;
 
-        if (PostStatusGuard::blocksEditing($post)) {
+        if (PostStatusRules::blocksEditing($post)) {
             return response()->json([
-                'message' => PostStatusGuard::editBlockedMessage(),
+                'message' => PostStatusRules::editBlockedMessage(),
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 

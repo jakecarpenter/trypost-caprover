@@ -7,7 +7,6 @@ namespace App\Http\Controllers\App;
 use App\Actions\Post\CreatePost;
 use App\Actions\Post\DeletePost;
 use App\Actions\Post\DuplicatePost;
-use App\Actions\Post\PostStatusGuard;
 use App\Actions\Post\SyncPostPlatforms;
 use App\Actions\Post\UpdatePost;
 use App\Enums\Post\Action as PostAction;
@@ -23,6 +22,7 @@ use App\Models\PostPlatform;
 use App\Services\Post\PostMetricsFetcher;
 use App\Services\Social\PinterestPublisher;
 use App\Services\Social\TikTokCreatorInfo;
+use App\Support\PostStatusRules;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -220,7 +220,7 @@ class PostController extends Controller
 
         $this->authorize('update', $post);
 
-        if (PostStatusGuard::blocksEditing($post)) {
+        if (PostStatusRules::blocksEditing($post)) {
             return redirect()->route('app.posts.show', $post);
         }
 
@@ -314,7 +314,7 @@ class PostController extends Controller
 
         $this->authorize('delete', $post);
 
-        if (PostStatusGuard::blocksDeletion($post)) {
+        if (PostStatusRules::blocksDeletion($post)) {
             session()->flash('flash.banner', __('posts.flash.cannot_delete_published'));
             session()->flash('flash.bannerStyle', 'danger');
 

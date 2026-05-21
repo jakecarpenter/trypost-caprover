@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Mcp\Tools\Post;
 
-use App\Actions\Post\PostStatusGuard;
 use App\Actions\Post\UpdatePost;
 use App\Enums\Post\Action as PostAction;
 use App\Enums\Post\Status;
 use App\Http\Resources\Api\PostResource;
 use App\Models\Post;
+use App\Support\PostStatusRules;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Mcp\Request;
 use Laravel\Mcp\Response;
@@ -49,7 +49,7 @@ class PublishPostTool extends Tool
         ]);
 
         if (data_get($result, 'action') === PostAction::Finalized) {
-            return Response::error(PostStatusGuard::editBlockedMessage());
+            return Response::error(PostStatusRules::editBlockedMessage());
         }
 
         /** @var Post $updated */

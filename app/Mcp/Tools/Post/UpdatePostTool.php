@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Mcp\Tools\Post;
 
-use App\Actions\Post\PostStatusGuard;
 use App\Actions\Post\UpdatePost;
 use App\Enums\Post\Action as PostAction;
 use App\Enums\Post\Status;
@@ -12,6 +11,7 @@ use App\Enums\PostPlatform\ContentType;
 use App\Http\Resources\Api\PostResource;
 use App\Models\Post;
 use App\Rules\ContentTypeMatchesPostPlatform;
+use App\Support\PostStatusRules;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Validation\Rule;
 use Laravel\Mcp\Request;
@@ -56,7 +56,7 @@ class UpdatePostTool extends Tool
         $result = UpdatePost::execute($workspace, $post, $payload);
 
         if (data_get($result, 'action') === PostAction::Finalized) {
-            return Response::error(PostStatusGuard::editBlockedMessage());
+            return Response::error(PostStatusRules::editBlockedMessage());
         }
 
         /** @var Post $updated */
