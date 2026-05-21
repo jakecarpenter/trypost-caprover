@@ -21,13 +21,13 @@ beforeEach(function () {
 });
 
 test('endpoint requires authentication', function () {
-    $this->postJson("/posts/{$this->post->id}/ai/review", ['content' => 'hi'])
+    $this->postJson(route('app.posts.ai.review', $this->post), ['content' => 'hi'])
         ->assertStatus(Response::HTTP_UNAUTHORIZED);
 });
 
 test('endpoint validates content required', function () {
     $this->actingAs($this->user)
-        ->postJson("/posts/{$this->post->id}/ai/review", [])
+        ->postJson(route('app.posts.ai.review', $this->post), [])
         ->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY)
         ->assertJsonValidationErrors(['content']);
 });
@@ -37,8 +37,8 @@ test('endpoint blocks cross-workspace posts', function () {
     $foreignPost = Post::factory()->create(['workspace_id' => $otherWorkspace->id]);
 
     $this->actingAs($this->user)
-        ->postJson("/posts/{$foreignPost->id}/ai/review", ['content' => 'hi'])
-        ->assertStatus(Response::HTTP_FORBIDDEN);
+        ->postJson(route('app.posts.ai.review', $foreignPost), ['content' => 'hi'])
+        ->assertStatus(Response::HTTP_NOT_FOUND);
 });
 
 test('endpoint returns suggestions array', function () {
@@ -49,7 +49,7 @@ test('endpoint returns suggestions array', function () {
     ]);
 
     $response = $this->actingAs($this->user)
-        ->postJson("/posts/{$this->post->id}/ai/review", ['content' => 'i was here'])
+        ->postJson(route('app.posts.ai.review', $this->post), ['content' => 'i was here'])
         ->assertOk();
 
     expect($response->json('suggestions'))->toBeArray()->toHaveCount(1);

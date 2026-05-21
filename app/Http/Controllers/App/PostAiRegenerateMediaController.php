@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\App;
 
+use App\Actions\Post\PostStatusGuard;
 use App\Enums\Media\Source;
-use App\Enums\Post\Status as PostStatus;
 use App\Http\Requests\App\Ai\RegeneratePostMediaImageRequest;
 use App\Jobs\Ai\RegeneratePostMediaImage;
 use App\Models\Post;
@@ -22,16 +22,9 @@ class PostAiRegenerateMediaController extends Controller
 
         $workspace = $request->user()->currentWorkspace;
 
-        $terminalStatuses = [
-            PostStatus::Published,
-            PostStatus::PartiallyPublished,
-            PostStatus::Failed,
-            PostStatus::Publishing,
-        ];
-
-        if (in_array($post->status, $terminalStatuses, true)) {
+        if (PostStatusGuard::blocksEditing($post)) {
             return response()->json([
-                'message' => __('posts.cannot_edit_finalized'),
+                'message' => PostStatusGuard::editBlockedMessage(),
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 

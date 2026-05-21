@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Actions\Post\CreatePost;
 use App\Actions\Post\DeletePost;
+use App\Actions\Post\PostStatusGuard;
 use App\Actions\Post\UpdatePost;
 use App\Enums\Media\Type as MediaType;
 use App\Enums\Post\Action as PostAction;
@@ -69,7 +70,7 @@ class PostController extends Controller
 
         if (data_get($result, 'action') === PostAction::Finalized) {
             return response()->json(
-                ['message' => 'Cannot edit a post in a terminal state.'],
+                ['message' => PostStatusGuard::editBlockedMessage()],
                 Response::HTTP_UNPROCESSABLE_ENTITY
             );
         }

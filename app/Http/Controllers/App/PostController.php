@@ -7,6 +7,7 @@ namespace App\Http\Controllers\App;
 use App\Actions\Post\CreatePost;
 use App\Actions\Post\DeletePost;
 use App\Actions\Post\DuplicatePost;
+use App\Actions\Post\PostStatusGuard;
 use App\Actions\Post\SyncPostPlatforms;
 use App\Actions\Post\UpdatePost;
 use App\Enums\Post\Action as PostAction;
@@ -219,7 +220,7 @@ class PostController extends Controller
 
         $this->authorize('update', $post);
 
-        if (in_array($post->status, [PostStatus::Publishing, PostStatus::Published, PostStatus::PartiallyPublished, PostStatus::Failed], true)) {
+        if (PostStatusGuard::blocksEditing($post)) {
             return redirect()->route('app.posts.show', $post);
         }
 
@@ -313,7 +314,7 @@ class PostController extends Controller
 
         $this->authorize('delete', $post);
 
-        if (in_array($post->status, [PostStatus::Publishing, PostStatus::Published, PostStatus::PartiallyPublished], true)) {
+        if (PostStatusGuard::blocksDeletion($post)) {
             session()->flash('flash.banner', __('posts.flash.cannot_delete_published'));
             session()->flash('flash.bannerStyle', 'danger');
 

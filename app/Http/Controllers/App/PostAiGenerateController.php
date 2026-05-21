@@ -18,9 +18,7 @@ class PostAiGenerateController extends Controller
     {
         $workspace = $request->user()->currentWorkspace;
 
-        if ($post->workspace_id !== $workspace->id) {
-            abort(Response::HTTP_FORBIDDEN);
-        }
+        $this->authorize('update', $post);
 
         $gate = Gate::inspect('useAi', $workspace->account);
         if ($gate->denied()) {

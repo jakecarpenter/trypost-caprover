@@ -20,9 +20,7 @@ class UpdatePost
      */
     public static function execute(Workspace $workspace, Post $post, array $data): array
     {
-        $terminalStatuses = [PostStatus::Published, PostStatus::PartiallyPublished, PostStatus::Failed, PostStatus::Publishing];
-
-        if (in_array($post->status, $terminalStatuses, true)) {
+        if (PostStatusGuard::blocksEditing($post)) {
             return ['post' => $post, 'action' => PostAction::Finalized];
         }
 

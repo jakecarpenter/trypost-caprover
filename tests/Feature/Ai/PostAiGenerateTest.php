@@ -22,14 +22,14 @@ beforeEach(function () {
 });
 
 test('endpoint requires authentication', function () {
-    $this->postJson("/posts/{$this->post->id}/ai/generate", ['prompt' => 'hi'])
+    $this->postJson(route('app.posts.ai.generate', $this->post), ['prompt' => 'hi'])
         ->assertStatus(Response::HTTP_UNAUTHORIZED);
 });
 
 test('endpoint validates prompt is required', function () {
     Bus::fake();
     $this->actingAs($this->user)
-        ->postJson("/posts/{$this->post->id}/ai/generate", [])
+        ->postJson(route('app.posts.ai.generate', $this->post), [])
         ->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY)
         ->assertJsonValidationErrors(['prompt']);
 });
@@ -40,15 +40,15 @@ test('endpoint blocks access to other workspace posts', function () {
     $foreignPost = Post::factory()->create(['workspace_id' => $otherWorkspace->id]);
 
     $this->actingAs($this->user)
-        ->postJson("/posts/{$foreignPost->id}/ai/generate", ['prompt' => 'hi'])
-        ->assertStatus(Response::HTTP_FORBIDDEN);
+        ->postJson(route('app.posts.ai.generate', $foreignPost), ['prompt' => 'hi'])
+        ->assertStatus(Response::HTTP_NOT_FOUND);
 });
 
 test('endpoint dispatches StreamPostContent and returns generation id and channel', function () {
     Bus::fake();
 
     $response = $this->actingAs($this->user)
-        ->postJson("/posts/{$this->post->id}/ai/generate", [
+        ->postJson(route('app.posts.ai.generate', $this->post), [
             'prompt' => 'Write a post about Mondays',
             'current_content' => 'Old content',
         ])

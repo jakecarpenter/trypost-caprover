@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mcp\Tools\Post;
 
+use App\Actions\Post\PostStatusGuard;
 use App\Actions\Post\UpdatePost;
 use App\Enums\Post\Action as PostAction;
 use App\Enums\Post\Status;
@@ -55,7 +56,7 @@ class UpdatePostTool extends Tool
         $result = UpdatePost::execute($workspace, $post, $payload);
 
         if (data_get($result, 'action') === PostAction::Finalized) {
-            return Response::error('Cannot edit a post in a terminal state.');
+            return Response::error(PostStatusGuard::editBlockedMessage());
         }
 
         /** @var Post $updated */

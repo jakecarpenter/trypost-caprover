@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mcp\Tools\Post;
 
+use App\Actions\Post\PostStatusGuard;
 use App\Actions\Post\UpdatePost;
 use App\Enums\Post\Action as PostAction;
 use App\Enums\Post\Status;
@@ -48,7 +49,7 @@ class PublishPostTool extends Tool
         ]);
 
         if (data_get($result, 'action') === PostAction::Finalized) {
-            return Response::error('Post is already published or in a terminal state.');
+            return Response::error(PostStatusGuard::editBlockedMessage());
         }
 
         /** @var Post $updated */
