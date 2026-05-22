@@ -9,6 +9,7 @@ use App\Exceptions\Social\ErrorCategory;
 use App\Exceptions\Social\FacebookPublishException;
 use App\Models\PostPlatform;
 use App\Services\Social\Concerns\HasSocialHttpClient;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -22,6 +23,15 @@ class FacebookPublisher
     public function __construct()
     {
         $this->baseUrl = config('trypost.platforms.facebook.graph_api');
+    }
+
+    /**
+     * Graph API expects application/x-www-form-urlencoded (or multipart), not JSON.
+     * Sending JSON makes `message` work but silently drops `attached_media[*]` on /feed.
+     */
+    private function facebookHttp(): PendingRequest
+    {
+        return $this->socialHttp()->asForm();
     }
 
     public function publish(PostPlatform $postPlatform): array
@@ -78,7 +88,7 @@ class FacebookPublisher
 
     private function publishTextPost(string $pageId, string $accessToken, string $content): array
     {
-        $response = $this->socialHttp()->post("{$this->baseUrl}/{$pageId}/feed", [
+        $response = $this->facebookHttp()->post("{$this->baseUrl}/{$pageId}/feed", [
             'message' => $content,
             'access_token' => $accessToken,
         ]);
@@ -111,7 +121,7 @@ class FacebookPublisher
             $payload['message'] = $content;
         }
 
-        $response = $this->socialHttp()->post("{$this->baseUrl}/{$pageId}/photos", $payload);
+        $response = $this->facebookHttp()->post("{$this->baseUrl}/{$pageId}/photos", $payload);
 
         if ($response->failed()) {
             Log::error('Facebook single image post failed', [
@@ -140,7 +150,7 @@ class FacebookPublisher
                 continue;
             }
 
-            $uploadResponse = $this->socialHttp()->post("{$this->baseUrl}/{$pageId}/photos", [
+            $uploadResponse = $this->facebookHttp()->post("{$this->baseUrl}/{$pageId}/photos", [
                 'url' => $media->url,
                 'published' => 'false',
                 'access_token' => $accessToken,
@@ -175,7 +185,7 @@ class FacebookPublisher
             $postData["attached_media[{$index}]"] = json_encode($media);
         }
 
-        $response = $this->socialHttp()->post("{$this->baseUrl}/{$pageId}/feed", $postData);
+        $response = $this->facebookHttp()->post("{$this->baseUrl}/{$pageId}/feed", $postData);
 
         if ($response->failed()) {
             Log::error('Facebook multi-image post failed', [
@@ -205,7 +215,7 @@ class FacebookPublisher
             $payload['description'] = $content;
         }
 
-        $response = $this->socialHttp()->post("{$this->baseUrl}/{$pageId}/videos", $payload);
+        $response = $this->facebookHttp()->post("{$this->baseUrl}/{$pageId}/videos", $payload);
 
         if ($response->failed()) {
             Log::error('Facebook video post failed', [
@@ -227,7 +237,7 @@ class FacebookPublisher
     private function publishReel(string $pageId, string $accessToken, ?string $content, $media): array
     {
         // Phase 1 (start) — graph endpoint returns video_id + upload_url.
-        $startResponse = $this->socialHttp()->post("{$this->baseUrl}/{$pageId}/video_reels", [
+        $startResponse = $this->facebookHttp()->post("{$this->baseUrl}/{$pageId}/video_reels", [
             'upload_phase' => 'start',
             'access_token' => $accessToken,
         ]);
@@ -310,7 +320,7 @@ class FacebookPublisher
             $finishPayload['description'] = $content;
         }
 
-        $finishResponse = $this->socialHttp()->post("{$this->baseUrl}/{$pageId}/video_reels", $finishPayload);
+        $finishResponse = $this->facebookHttp()->post("{$this->baseUrl}/{$pageId}/video_reels", $finishPayload);
 
         if ($finishResponse->failed()) {
             $this->handleApiError($finishResponse);
@@ -331,7 +341,7 @@ class FacebookPublisher
 
         if ($isVideo) {
             // Video story
-            $response = $this->socialHttp()->post("{$this->baseUrl}/{$pageId}/video_stories", [
+            $response = $this->facebookHttp()->post("{$this->baseUrl}/{$pageId}/video_stories", [
                 'upload_phase' => 'start',
                 'access_token' => $accessToken,
             ]);
@@ -347,7 +357,7 @@ class FacebookPublisher
             }
 
             // Transfer the video (Facebook accepts URL in video_file_chunk)
-            $transferResponse = $this->socialHttp()->post("{$this->baseUrl}/{$videoId}", [
+            $transferResponse = $this->facebookHttp()->post("{$this->baseUrl}/{$videoId}", [
                 'upload_phase' => 'transfer',
                 'video_file_chunk' => $media->url,
                 'access_token' => $accessToken,
@@ -359,7 +369,7 @@ class FacebookPublisher
             }
 
             // Finish the story
-            $finishResponse = $this->socialHttp()->post("{$this->baseUrl}/{$pageId}/video_stories", [
+            $finishResponse = $this->facebookHttp()->post("{$this->baseUrl}/{$pageId}/video_stories", [
                 'upload_phase' => 'finish',
                 'video_id' => $videoId,
                 'access_token' => $accessToken,
@@ -378,7 +388,7 @@ class FacebookPublisher
         }
 
         // Image story
-        $response = $this->socialHttp()->post("{$this->baseUrl}/{$pageId}/photo_stories", [
+        $response = $this->facebookHttp()->post("{$this->baseUrl}/{$pageId}/photo_stories", [
             'photo_id' => $this->uploadUnpublishedPhoto($pageId, $accessToken, $media),
             'access_token' => $accessToken,
         ]);
@@ -400,7 +410,7 @@ class FacebookPublisher
 
     private function uploadUnpublishedPhoto(string $pageId, string $accessToken, $media): string
     {
-        $response = $this->socialHttp()->post("{$this->baseUrl}/{$pageId}/photos", [
+        $response = $this->facebookHttp()->post("{$this->baseUrl}/{$pageId}/photos", [
             'url' => $media->url,
             'published' => 'false',
             'access_token' => $accessToken,

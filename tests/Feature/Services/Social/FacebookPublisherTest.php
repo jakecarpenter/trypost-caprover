@@ -126,7 +126,36 @@ test('facebook publisher can publish multi image post', function () {
     expect($result['id'])->toBe('page_123_multi_post_789');
 
     Http::assertSent(function ($request) {
-        return str_contains($request->url(), '/page_123/feed');
+        return str_contains($request->url(), '/page_123/feed')
+            && str_contains($request->header('Content-Type')[0] ?? '', 'application/x-www-form-urlencoded')
+            && ($request->data()['attached_media[0]'] ?? null) === json_encode(['media_fbid' => 'photo_1'])
+            && ($request->data()['attached_media[1]'] ?? null) === json_encode(['media_fbid' => 'photo_2']);
+    });
+});
+
+test('facebook publisher sends graph api requests as form-urlencoded not json', function () {
+    $this->post->update([
+        'media' => [
+            [
+                'id' => 'test-media-id',
+                'path' => 'media/2026-01/image.jpg',
+                'url' => 'https://example.com/media/2026-01/image.jpg',
+                'mime_type' => 'image/jpeg',
+                'original_filename' => 'image.jpg',
+            ],
+        ],
+    ]);
+
+    Http::fake([
+        '*/page_123/photos' => Http::response(['id' => 'photo_123', 'post_id' => 'post_123'], 200),
+    ]);
+
+    $this->publisher->publish($this->postPlatform);
+
+    Http::assertSent(function ($request) {
+        return str_contains($request->url(), '/page_123/photos')
+            && str_contains($request->header('Content-Type')[0] ?? '', 'application/x-www-form-urlencoded')
+            && ! str_contains($request->header('Content-Type')[0] ?? '', 'application/json');
     });
 });
 
