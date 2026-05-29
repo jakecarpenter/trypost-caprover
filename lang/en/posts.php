@@ -61,7 +61,7 @@ return [
             ],
             'posting_to' => 'Posting to',
             'privacy_level' => 'Who can see this video?',
-            'privacy_placeholder' => 'Select visibility',
+            'privacy_placeholder' => 'Select who can view this post',
             'privacy' => [
                 'public' => 'Public to everyone',
                 'friends' => 'Mutual follow friends',
@@ -87,7 +87,7 @@ return [
             'compliance_incomplete' => 'You need to indicate if your content promotes yourself, a third party, or both.',
             'privacy_required' => 'TikTok privacy level is required when publishing.',
             'branded_cleared_private' => 'Privacy was cleared because Branded Content cannot be private.',
-            'interaction_disabled_by_creator' => 'Disabled by your TikTok account settings.',
+            'interaction_disabled_by_creator' => 'Turned off in your TikTok account settings',
             'max_duration_exceeded' => 'Video is :duration s long but this account can only post videos up to :max s.',
             'processing_hint' => 'After publishing, it may take a few minutes for the content to process and appear on your TikTok profile.',
             'brand_organic' => 'Your brand',

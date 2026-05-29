@@ -397,6 +397,11 @@ watch(
                     {{ $t('posts.form.tiktok.compliance.music_usage') }}
                 </a>
             </p>
+
+            <!-- Post-publish notice required by TikTok Content Sharing Guidelines -->
+            <p class="mt-3 text-xs text-muted-foreground">
+                {{ $t('posts.form.tiktok.processing_hint') }}
+            </p>
         </div>
     </div>
 </template>

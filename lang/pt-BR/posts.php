@@ -61,7 +61,7 @@ return [
             ],
             'posting_to' => 'Publicando em',
             'privacy_level' => 'Quem pode ver este vídeo?',
-            'privacy_placeholder' => 'Selecione a visibilidade',
+            'privacy_placeholder' => 'Selecione quem pode ver este post',
             'privacy' => [
                 'public' => 'Público para todos',
                 'friends' => 'Amigos em comum',
@@ -87,7 +87,7 @@ return [
             'compliance_incomplete' => 'Você precisa indicar se o conteúdo promove você mesmo, terceiros ou ambos.',
             'privacy_required' => 'A visibilidade do TikTok é obrigatória ao publicar.',
             'branded_cleared_private' => 'A visibilidade foi limpa porque conteúdo de marca não pode ser privado.',
-            'interaction_disabled_by_creator' => 'Desativado pelas configurações da sua conta TikTok.',
+            'interaction_disabled_by_creator' => 'Desativado nas configurações da sua conta TikTok',
             'max_duration_exceeded' => 'Vídeo tem :duration s mas esta conta só permite vídeos de até :max s.',
             'processing_hint' => 'Após publicar, pode levar alguns minutos para o conteúdo ser processado e aparecer no seu perfil TikTok.',
             'brand_organic' => 'Sua marca',
