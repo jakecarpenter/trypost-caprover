@@ -10,7 +10,6 @@ enum ContentType: string
 {
     // Instagram
     case InstagramFeed = 'instagram_feed';
-    case InstagramCarousel = 'instagram_carousel';
     case InstagramReel = 'instagram_reel';
     case InstagramStory = 'instagram_story';
 
@@ -51,11 +50,16 @@ enum ContentType: string
     // Mastodon
     case MastodonPost = 'mastodon_post';
 
+    /**
+     * AI generation format for an Instagram carousel. Not a content type —
+     * carousel posts are persisted as InstagramFeed.
+     */
+    public const CAROUSEL_FORMAT = 'instagram_carousel';
+
     public function label(): string
     {
         return match ($this) {
             self::InstagramFeed => 'Feed Post',
-            self::InstagramCarousel => 'Carousel',
             self::InstagramReel => 'Reel',
             self::InstagramStory => 'Story',
             self::LinkedInPost, self::LinkedInPagePost => 'Post',
@@ -84,7 +88,7 @@ enum ContentType: string
     public function platform(): SocialPlatform
     {
         return match ($this) {
-            self::InstagramFeed, self::InstagramCarousel, self::InstagramReel, self::InstagramStory => SocialPlatform::Instagram,
+            self::InstagramFeed, self::InstagramReel, self::InstagramStory => SocialPlatform::Instagram,
             self::LinkedInPost, self::LinkedInCarousel => SocialPlatform::LinkedIn,
             self::LinkedInPagePost, self::LinkedInPageCarousel => SocialPlatform::LinkedInPage,
             self::FacebookPost, self::FacebookReel, self::FacebookStory => SocialPlatform::Facebook,
@@ -109,7 +113,6 @@ enum ContentType: string
         return match ($this) {
             // Vertical 4:5 (Instagram preferred portrait, Threads mirrors it)
             self::InstagramFeed,
-            self::InstagramCarousel,
             self::ThreadsPost => ['width' => 1080, 'height' => 1350],
 
             // Square 1:1 (LinkedIn, X, Facebook, Bluesky, Mastodon)
@@ -135,7 +138,7 @@ enum ContentType: string
     public function aspectRatio(): ?string
     {
         return match ($this) {
-            self::InstagramFeed, self::InstagramCarousel => '4:5',
+            self::InstagramFeed => '4:5',
             self::InstagramReel, self::InstagramStory => '9:16',
             self::FacebookReel, self::FacebookStory => '9:16',
             self::TikTokVideo, self::YouTubeShort => '9:16',
@@ -149,8 +152,7 @@ enum ContentType: string
     public function maxMediaCount(): int
     {
         return match ($this) {
-            self::InstagramFeed => 1,
-            self::InstagramCarousel => 10,
+            self::InstagramFeed => 10,
             self::InstagramReel, self::InstagramStory => 1,
             self::LinkedInPost, self::LinkedInPagePost => 1,
             self::LinkedInCarousel, self::LinkedInPageCarousel => 20,
@@ -172,7 +174,6 @@ enum ContentType: string
     {
         return match ($this) {
             self::InstagramFeed, self::InstagramReel, self::InstagramStory => true,
-            self::InstagramCarousel => false,
             self::LinkedInPost, self::LinkedInPagePost => true,
             self::LinkedInCarousel, self::LinkedInPageCarousel => false,
             self::FacebookPost, self::FacebookReel, self::FacebookStory => true,
@@ -237,7 +238,6 @@ enum ContentType: string
     {
         return [
             self::InstagramFeed,
-            self::InstagramCarousel,
             self::InstagramStory,
             self::LinkedInPost,
             self::LinkedInPagePost,

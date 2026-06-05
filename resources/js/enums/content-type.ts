@@ -1,6 +1,5 @@
 export const ContentType = {
     InstagramFeed: 'instagram_feed',
-    InstagramCarousel: 'instagram_carousel',
     InstagramStory: 'instagram_story',
     InstagramReel: 'instagram_reel',
     LinkedInPost: 'linkedin_post',

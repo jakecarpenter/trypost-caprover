@@ -50,6 +50,26 @@ test('start validates format must be a known value', function () {
         ->assertJsonValidationErrors(['format']);
 });
 
+test('start accepts instagram_carousel as a generation format', function () {
+    Bus::fake();
+
+    $account = SocialAccount::factory()->create([
+        'workspace_id' => $this->workspace->id,
+        'platform' => Platform::Instagram,
+    ]);
+
+    $this->actingAs($this->user)
+        ->postJson(route('app.posts.ai.create'), [
+            'prompt' => 'Five tips about productivity',
+            'format' => 'instagram_carousel',
+            'social_account_id' => $account->id,
+            'image_count' => 5,
+        ])
+        ->assertStatus(Response::HTTP_ACCEPTED);
+
+    Bus::assertDispatched(StreamPostCreation::class, fn ($job) => $job->format === 'instagram_carousel');
+});
+
 test('start rejects social_account_id from another workspace', function () {
     Bus::fake();
 

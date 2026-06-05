@@ -167,6 +167,39 @@ it('updates a post', function () {
         ->assertOk();
 });
 
+it('rejects creating a post with instagram_carousel — carousel is not a stored content_type', function () {
+    $this->withHeaders(['Authorization' => 'Bearer '.$this->plainToken])
+        ->postJson(route('api.posts.store'), [
+            'platforms' => [
+                ['social_account_id' => $this->socialAccount->id, 'content_type' => 'instagram_carousel'],
+            ],
+        ])
+        ->assertJsonValidationErrors(['platforms.0.content_type']);
+});
+
+it('rejects updating a post with instagram_carousel — carousel is not a stored content_type', function () {
+    $post = Post::factory()->create([
+        'workspace_id' => $this->workspace->id,
+        'user_id' => $this->user->id,
+        'status' => PostStatus::Draft,
+    ]);
+
+    $postPlatform = PostPlatform::factory()->linkedin()->create([
+        'post_id' => $post->id,
+        'social_account_id' => $this->socialAccount->id,
+        'enabled' => true,
+    ]);
+
+    $this->withHeaders(['Authorization' => 'Bearer '.$this->plainToken])
+        ->putJson(route('api.posts.update', $post), [
+            'status' => 'draft',
+            'platforms' => [
+                ['id' => $postPlatform->id, 'content_type' => 'instagram_carousel'],
+            ],
+        ])
+        ->assertJsonValidationErrors(['platforms.0.content_type']);
+});
+
 it('cannot update post from another workspace', function () {
     $otherWorkspace = Workspace::factory()->create();
     $otherSocialAccount = SocialAccount::factory()->create([
