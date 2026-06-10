@@ -75,7 +75,10 @@ class PostController extends Controller
             );
         }
 
-        return new PostResource(data_get($result, 'post'));
+        $updated = data_get($result, 'post');
+        $updated->load(['postPlatforms.socialAccount']);
+
+        return new PostResource($updated);
     }
 
     public function destroy(Request $request, Post $post): JsonResponse

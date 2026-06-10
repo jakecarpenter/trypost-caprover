@@ -62,6 +62,10 @@ class CreatePost
                     $updates['content_type'] = $contentType;
                 }
 
+                if (($meta = data_get($platformData, 'meta')) !== null) {
+                    $updates['meta'] = $meta;
+                }
+
                 $post->postPlatforms()
                     ->where('social_account_id', $accountId)
                     ->update($updates);

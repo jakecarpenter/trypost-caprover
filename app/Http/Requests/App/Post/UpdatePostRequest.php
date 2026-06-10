@@ -6,6 +6,7 @@ namespace App\Http\Requests\App\Post;
 
 use App\Enums\Media\Source;
 use App\Enums\Post\Status;
+use App\Enums\PostPlatform\AspectRatio;
 use App\Enums\PostPlatform\ContentType;
 use App\Enums\SocialAccount\Platform;
 use App\Rules\ContentFitsPlatformLimits;
@@ -70,7 +71,7 @@ class UpdatePostRequest extends FormRequest
                 Rule::when($enforcesMediaCompatibility, [new ContentTypeCompatibleWithMedia]),
             ],
             'platforms.*.meta' => ['nullable', 'array'],
-            'platforms.*.meta.aspect_ratio' => ['sometimes', 'nullable', 'string', Rule::in(['1:1', '4:5', '16:9', 'original'])],
+            'platforms.*.meta.aspect_ratio' => ['sometimes', 'nullable', 'string', Rule::enum(AspectRatio::class)],
             'platforms.*.meta.privacy_level' => ['sometimes', 'nullable', 'string', Rule::in(['PUBLIC_TO_EVERYONE', 'MUTUAL_FOLLOW_FRIENDS', 'FOLLOWER_OF_CREATOR', 'SELF_ONLY'])],
             'platforms.*.meta.auto_add_music' => ['sometimes', 'boolean'],
             'platforms.*.meta.allow_comments' => ['sometimes', 'boolean'],

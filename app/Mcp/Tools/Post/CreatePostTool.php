@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Mcp\Tools\Post;
 
 use App\Actions\Post\CreatePost;
+use App\Enums\PostPlatform\AspectRatio;
 use App\Enums\PostPlatform\ContentType;
 use App\Http\Resources\Api\PostResource;
 use App\Rules\ContentTypeMatchesPlatform;
@@ -37,6 +38,8 @@ class CreatePostTool extends Tool
                     ->where('is_active', true),
             ],
             'platforms.*.content_type' => ['required', 'string', Rule::in(array_column(ContentType::cases(), 'value')), new ContentTypeMatchesPlatform],
+            'platforms.*.meta' => ['sometimes', 'array'],
+            'platforms.*.meta.aspect_ratio' => ['sometimes', 'nullable', 'string', Rule::enum(AspectRatio::class)],
         ]);
 
         $post = CreatePost::execute($workspace, $request->user(), $validated);
@@ -58,6 +61,7 @@ class CreatePostTool extends Tool
                 ->items($schema->object(fn ($p) => [
                     'social_account_id' => $p->string()->required()->description('UUID of the connected social account.'),
                     'content_type' => $p->string()->required()->description('Format for this platform (e.g. linkedin_post, x_post, instagram_feed).'),
+                    'meta' => $p->object()->description('Per-platform metadata (e.g. aspect_ratio: 1:1|4:5|16:9|original for Instagram/Facebook feed images).'),
                 ]))
                 ->description('Platforms to publish on. Accounts not listed remain available but disabled.'),
         ];

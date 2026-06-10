@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Social\Concerns;
 
+use App\Enums\PostPlatform\AspectRatio;
 use App\Exceptions\Social\SocialPublishException;
 use App\Services\Media\MediaOptimizer;
 use Illuminate\Support\Facades\Http;
@@ -51,11 +52,7 @@ trait CropsImageForAspectRatio
 
     protected function aspectRatioToFloat(string $ratio): float
     {
-        return match ($ratio) {
-            '4:5' => 4 / 5,
-            '16:9' => 16 / 9,
-            default => 1.0,
-        };
+        return AspectRatio::tryFrom($ratio)?->toFloat() ?? 1.0;
     }
 
     /**

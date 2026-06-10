@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Api\Post;
 
+use App\Enums\PostPlatform\AspectRatio;
 use App\Enums\PostPlatform\ContentType;
 use App\Enums\SocialAccount\Platform;
 use App\Models\SocialAccount;
@@ -49,6 +50,8 @@ class StorePostRequest extends FormRequest
                 Rule::in(array_column(ContentType::cases(), 'value')),
                 new ContentTypeMatchesPlatform,
             ],
+            'platforms.*.meta' => ['sometimes', 'nullable', 'array'],
+            'platforms.*.meta.aspect_ratio' => ['sometimes', 'nullable', 'string', Rule::enum(AspectRatio::class)],
             'scheduled_at' => ['nullable', 'date', 'after:now'],
             'label_ids' => ['sometimes', 'array'],
             'label_ids.*' => [

@@ -7,6 +7,7 @@ namespace App\Mcp\Tools\Post;
 use App\Actions\Post\UpdatePost;
 use App\Enums\Post\Action as PostAction;
 use App\Enums\Post\Status;
+use App\Enums\PostPlatform\AspectRatio;
 use App\Enums\PostPlatform\ContentType;
 use App\Http\Resources\Api\PostResource;
 use App\Models\Post;
@@ -49,6 +50,7 @@ class UpdatePostTool extends Tool
             ],
             'platforms.*.content_type' => ['sometimes', 'string', Rule::in(array_column(ContentType::cases(), 'value')), new ContentTypeMatchesPostPlatform],
             'platforms.*.meta' => ['sometimes', 'array'],
+            'platforms.*.meta.aspect_ratio' => ['sometimes', 'nullable', 'string', Rule::enum(AspectRatio::class)],
         ]);
 
         $payload = collect($validated)->except('post_id')->all();

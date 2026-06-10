@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests\Api\Post;
 
 use App\Enums\Post\Status;
+use App\Enums\PostPlatform\AspectRatio;
 use App\Enums\PostPlatform\ContentType;
 use App\Enums\SocialAccount\Platform;
 use App\Models\Post;
@@ -51,6 +52,7 @@ class UpdatePostRequest extends FormRequest
                 new ContentTypeMatchesPostPlatform,
             ],
             'platforms.*.meta' => ['nullable', 'array'],
+            'platforms.*.meta.aspect_ratio' => ['sometimes', 'nullable', 'string', Rule::enum(AspectRatio::class)],
             'scheduled_at' => [
                 'nullable',
                 'date',
