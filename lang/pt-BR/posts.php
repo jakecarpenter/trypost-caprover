@@ -320,7 +320,7 @@ return [
 
         'tabs' => [
             'preview' => 'Pré-visualização',
-            'schedule' => 'Agendamento',
+            'channels' => 'Canais',
             'comments' => 'Comentários',
             'comments_empty' => 'Nenhum comentário ainda.',
         ],
