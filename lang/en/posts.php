@@ -320,7 +320,7 @@ return [
 
         'tabs' => [
             'preview' => 'Preview',
-            'schedule' => 'Schedule',
+            'channels' => 'Channels',
             'comments' => 'Comments',
             'comments_empty' => 'No comments yet.',
         ],
