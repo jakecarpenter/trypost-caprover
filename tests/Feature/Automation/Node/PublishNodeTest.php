@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Actions\Automation\Node\RunPublishNode;
 use App\Enums\Post\Status as PostStatus;
 use App\Jobs\PublishPost;

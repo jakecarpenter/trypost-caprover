@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Http\Middleware\Api\LoadWorkspaceFromToken;
 use App\Http\Middleware\App\EnsureRegistrationEnabled;
 use App\Http\Middleware\App\HandleInertiaRequests;

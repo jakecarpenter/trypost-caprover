@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\Automation\Status;
 use App\Models\Automation;
 use App\Models\AutomationNodeRun;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
     'title' => 'Automatizaciones',
     'default_name' => 'Nueva automatización',

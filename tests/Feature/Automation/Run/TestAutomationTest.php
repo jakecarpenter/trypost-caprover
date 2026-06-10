@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Actions\Automation\Run\TestAutomation;
 use App\Enums\Automation\Run\Status;
 use App\Enums\Post\Status as PostStatus;

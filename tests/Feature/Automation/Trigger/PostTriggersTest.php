@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Enums\Post\Status as PostStatus;
 use App\Jobs\Automation\ProcessAutomationNode;
 use App\Models\Automation;

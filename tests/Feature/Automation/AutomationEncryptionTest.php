@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Http\Resources\AutomationResource;
 use App\Models\Automation;
 use Illuminate\Support\Facades\Crypt;

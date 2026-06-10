@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Actions\Automation\Node\RunFetchRssNode;
 use App\Enums\Automation\NodeRun\Status as NodeRunStatus;
 use App\Jobs\Automation\ProcessAutomationNode;

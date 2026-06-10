@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Actions\Automation\Node\RunDelayNode;
 use App\Enums\Automation\NodeRun\Status;
 use App\Models\AutomationRun;

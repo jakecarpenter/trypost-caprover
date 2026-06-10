@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Actions\Automation\TriggerItem\EnrollTriggerItem;
 use App\Ai\Agents\PostContentGenerator;
 use App\Ai\Agents\PostContentHumanizer;

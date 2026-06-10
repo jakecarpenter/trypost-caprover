@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 return [
     'workspaces' => 'Workspaces',
     'select_workspace' => 'Select workspace',
