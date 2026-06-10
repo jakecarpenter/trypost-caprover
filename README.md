@@ -120,7 +120,9 @@ If TryPost is useful to you, **a star helps more people find it.** That's the mo
 ## Star History
 
 <p align="center">
-  <a href="https://www.star-history.com/?repos=trypostit%2Ftrypost&type=date&legend=top-left">
-    <img src="https://api.star-history.com/chart?repos=trypostit/trypost&type=date&legend=top-left" alt="Star History Chart" width="600">
-  </a>
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=trypostit/trypost&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=trypostit/trypost&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=trypostit/trypost&type=date&legend=top-left" />
+ </picture>
 </p>

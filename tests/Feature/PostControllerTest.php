@@ -176,6 +176,27 @@ test('calendar supports month view', function () {
     );
 });
 
+test('calendar payload exposes post content for rendering', function () {
+    $scheduledAt = now('UTC')->startOfWeek()->addDays(2)->setTime(12, 0);
+
+    Post::factory()->create([
+        'workspace_id' => $this->workspace->id,
+        'user_id' => $this->user->id,
+        'content' => 'Caption visible in the calendar',
+        'status' => PostStatus::Scheduled,
+        'scheduled_at' => $scheduledAt,
+    ]);
+
+    $dateKey = $scheduledAt->format('Y-m-d');
+
+    $response = $this->actingAs($this->user)->get(route('app.calendar'));
+
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->where("posts.{$dateKey}.0.content", 'Caption visible in the calendar')
+    );
+});
+
 // Create tests
 test('create requires authentication', function () {
     $response = $this->get(route('app.posts.create'));

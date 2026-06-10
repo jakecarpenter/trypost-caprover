@@ -29,8 +29,8 @@ class UpdateWorkspaceRequest extends FormRequest
             'brand_color' => $hex,
             'background_color' => $hex,
             'text_color' => $hex,
-            'brand_font' => ['required', 'string', Rule::in(BrandFont::values())],
-            'image_style' => ['required', 'string', Rule::in(ImageStyle::values())],
+            'brand_font' => ['sometimes', 'required', 'string', Rule::in(BrandFont::values())],
+            'image_style' => ['sometimes', 'required', 'string', Rule::in(ImageStyle::values())],
             'content_language' => ['sometimes', 'string', 'in:en,pt-BR,es'],
         ];
     }

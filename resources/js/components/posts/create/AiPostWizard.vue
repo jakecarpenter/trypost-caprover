@@ -42,8 +42,11 @@ const emit = defineEmits<{
     cancel: [];
 }>();
 
+const CAROUSEL_FORMAT = 'instagram_carousel' as const;
+type AiFormat = ContentTypeValue | typeof CAROUSEL_FORMAT;
+
 // Selections
-const selectedFormat = ref<ContentTypeValue | null>(null);
+const selectedFormat = ref<AiFormat | null>(null);
 const selectedAccountId = ref<string | null>(null);
 const includeImages = ref(true);
 const imageCount = ref(2);
@@ -59,9 +62,9 @@ const httpStart = useHttp<{
     date: string | null;
 }>({ format: null, social_account_id: null, image_count: 0, prompt: '', date: null });
 
-const AI_FORMATS: Array<{ value: ContentTypeValue; platforms: string[] }> = [
+const AI_FORMATS: Array<{ value: AiFormat; platforms: string[] }> = [
     { value: ContentType.InstagramFeed, platforms: ['instagram', 'instagram-facebook'] },
-    { value: ContentType.InstagramCarousel, platforms: ['instagram', 'instagram-facebook'] },
+    { value: CAROUSEL_FORMAT, platforms: ['instagram', 'instagram-facebook'] },
     { value: ContentType.InstagramStory, platforms: ['instagram', 'instagram-facebook'] },
     { value: ContentType.LinkedInPost, platforms: ['linkedin'] },
     { value: ContentType.LinkedInPagePost, platforms: ['linkedin-page'] },
@@ -95,7 +98,7 @@ const accountsForFormat = computed(() => {
     return props.socialAccounts.filter((a) => format.platforms.includes(a.platform));
 });
 
-const isCarousel = computed(() => selectedFormat.value === ContentType.InstagramCarousel);
+const isCarousel = computed(() => selectedFormat.value === CAROUSEL_FORMAT);
 const requiresImage = computed(() =>
     selectedFormat.value === ContentType.FacebookPost ||
     selectedFormat.value === ContentType.PinterestPin ||
@@ -140,11 +143,11 @@ watch(accountsForFormat, (accounts) => {
     }
 });
 
-const selectFormat = (format: ContentTypeValue) => {
+const selectFormat = (format: AiFormat) => {
     selectedFormat.value = format;
     // Sensible default per format. Picking a format always pre-selects an
     // image option so the user sees a chip highlighted on arrival.
-    if (format === ContentType.InstagramCarousel) {
+    if (format === CAROUSEL_FORMAT) {
         imageCount.value = 5;
     } else if (format === ContentType.InstagramFeed) {
         imageCount.value = 1;

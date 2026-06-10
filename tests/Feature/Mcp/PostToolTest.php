@@ -9,7 +9,9 @@ use App\Mcp\Tools\Post\CreatePostTool;
 use App\Mcp\Tools\Post\DeletePostTool;
 use App\Mcp\Tools\Post\GetPostTool;
 use App\Mcp\Tools\Post\ListPostsTool;
+use App\Mcp\Tools\Post\UpdatePostTool;
 use App\Models\Post;
+use App\Models\PostPlatform;
 use App\Models\SocialAccount;
 use App\Models\User;
 use App\Models\Workspace;
@@ -171,6 +173,38 @@ test('create post rejects a content_type not in the enum', function () {
         ->tool(CreatePostTool::class, [
             'platforms' => [
                 ['social_account_id' => $this->socialAccount->id, 'content_type' => 'made_up_type'],
+            ],
+        ]);
+
+    $response->assertHasErrors();
+});
+
+test('create post rejects instagram_carousel — carousel is not a stored content_type', function () {
+    $response = TryPostServer::actingAs($this->user)
+        ->tool(CreatePostTool::class, [
+            'platforms' => [
+                ['social_account_id' => $this->socialAccount->id, 'content_type' => 'instagram_carousel'],
+            ],
+        ]);
+
+    $response->assertHasErrors();
+});
+
+test('update post rejects instagram_carousel — carousel is not a stored content_type', function () {
+    $post = Post::factory()->create([
+        'workspace_id' => $this->workspace->id,
+        'user_id' => $this->user->id,
+    ]);
+    $platform = PostPlatform::factory()->create([
+        'post_id' => $post->id,
+        'social_account_id' => $this->socialAccount->id,
+    ]);
+
+    $response = TryPostServer::actingAs($this->user)
+        ->tool(UpdatePostTool::class, [
+            'post_id' => $post->id,
+            'platforms' => [
+                ['id' => $platform->id, 'content_type' => 'instagram_carousel'],
             ],
         ]);
 

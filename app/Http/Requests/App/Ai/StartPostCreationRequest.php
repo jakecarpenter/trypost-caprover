@@ -20,11 +20,14 @@ class StartPostCreationRequest extends FormRequest
      */
     public function rules(): array
     {
+        $allowedFormats = array_map(fn (ContentType $t) => $t->value, ContentType::aiSupported());
+        $allowedFormats[] = ContentType::CAROUSEL_FORMAT;
+
         return [
             'format' => [
                 'required',
                 'string',
-                Rule::in(array_map(fn (ContentType $t) => $t->value, ContentType::aiSupported())),
+                Rule::in($allowedFormats),
             ],
             'social_account_id' => ['nullable', 'uuid'],
             'image_count' => ['nullable', 'integer', 'min:0', 'max:10'],

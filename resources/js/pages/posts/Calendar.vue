@@ -18,7 +18,6 @@ import { PostStatus } from '@/types/post';
 interface PostPlatform {
     id: string;
     platform: string;
-    content: string;
     status: string;
     social_account: {
         id: string;
@@ -31,6 +30,7 @@ interface PostPlatform {
 interface Post {
     id: string;
     status: string;
+    content: string | null;
     scheduled_at: string;
     post_platforms: PostPlatform[];
 }
@@ -297,7 +297,7 @@ const formatTime = (scheduledAt: string): string => {
                     <div v-if="dayPosts.length > 0" class="space-y-3">
                         <Link v-for="post in dayPosts" :key="post.id" :href="getPostUrl(post)" class="block">
                             <div
-                                class="rounded-xl border-2 border-foreground p-4 shadow-2xs transition-all hover:-translate-y-0.5 hover:shadow-md"
+                                class="rounded-xl border-2 border-foreground p-4 shadow-2xs transition-all hover:shadow-md"
                                 :class="getStatusColor(post.status)"
                             >
                                 <div class="flex items-start justify-between gap-3">
@@ -334,7 +334,7 @@ const formatTime = (scheduledAt: string): string => {
 
                                         <!-- Content Preview -->
                                         <p class="line-clamp-2 text-sm font-medium text-foreground/80">
-                                            {{ post.post_platforms[0]?.content || $t('calendar.no_content') }}
+                                            {{ post.content?.trim() || $t('calendar.no_content') }}
                                         </p>
                                     </div>
                                 </div>
@@ -383,7 +383,7 @@ const formatTime = (scheduledAt: string): string => {
                         <!-- Posts -->
                         <Link v-for="post in getPostsForDay(day)" :key="post.id" :href="getPostUrl(post)" class="block">
                             <div
-                                class="rounded-lg border-2 border-foreground p-2 text-sm shadow-2xs transition-all hover:-translate-y-0.5 hover:shadow-sm"
+                                class="rounded-lg border-2 border-foreground p-2 text-sm shadow-2xs transition-all hover:shadow-sm"
                                 :class="getStatusColor(post.status)"
                             >
                                 <!-- Time -->
@@ -418,7 +418,7 @@ const formatTime = (scheduledAt: string): string => {
 
                                 <!-- Content Preview -->
                                 <p class="line-clamp-2 text-xs font-medium text-foreground/80">
-                                    {{ post.post_platforms[0]?.content || $t('calendar.no_content') }}
+                                    {{ post.content?.trim() || $t('calendar.no_content') }}
                                 </p>
                             </div>
                         </Link>
@@ -479,12 +479,13 @@ const formatTime = (scheduledAt: string): string => {
                             </div>
 
                             <!-- Posts -->
-                            <div class="min-h-0 flex-1 space-y-1 overflow-y-auto">
+                            <div class="min-h-0 flex-1 space-y-1 overflow-y-auto px-1">
                                 <Link v-for="post in getPostsForDay(day).slice(0, 3)" :key="post.id" :href="getPostUrl(post)" class="block">
                                     <div
-                                        class="flex items-center justify-between gap-1.5 rounded-md border-2 border-foreground px-2 py-1 text-xs shadow-2xs transition-all hover:-translate-y-0.5 hover:shadow-sm"
+                                        class="flex flex-col gap-1 rounded-md border-2 border-foreground px-2 py-1 text-xs shadow-2xs transition-all hover:shadow-sm"
                                         :class="getStatusColor(post.status)"
                                     >
+                                        <div class="flex items-center justify-between gap-1.5">
                                         <span class="shrink-0 font-bold">{{ formatTime(post.scheduled_at) }}</span>
                                         <div class="flex shrink-0 -space-x-1">
                                             <TooltipProvider
@@ -513,6 +514,10 @@ const formatTime = (scheduledAt: string): string => {
                                                 +{{ post.post_platforms.length - 3 }}
                                             </span>
                                         </div>
+                                        </div>
+                                        <p class="line-clamp-1 font-medium text-foreground/80">
+                                            {{ post.content?.trim() || $t('calendar.no_content') }}
+                                        </p>
                                     </div>
                                 </Link>
                                 <div

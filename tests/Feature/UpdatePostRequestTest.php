@@ -525,3 +525,19 @@ test('draft save accepts media source metadata for ai regeneration', function ()
     expect(data_get($this->post->media, '0.source'))->toBe('ai');
     expect(data_get($this->post->media, '0.source_meta.title'))->toBe('Fix ECP typo');
 });
+
+test('instagram_carousel is rejected as a content_type — carousel is a feed post with multiple images', function () {
+    $response = $this->actingAs($this->user)
+        ->put(route('app.posts.update', $this->post), [
+            'status' => Status::Draft->value,
+            'platforms' => [
+                [
+                    'id' => $this->postPlatform->id,
+                    'content_type' => 'instagram_carousel',
+                    'meta' => [],
+                ],
+            ],
+        ]);
+
+    $response->assertSessionHasErrors('platforms.0.content_type');
+});

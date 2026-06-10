@@ -52,7 +52,7 @@ class StreamPostCreation implements ShouldQueue
         $workspace = Workspace::findOrFail($this->workspaceId);
         $socialAccount = $this->socialAccountId ? SocialAccount::find($this->socialAccountId) : null;
 
-        $isCarousel = $this->format === 'instagram_carousel';
+        $isCarousel = $this->format === ContentType::CAROUSEL_FORMAT;
         $agentFormat = $isCarousel ? 'carousel' : 'single';
 
         $slideCount = $isCarousel && $this->imageCount > 0 ? $this->imageCount : 1;
@@ -120,11 +120,24 @@ class StreamPostCreation implements ShouldQueue
      */
     private function dimensionsForFormat(): array
     {
-        $type = ContentType::tryFrom($this->format);
+        $type = $this->resolvedContentType();
 
         return $type
             ? $type->aiImageDimensions()
             : ['width' => TemplateImageGenerator::DEFAULT_WIDTH, 'height' => TemplateImageGenerator::DEFAULT_HEIGHT];
+    }
+
+    /**
+     * The stored content type for the requested generation format. The carousel
+     * generation format is persisted as an Instagram feed post.
+     */
+    private function resolvedContentType(): ?ContentType
+    {
+        if ($this->format === ContentType::CAROUSEL_FORMAT) {
+            return ContentType::InstagramFeed;
+        }
+
+        return ContentType::tryFrom($this->format);
     }
 
     private function humanize(Workspace $workspace, array $structured, string $format): array
@@ -277,23 +290,20 @@ class StreamPostCreation implements ShouldQueue
             'date' => $this->date,
         ]);
 
-        $contentType = ContentType::tryFrom($this->format);
+        $contentType = $this->resolvedContentType();
 
         if ($contentType && $socialAccount) {
             $aspectRatio = $this->aspectRatioFor($contentType);
-            $platformContentType = $contentType === ContentType::InstagramCarousel
-                ? ContentType::InstagramFeed
-                : $contentType;
 
             $post->postPlatforms()
                 ->where('social_account_id', $socialAccount->id)
-                ->each(function ($platform) use ($aspectRatio, $platformContentType): void {
+                ->each(function ($platform) use ($aspectRatio, $contentType): void {
                     $meta = $platform->meta ?? [];
                     if ($aspectRatio !== null) {
                         $meta['aspect_ratio'] = $aspectRatio;
                     }
                     $platform->meta = $meta;
-                    $platform->content_type = $platformContentType->value;
+                    $platform->content_type = $contentType->value;
                     $platform->enabled = true;
                     $platform->save();
                 });

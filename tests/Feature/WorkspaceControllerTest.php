@@ -232,6 +232,27 @@ test('update workspace settings persists the image_style choice', function () {
     expect($this->workspace->refresh()->image_style->value)->toBe('minimalist');
 });
 
+test('update workspace settings updates the name when only the name is submitted', function () {
+    $this->actingAs($this->user)
+        ->from(route('app.workspace.settings'))
+        ->put(route('app.workspace.settings.update'), [
+            'name' => 'Name Only Update',
+        ])
+        ->assertRedirect(route('app.workspace.settings'))
+        ->assertSessionHasNoErrors();
+
+    expect($this->workspace->refresh()->name)->toBe('Name Only Update');
+});
+
+test('update workspace settings still requires brand_font and image_style when submitted empty', function () {
+    $this->actingAs($this->user)
+        ->put(route('app.workspace.settings.update'), [
+            'name' => $this->workspace->name,
+            'brand_font' => '',
+            'image_style' => '',
+        ])->assertSessionHasErrors(['brand_font', 'image_style']);
+});
+
 test('update workspace settings rejects unknown image_style values', function () {
     $this->actingAs($this->user)
         ->put(route('app.workspace.settings.update'), [

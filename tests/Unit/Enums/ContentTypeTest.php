@@ -53,9 +53,12 @@ test('content type has correct aspect ratios', function () {
     expect(ContentType::XPost->aspectRatio())->toBeNull();
 });
 
+test('instagram_carousel is not a content type — it is an AI generation format only', function () {
+    expect(ContentType::tryFrom('instagram_carousel'))->toBeNull();
+});
+
 test('content type has correct max media count', function () {
-    expect(ContentType::InstagramFeed->maxMediaCount())->toBe(1);
-    expect(ContentType::InstagramCarousel->maxMediaCount())->toBe(10);
+    expect(ContentType::InstagramFeed->maxMediaCount())->toBe(10);
     expect(ContentType::InstagramReel->maxMediaCount())->toBe(1);
     expect(ContentType::LinkedInCarousel->maxMediaCount())->toBe(20);
     expect(ContentType::XPost->maxMediaCount())->toBe(4);
