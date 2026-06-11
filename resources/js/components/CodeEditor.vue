@@ -3,10 +3,12 @@ import { indentWithTab } from '@codemirror/commands';
 import { json } from '@codemirror/lang-json';
 import { EditorState } from '@codemirror/state';
 import { EditorView, keymap, placeholder as placeholderExt } from '@codemirror/view';
+import { IconCopy } from '@tabler/icons-vue';
 import { basicSetup } from 'codemirror';
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 import debounce from '@/debounce';
+import { copyToClipboard } from '@/lib/utils';
 
 const props = withDefaults(
     defineProps<{
@@ -155,5 +157,18 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-    <div ref="editorContainer" class="code-editor h-full w-full" />
+    <div class="relative h-full w-full">
+        <div ref="editorContainer" class="code-editor h-full w-full" />
+
+        <button
+            v-if="modelValue"
+            type="button"
+            class="absolute right-2 top-2 z-10 inline-flex size-7 items-center justify-center rounded-md border-2 border-foreground bg-card shadow-[1px_1px_0_var(--foreground)] transition hover:-translate-x-px hover:-translate-y-px hover:shadow-[2px_2px_0_var(--foreground)] active:translate-x-0 active:translate-y-0 active:shadow-[0_0_0_var(--foreground)]"
+            :title="$t('common.actions.copy')"
+            :aria-label="$t('common.actions.copy')"
+            @click="copyToClipboard(modelValue)"
+        >
+            <IconCopy class="size-3.5" stroke-width="2.5" />
+        </button>
+    </div>
 </template>

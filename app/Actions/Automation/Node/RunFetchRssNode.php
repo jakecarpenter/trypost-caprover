@@ -9,9 +9,12 @@ use App\Enums\Automation\Run\Status as RunStatus;
 use App\Jobs\Automation\ProcessAutomationNode;
 use App\Models\AutomationNodeState;
 use App\Models\AutomationRun;
+use App\Services\Automation\ExpressionResolver;
+use App\Services\Brand\SafeHttpFetcher;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use RuntimeException;
 use SimpleXMLElement;
 use Throwable;
 
@@ -32,12 +35,26 @@ class RunFetchRssNode
 {
     private const ITEM_HANDLE = 'default';
 
+    public function __construct(
+        private ExpressionResolver $resolver,
+        private SafeHttpFetcher $safeHttp,
+    ) {}
+
     public function __invoke(AutomationRun $run, array $config): NodeRunResult
     {
-        $feedUrl = (string) data_get($config, 'feed_url', '');
+        $feedUrl = $this->resolver->resolve((string) data_get($config, 'feed_url', ''), $run->resolverContext());
 
         if ($feedUrl === '') {
             return NodeRunResult::failed('Fetch RSS node missing feed_url.');
+        }
+
+        try {
+            $this->safeHttp->guardAgainstSsrf($feedUrl);
+        } catch (RuntimeException) {
+            return NodeRunResult::failed(__('automations.errors.url_not_allowed'), [
+                'reason' => 'url_not_allowed',
+                'url' => $feedUrl,
+            ]);
         }
 
         $response = Http::get($feedUrl);

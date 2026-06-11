@@ -17,6 +17,7 @@ class UpdateAutomation
             'name' => $data['name'] ?? $automation->name,
             'nodes' => $data['nodes'] ?? $automation->nodes,
             'connections' => $data['connections'] ?? $automation->connections,
+            'variables' => $data['variables'] ?? $automation->variables,
         ]);
 
         return $automation->fresh();

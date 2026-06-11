@@ -44,7 +44,7 @@ $rssFeed = function (string $title, string $guid, string $pubDate): string {
     return <<<XML
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0"><channel>
-  <item><title>{$title}</title><link>https://blog.example.com/{$guid}</link><guid>{$guid}</guid><pubDate>{$pubDate}</pubDate></item>
+  <item><title>{$title}</title><link>https://1.1.1.1/{$guid}</link><guid>{$guid}</guid><pubDate>{$pubDate}</pubDate></item>
 </channel></rss>
 XML;
 };
@@ -92,7 +92,7 @@ it('runs fetch_rss → generate → delay → publish, pausing at the delay then
     $fakeContentAgents('Post from RSS item');
 
     Http::fake([
-        'blog.example.com/*' => Http::response($rssFeed('Fresh News', 'fresh-1', 'Wed, 14 Jan 2026 12:00:00 +0000'), 200),
+        '1.1.1.1/*' => Http::response($rssFeed('Fresh News', 'fresh-1', 'Wed, 14 Jan 2026 12:00:00 +0000'), 200),
     ]);
 
     $workspace = Workspace::factory()->create();
@@ -101,7 +101,7 @@ it('runs fetch_rss → generate → delay → publish, pausing at the delay then
     $automation = Automation::factory()->for($workspace)->active()->create([
         'nodes' => [
             ['id' => 't', 'type' => 'trigger', 'position' => ['x' => 0, 'y' => 0], 'data' => ['trigger_type' => 'schedule']],
-            ['id' => 'f', 'type' => 'fetch_rss', 'position' => ['x' => 1, 'y' => 0], 'data' => ['feed_url' => 'https://blog.example.com/feed']],
+            ['id' => 'f', 'type' => 'fetch_rss', 'position' => ['x' => 1, 'y' => 0], 'data' => ['feed_url' => 'https://1.1.1.1/feed']],
             ['id' => 'g', 'type' => 'generate', 'position' => ['x' => 2, 'y' => 0], 'data' => [
                 'accounts' => [
                     ['social_account_id' => (string) $account->id, 'content_type' => 'instagram_feed', 'meta' => []],
@@ -150,8 +150,8 @@ it('runs fetch_rss → generate → delay → publish, pausing at the delay then
 
 it('runs http_request → condition (true) → webhook down the yes handle', function () {
     Http::fake([
-        'api.example.com/*' => Http::response(['status' => 'active'], 200),
-        'hooks.example.com/*' => Http::response(['ok' => true], 200),
+        '8.8.8.8/*' => Http::response(['status' => 'active'], 200),
+        '9.9.9.9/*' => Http::response(['ok' => true], 200),
     ]);
 
     $workspace = Workspace::factory()->create();
@@ -159,9 +159,9 @@ it('runs http_request → condition (true) → webhook down the yes handle', fun
     $automation = Automation::factory()->for($workspace)->active()->create([
         'nodes' => [
             ['id' => 't', 'type' => 'trigger', 'position' => ['x' => 0, 'y' => 0], 'data' => ['trigger_type' => 'schedule']],
-            ['id' => 'h', 'type' => 'http_request', 'position' => ['x' => 1, 'y' => 0], 'data' => ['url' => 'https://api.example.com/status', 'method' => 'GET']],
+            ['id' => 'h', 'type' => 'http_request', 'position' => ['x' => 1, 'y' => 0], 'data' => ['url' => 'https://8.8.8.8/status', 'method' => 'GET']],
             ['id' => 'c', 'type' => 'condition', 'position' => ['x' => 2, 'y' => 0], 'data' => ['field' => '{{ fetched.status }}', 'operator' => 'equals', 'value' => 'active']],
-            ['id' => 'w', 'type' => 'webhook', 'position' => ['x' => 3, 'y' => 0], 'data' => ['url' => 'https://hooks.example.com/notify', 'method' => 'POST', 'payload_template' => '{"ok":true}']],
+            ['id' => 'w', 'type' => 'webhook', 'position' => ['x' => 3, 'y' => 0], 'data' => ['url' => 'https://9.9.9.9/notify', 'method' => 'POST', 'payload_template' => '{"ok":true}']],
             ['id' => 'e', 'type' => 'end', 'position' => ['x' => 3, 'y' => 1], 'data' => []],
         ],
         'connections' => [
@@ -177,13 +177,13 @@ it('runs http_request → condition (true) → webhook down the yes handle', fun
     $run = $automation->runs()->latest()->first();
 
     expect($run->status)->toBe(RunStatus::Completed);
-    Http::assertSent(fn ($request) => str_contains($request->url(), 'hooks.example.com/notify'));
+    Http::assertSent(fn ($request) => str_contains($request->url(), '9.9.9.9/notify'));
 });
 
 it('runs http_request → condition (false) → end down the no handle without hitting the webhook', function () {
     Http::fake([
-        'api.example.com/*' => Http::response(['status' => 'inactive'], 200),
-        'hooks.example.com/*' => Http::response(['ok' => true], 200),
+        '8.8.8.8/*' => Http::response(['status' => 'inactive'], 200),
+        '9.9.9.9/*' => Http::response(['ok' => true], 200),
     ]);
 
     $workspace = Workspace::factory()->create();
@@ -191,9 +191,9 @@ it('runs http_request → condition (false) → end down the no handle without h
     $automation = Automation::factory()->for($workspace)->active()->create([
         'nodes' => [
             ['id' => 't', 'type' => 'trigger', 'position' => ['x' => 0, 'y' => 0], 'data' => ['trigger_type' => 'schedule']],
-            ['id' => 'h', 'type' => 'http_request', 'position' => ['x' => 1, 'y' => 0], 'data' => ['url' => 'https://api.example.com/status', 'method' => 'GET']],
+            ['id' => 'h', 'type' => 'http_request', 'position' => ['x' => 1, 'y' => 0], 'data' => ['url' => 'https://8.8.8.8/status', 'method' => 'GET']],
             ['id' => 'c', 'type' => 'condition', 'position' => ['x' => 2, 'y' => 0], 'data' => ['field' => '{{ fetched.status }}', 'operator' => 'equals', 'value' => 'active']],
-            ['id' => 'w', 'type' => 'webhook', 'position' => ['x' => 3, 'y' => 0], 'data' => ['url' => 'https://hooks.example.com/notify', 'method' => 'POST', 'payload_template' => '{"ok":true}']],
+            ['id' => 'w', 'type' => 'webhook', 'position' => ['x' => 3, 'y' => 0], 'data' => ['url' => 'https://9.9.9.9/notify', 'method' => 'POST', 'payload_template' => '{"ok":true}']],
             ['id' => 'e', 'type' => 'end', 'position' => ['x' => 3, 'y' => 1], 'data' => []],
         ],
         'connections' => [
@@ -209,14 +209,14 @@ it('runs http_request → condition (false) → end down the no handle without h
     $run = $automation->runs()->latest()->first();
 
     expect($run->status)->toBe(RunStatus::Completed);
-    Http::assertNotSent(fn ($request) => str_contains($request->url(), 'hooks.example.com/notify'));
+    Http::assertNotSent(fn ($request) => str_contains($request->url(), '9.9.9.9/notify'));
 });
 
 it('runs fetch_rss → (no_items) → end when the feed yields no new items and creates no post', function () use ($rssFeed) {
     Carbon::setTestNow('2026-01-15 10:00:00');
 
     Http::fake([
-        'blog.example.com/*' => Http::response($rssFeed('Stale', 'stale-1', 'Mon, 01 Jan 2024 12:00:00 +0000'), 200),
+        '1.1.1.1/*' => Http::response($rssFeed('Stale', 'stale-1', 'Mon, 01 Jan 2024 12:00:00 +0000'), 200),
     ]);
 
     $workspace = Workspace::factory()->create();
@@ -224,7 +224,7 @@ it('runs fetch_rss → (no_items) → end when the feed yields no new items and 
     $automation = Automation::factory()->for($workspace)->active()->create([
         'nodes' => [
             ['id' => 't', 'type' => 'trigger', 'position' => ['x' => 0, 'y' => 0], 'data' => ['trigger_type' => 'schedule']],
-            ['id' => 'f', 'type' => 'fetch_rss', 'position' => ['x' => 1, 'y' => 0], 'data' => ['feed_url' => 'https://blog.example.com/feed']],
+            ['id' => 'f', 'type' => 'fetch_rss', 'position' => ['x' => 1, 'y' => 0], 'data' => ['feed_url' => 'https://1.1.1.1/feed']],
             ['id' => 'g', 'type' => 'generate', 'position' => ['x' => 2, 'y' => 0], 'data' => ['prompt_template' => 'x', 'include_image' => false]],
             ['id' => 'e', 'type' => 'end', 'position' => ['x' => 2, 'y' => 1], 'data' => []],
         ],

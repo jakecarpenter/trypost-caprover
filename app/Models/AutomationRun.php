@@ -38,6 +38,23 @@ class AutomationRun extends Model
         return $this->belongsTo(Automation::class);
     }
 
+    /**
+     * Context for template (`{{ ... }}`) resolution: the run context plus the
+     * automation's workflow variables, merged in-memory. Variables are NEVER
+     * persisted into the run context (they're encrypted at rest and would
+     * otherwise leak in plaintext via the run/node-run API), so we compute this
+     * on demand at resolve time only.
+     *
+     * @return array<string, mixed>
+     */
+    public function resolverContext(): array
+    {
+        return array_merge(
+            $this->context ?? [],
+            ['variables' => $this->automation->resolvedVariables()],
+        );
+    }
+
     public function triggerItem(): BelongsTo
     {
         return $this->belongsTo(AutomationTriggerItem::class, 'trigger_item_id');

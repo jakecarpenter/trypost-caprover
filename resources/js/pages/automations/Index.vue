@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, InfiniteScroll, Link, router } from '@inertiajs/vue3';
+import { Head, InfiniteScroll, router } from '@inertiajs/vue3';
 import { IconBolt, IconCircleCheck, IconCircleDot, IconCircleX, IconPlus } from '@tabler/icons-vue';
 import { trans } from 'laravel-vue-i18n';
 import { ref } from 'vue';
@@ -20,7 +20,6 @@ import {
 import dayjs from '@/dayjs';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {
-    edit as editAutomation,
     show as showAutomation,
     store as storeAutomation,
 } from '@/routes/app/automations';
@@ -95,7 +94,6 @@ const handleCreate = () => {
                                 <TableHead>{{ $t('automations.index.columns.name') }}</TableHead>
                                 <TableHead>{{ $t('automations.index.columns.status') }}</TableHead>
                                 <TableHead>{{ $t('automations.index.columns.created') }}</TableHead>
-                                <TableHead class="text-right">{{ $t('automations.index.columns.actions') }}</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody id="automations-body">
@@ -113,11 +111,6 @@ const handleCreate = () => {
                                     </Badge>
                                 </TableCell>
                                 <TableCell>{{ formatDate(automation.created_at) }}</TableCell>
-                                <TableCell class="text-right" @click.stop>
-                                    <Link :href="editAutomation.url(automation.id)">
-                                        <Button variant="outline" size="sm">{{ $t('automations.actions.edit') }}</Button>
-                                    </Link>
-                                </TableCell>
                             </TableRow>
                         </TableBody>
                     </Table>

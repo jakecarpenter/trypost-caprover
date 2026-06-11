@@ -18,14 +18,14 @@ beforeEach(fn () => Bus::fake());
 
 it('runs in single-response mode when items_path is empty', function () {
     Http::fake([
-        'api.example.com/*' => Http::response(['title' => 'Hello', 'id' => 42], 200),
+        '1.1.1.1/*' => Http::response(['title' => 'Hello', 'id' => 42], 200),
     ]);
 
     $automation = Automation::factory()->active()->create();
     $run = AutomationRun::factory()->for($automation)->create(['current_node_id' => 'http_1']);
 
     $result = app(RunHttpRequestNode::class)($run, [
-        'url' => 'https://api.example.com/lookup',
+        'url' => 'https://1.1.1.1/lookup',
         'method' => 'GET',
         'auth_type' => 'none',
     ]);
@@ -35,10 +35,27 @@ it('runs in single-response mode when items_path is empty', function () {
     expect($result->output['fetch']['spawned'])->toBe(0);
 });
 
+it('blocks a request to a private or reserved address', function () {
+    Http::fake();
+
+    $automation = Automation::factory()->active()->create();
+    $run = AutomationRun::factory()->for($automation)->create(['current_node_id' => 'http_1']);
+
+    $result = app(RunHttpRequestNode::class)($run, [
+        'url' => 'http://127.0.0.1/internal',
+        'method' => 'GET',
+        'auth_type' => 'none',
+    ]);
+
+    expect($result->status)->toBe(NodeRunStatus::Failed);
+    expect($result->error['reason'])->toBe('url_not_allowed');
+    Http::assertNothingSent();
+});
+
 it('processes first new item and spawns siblings when items_path is set', function () {
     Carbon::setTestNow('2026-01-15 10:00:00');
     Http::fake([
-        'api.example.com/*' => Http::response([
+        '1.1.1.1/*' => Http::response([
             'items' => [
                 ['id' => 'a1', 'published_at' => '2025-12-31T00:00:00Z'],
                 ['id' => 'a2', 'published_at' => '2026-01-05T00:00:00Z'],
@@ -68,7 +85,7 @@ it('processes first new item and spawns siblings when items_path is set', functi
     $run = AutomationRun::factory()->for($automation)->create(['current_node_id' => 'http_1']);
 
     $result = app(RunHttpRequestNode::class)($run, [
-        'url' => 'https://api.example.com/items',
+        'url' => 'https://1.1.1.1/items',
         'method' => 'GET',
         'auth_type' => 'none',
         'items_path' => 'items',
@@ -83,13 +100,13 @@ it('processes first new item and spawns siblings when items_path is set', functi
 });
 
 it('sends bearer token header decrypting it on the fly', function () {
-    Http::fake(['api.example.com/*' => Http::response(['ok' => true], 200)]);
+    Http::fake(['1.1.1.1/*' => Http::response(['ok' => true], 200)]);
 
     $automation = Automation::factory()->active()->create();
     $run = AutomationRun::factory()->for($automation)->create(['current_node_id' => 'http_1']);
 
     app(RunHttpRequestNode::class)($run, [
-        'url' => 'https://api.example.com/me',
+        'url' => 'https://1.1.1.1/me',
         'method' => 'GET',
         'auth_type' => 'bearer',
         'auth_token' => Crypt::encryptString('secret-token-123'),
@@ -99,13 +116,13 @@ it('sends bearer token header decrypting it on the fly', function () {
 });
 
 it('sends api_key header with custom header name', function () {
-    Http::fake(['api.example.com/*' => Http::response(['ok' => true], 200)]);
+    Http::fake(['1.1.1.1/*' => Http::response(['ok' => true], 200)]);
 
     $automation = Automation::factory()->active()->create();
     $run = AutomationRun::factory()->for($automation)->create(['current_node_id' => 'http_1']);
 
     app(RunHttpRequestNode::class)($run, [
-        'url' => 'https://api.example.com/me',
+        'url' => 'https://1.1.1.1/me',
         'method' => 'GET',
         'auth_type' => 'api_key',
         'auth_header_name' => 'X-Custom-Key',
@@ -116,7 +133,7 @@ it('sends api_key header with custom header name', function () {
 });
 
 it('posts a body rendered from the template with run context', function () {
-    Http::fake(['api.example.com/*' => Http::response(['ok' => true], 200)]);
+    Http::fake(['1.1.1.1/*' => Http::response(['ok' => true], 200)]);
 
     $automation = Automation::factory()->active()->create();
     $run = AutomationRun::factory()->for($automation)->create([
@@ -125,7 +142,7 @@ it('posts a body rendered from the template with run context', function () {
     ]);
 
     app(RunHttpRequestNode::class)($run, [
-        'url' => 'https://api.example.com/notify',
+        'url' => 'https://1.1.1.1/notify',
         'method' => 'POST',
         'auth_type' => 'none',
         'body_template' => '{"post_id":"{{ trigger.post.id }}"}',
@@ -135,13 +152,13 @@ it('posts a body rendered from the template with run context', function () {
 });
 
 it('sends the branded user-agent header', function () {
-    Http::fake(['api.example.com/*' => Http::response(['ok' => true], 200)]);
+    Http::fake(['1.1.1.1/*' => Http::response(['ok' => true], 200)]);
 
     $automation = Automation::factory()->active()->create();
     $run = AutomationRun::factory()->for($automation)->create(['current_node_id' => 'http_1']);
 
     app(RunHttpRequestNode::class)($run, [
-        'url' => 'https://api.example.com/me',
+        'url' => 'https://1.1.1.1/me',
         'method' => 'GET',
         'auth_type' => 'none',
         'headers' => ['User-Agent' => 'user-supplied-agent'],
@@ -151,13 +168,13 @@ it('sends the branded user-agent header', function () {
 });
 
 it('sends custom headers configured in the editor', function () {
-    Http::fake(['api.example.com/*' => Http::response(['ok' => true], 200)]);
+    Http::fake(['1.1.1.1/*' => Http::response(['ok' => true], 200)]);
 
     $automation = Automation::factory()->active()->create();
     $run = AutomationRun::factory()->for($automation)->create(['current_node_id' => 'http_1']);
 
     app(RunHttpRequestNode::class)($run, [
-        'url' => 'https://api.example.com/me',
+        'url' => 'https://1.1.1.1/me',
         'method' => 'GET',
         'auth_type' => 'none',
         'headers' => ['X-Custom' => 'v'],

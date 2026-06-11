@@ -137,7 +137,7 @@ it('does not mutate the post or dispatch PublishPost when publish node runs in d
 
 it('does not advance http watermark or spawn siblings in dry mode', function () {
     Http::fake([
-        'api.example.com/*' => Http::response([
+        '8.8.8.8/*' => Http::response([
             'items' => [
                 ['id' => 'a1', 'published_at' => '2026-01-01T00:00:00Z'],
                 ['id' => 'a2', 'published_at' => '2026-01-02T00:00:00Z'],
@@ -160,7 +160,7 @@ it('does not advance http watermark or spawn siblings in dry mode', function () 
     ]);
 
     $result = app(RunHttpRequestNode::class)($run, [
-        'url' => 'https://api.example.com/items',
+        'url' => 'https://8.8.8.8/items',
         'method' => 'GET',
         'auth_type' => 'none',
         'items_path' => 'items',
@@ -175,7 +175,7 @@ it('does not advance http watermark or spawn siblings in dry mode', function () 
 });
 
 it('still hits the external URL in dry mode regardless of HTTP method', function () {
-    Http::fake(['api.example.com/*' => Http::response(['ok' => true], 200)]);
+    Http::fake(['8.8.8.8/*' => Http::response(['ok' => true], 200)]);
 
     $automation = Automation::factory()->for($this->workspace)->create();
     $run = AutomationRun::factory()->for($automation)->create([
@@ -184,13 +184,13 @@ it('still hits the external URL in dry mode regardless of HTTP method', function
     ]);
 
     app(RunHttpRequestNode::class)($run, [
-        'url' => 'https://api.example.com/notify',
+        'url' => 'https://8.8.8.8/notify',
         'method' => 'POST',
         'auth_type' => 'none',
         'body_template' => '{"x": 1}',
     ]);
 
-    Http::assertSent(fn ($request) => $request->method() === 'POST' && $request->url() === 'https://api.example.com/notify');
+    Http::assertSent(fn ($request) => $request->method() === 'POST' && $request->url() === 'https://8.8.8.8/notify');
 });
 
 it('does not advance rss watermark or spawn siblings in dry mode', function () {
@@ -202,7 +202,7 @@ it('does not advance rss watermark or spawn siblings in dry mode', function () {
         </channel></rss>
         XML;
 
-    Http::fake(['feed.example.com/*' => Http::response($rss, 200)]);
+    Http::fake(['1.1.1.1/*' => Http::response($rss, 200)]);
 
     $automation = Automation::factory()->for($this->workspace)->create();
     $run = AutomationRun::factory()->for($automation)->create([
@@ -210,7 +210,7 @@ it('does not advance rss watermark or spawn siblings in dry mode', function () {
         'current_node_id' => 'rss_1',
     ]);
 
-    $result = app(RunFetchRssNode::class)($run, ['feed_url' => 'https://feed.example.com/rss']);
+    $result = app(RunFetchRssNode::class)($run, ['feed_url' => 'https://1.1.1.1/rss']);
 
     expect($result->status->value)->toBe('completed');
     expect($result->output['fetch']['spawned'])->toBe(0);

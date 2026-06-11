@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { IconAlertCircle, IconChevronRight, IconCircleCheck, IconCircleDot, IconInfoCircle, IconLoader2, IconPlayerPlay, IconX } from '@tabler/icons-vue';
+import { IconAlertCircle, IconChevronRight, IconCircleCheck, IconCircleDot, IconInfoCircle, IconLoader2, IconPlayerPlay } from '@tabler/icons-vue';
+import { trans } from 'laravel-vue-i18n';
 import { ref } from 'vue';
 import { toast } from 'vue-sonner';
-import { trans } from 'laravel-vue-i18n';
 
+import { showRun as showRunRoute } from '@/actions/App/Http/Controllers/App/AutomationController';
 import JsonViewer from '@/components/JsonViewer.vue';
-import { useAutomationEcho } from '@/composables/echo/useAutomationEcho';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useAutomationEcho } from '@/composables/echo/useAutomationEcho';
 import { test as testAutomation } from '@/routes/app/automations';
-import { showRun as showRunRoute } from '@/actions/App/Http/Controllers/App/AutomationController';
 
 interface NodeRun {
     id: string;
@@ -34,8 +34,6 @@ interface Run {
 }
 
 const props = defineProps<{ automationId: string; beforeRun?: () => Promise<boolean> | boolean }>();
-
-const open = defineModel<boolean>('open', { default: false });
 
 const isStarting = ref(false);
 const realData = ref(false);
@@ -95,7 +93,6 @@ const start = async () => {
         await fetchRun(runId);
     } catch {
         toast.error(trans('automations.test.error_starting'));
-        open.value = false;
     } finally {
         isStarting.value = false;
     }
@@ -107,8 +104,6 @@ const runTest = async () => {
     if (proceed === false) return;
     await start();
 };
-
-const close = () => { open.value = false; };
 
 const statusLabel = (status: string): string => {
     const map: Record<string, string> = {
@@ -139,25 +134,17 @@ const isZeroFetchResult = (nodeRun: NodeRun): boolean => {
 </script>
 
 <template>
-    <aside class="flex w-[36rem] flex-shrink-0 flex-col gap-5 overflow-y-auto border-l-2 border-foreground/10 px-5 pt-5 pb-12">
-        <div class="flex items-start justify-between gap-3">
-            <div class="min-w-0">
-                <div class="flex items-center gap-2">
-                    <h2 class="text-lg font-bold">{{ $t('automations.test.title') }}</h2>
-                    <span
-                        v-if="run?.is_dry_run"
-                        class="inline-flex -rotate-3 items-center rounded-md border-2 border-foreground bg-amber-200 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-foreground shadow-[2px_2px_0_var(--foreground)]"
-                    >
-                        {{ $t('automations.test.dry_badge') }}
-                    </span>
-                </div>
-                <p class="mt-1 text-sm text-foreground/60">
-                    {{ run?.is_dry_run === false ? $t('automations.test.real_data_hint') : $t('automations.test.description') }}
-                </p>
-            </div>
-            <Button variant="ghost" size="icon-sm" @click="close">
-                <IconX class="size-5" />
-            </Button>
+    <div class="flex flex-col gap-5 px-5 pt-5 pb-12">
+        <div class="min-w-0">
+            <span
+                v-if="run?.is_dry_run"
+                class="inline-flex -rotate-3 items-center rounded-md border-2 border-foreground bg-amber-200 px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-foreground shadow-[2px_2px_0_var(--foreground)]"
+            >
+                {{ $t('automations.test.dry_badge') }}
+            </span>
+            <p class="text-sm text-foreground/60" :class="{ 'mt-2': run?.is_dry_run }">
+                {{ run?.is_dry_run === false ? $t('automations.test.real_data_hint') : $t('automations.test.description') }}
+            </p>
         </div>
 
         <div class="flex items-center justify-between gap-3 rounded-xl border-2 border-foreground bg-card p-3 shadow-[3px_3px_0_var(--foreground)]">
@@ -244,5 +231,5 @@ const isZeroFetchResult = (nodeRun: NodeRun): boolean => {
                 </div>
             </li>
         </ul>
-    </aside>
+    </div>
 </template>

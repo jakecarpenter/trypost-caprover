@@ -1,5 +1,6 @@
 import type { InertiaLinkProps } from '@inertiajs/vue3';
 import { clsx, type ClassValue } from 'clsx';
+import { trans } from 'laravel-vue-i18n';
 import { twMerge } from 'tailwind-merge';
 import { toast } from 'vue-sonner';
 
@@ -44,14 +45,11 @@ export const formatMoneyCompact = (cents: number): string => {
     }).format(dollars);
 };
 
-export const copyToClipboard = async (
-    text: string,
-    message = 'Copied to clipboard',
-) => {
+export const copyToClipboard = async (text: string, message?: string) => {
     try {
         await navigator.clipboard.writeText(text);
-        toast.success(message);
+        toast.success(message ?? trans('common.actions.copied'));
     } catch {
-        toast.error('Failed to copy to clipboard');
+        toast.error(trans('common.actions.copy_failed'));
     }
 };

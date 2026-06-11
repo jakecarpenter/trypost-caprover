@@ -1,21 +1,20 @@
 <script setup lang="ts">
 import { usePage } from '@inertiajs/vue3';
-import { IconCheck } from '@tabler/icons-vue';
 import { computed, ref, watch } from 'vue';
 
+import ChannelConfigurator from '@/components/ChannelConfigurator.vue';
 import InputError from '@/components/InputError.vue';
-import FacebookSettings from '@/components/posts/editor/FacebookSettings.vue';
-import InstagramSettings from '@/components/posts/editor/InstagramSettings.vue';
-import LinkedInSettings from '@/components/posts/editor/LinkedInSettings.vue';
-import PinterestSettings from '@/components/posts/editor/PinterestSettings.vue';
-import TikTokSettings from '@/components/posts/editor/TikTokSettings.vue';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { ContentType } from '@/types/content-type';
-import { Platform } from '@/types/platform';
+import { getMediaRulesForContentType } from '@/composables/useMediaRules';
+import { getMediaIncompatibilityReason, getPlatformMetaIssue } from '@/composables/usePostCompliance';
 import type { PinterestBoard } from '@/types';
+import type { Channel } from '@/types/channel';
+import { ContentType } from '@/types/content-type';
+import type { MediaItem } from '@/types/media';
+import { Platform } from '@/types/platform';
 
 interface SocialAccount {
     id: string;
@@ -143,11 +142,15 @@ const local = ref<GenerateConfig>({
 
 watch(local, (val) => emit('update', val), { deep: true });
 
-const isSelected = (accountId: string): boolean =>
-    local.value.accounts.some((a) => a.social_account_id === accountId);
+const selectedAccountIds = computed(() => local.value.accounts.map((a) => a.social_account_id));
+
+const onToggleAccount = (accountId: string) => {
+    const account = accountById(accountId);
+    if (account) toggleAccount(account);
+};
 
 const toggleAccount = (account: SocialAccount) => {
-    if (isSelected(account.id)) {
+    if (selectedAccountIds.value.includes(account.id)) {
         local.value.accounts = local.value.accounts.filter((a) => a.social_account_id !== account.id);
         return;
     }
@@ -160,15 +163,6 @@ const toggleAccount = (account: SocialAccount) => {
         },
     ];
 };
-
-const selectedAccounts = computed(() =>
-    local.value.accounts
-        .map((entry) => {
-            const account = accountById(entry.social_account_id);
-            return account ? { entry, account } : null;
-        })
-        .filter((pair): pair is { entry: GenerateAccount; account: SocialAccount } => pair !== null),
-);
 
 const updateContentType = (accountId: string, value: string) => {
     const idx = local.value.accounts.findIndex((a) => a.social_account_id === accountId);
@@ -191,18 +185,83 @@ const getCreatorInfo = (account: SocialAccount): TikTokCreatorInfo | null =>
 const getBoards = (account: SocialAccount): PinterestBoard[] =>
     pinterestBoards.value[account.id] ?? [];
 
-// Carousel-capable content types: instagram_feed, linkedin_carousel,
-// linkedin_page_carousel, pinterest_carousel, tiktok_photo.
-const carouselCapableContentTypes = new Set([
-    ContentType.InstagramFeed,
-    ContentType.LinkedInCarousel,
-    ContentType.LinkedInPageCarousel,
-    ContentType.PinterestCarousel,
-    ContentType.TikTokPhoto,
-]);
+// Image-capability is derived from the SAME media rules the post editor uses
+// (per content type), never a hardcoded list — facebook_post, tiktok_photo,
+// linkedin_carousel etc. all accept multiple images. We cap AI image generation
+// at MAX_GENERATED_IMAGES regardless of how many a platform technically allows.
+const MAX_GENERATED_IMAGES = 10;
 
-const hasCarouselCapableAccount = computed(() =>
-    local.value.accounts.some((a) => carouselCapableContentTypes.has(a.content_type as ContentType)),
+const multiImageAccounts = computed(() =>
+    local.value.accounts.filter((a) => {
+        const rules = getMediaRulesForContentType(a.content_type);
+        return rules.acceptImages && rules.maxFiles > 1;
+    }),
+);
+
+const supportsMultiImage = computed(() => multiImageAccounts.value.length > 0);
+
+const imageCountCap = computed(() => {
+    if (!supportsMultiImage.value) return 1;
+    const maxAcrossAccounts = Math.max(
+        ...multiImageAccounts.value.map((a) => getMediaRulesForContentType(a.content_type).maxFiles),
+    );
+    return Math.min(MAX_GENERATED_IMAGES, maxAcrossAccounts);
+});
+
+const imageCountOptions = computed(() =>
+    Array.from({ length: Math.max(0, imageCountCap.value - 1) }, (_, i) => i + 2),
+);
+
+// How many images each selected account will receive — the carousel slide count
+// when any account supports multiple, otherwise a single image when enabled.
+const intendedImageCount = computed(() =>
+    supportsMultiImage.value
+        ? local.value.target_slide_count
+        : (local.value.include_image ? 1 : 0),
+);
+
+const syntheticImages = (count: number): MediaItem[] =>
+    Array.from({ length: Math.max(0, count) }, () => ({ type: 'image' }) as MediaItem);
+
+// Reuses the post editor's exact compliance: per-content-type media rules
+// (too many / too few images, image-not-supported, media-required) AND the
+// platform meta rules (TikTok privacy/disclosure, Pinterest board required).
+const accountIssue = (accountId: string): string | null => {
+    const entry = local.value.accounts.find((a) => a.social_account_id === accountId);
+    if (!entry) return null;
+    const mediaIssue = getMediaIncompatibilityReason(entry.content_type, syntheticImages(intendedImageCount.value));
+    if (mediaIssue) return mediaIssue;
+    const account = accountById(accountId);
+    return account ? getPlatformMetaIssue(account.platform, entry.meta) : null;
+};
+
+watch(imageCountCap, (cap) => {
+    if (local.value.target_slide_count > cap) {
+        local.value.target_slide_count = cap;
+    }
+    if (local.value.target_slide_count < 2) {
+        local.value.target_slide_count = Math.min(2, cap);
+    }
+});
+
+const channels = computed<Channel[]>(() =>
+    socialAccounts.value.map((account) => {
+        const entry = local.value.accounts.find((a) => a.social_account_id === account.id);
+        return {
+            id: account.id,
+            platform: account.platform,
+            displayName: account.display_name,
+            username: account.username,
+            avatarUrl: account.avatar_url,
+            socialAccount: account,
+            contentType: entry?.content_type ?? defaultContentTypeFor(account.platform),
+            meta: entry?.meta ?? {},
+            issue: accountIssue(account.id),
+            publishConfig: getPublishConfig(account),
+            creatorInfo: getCreatorInfo(account),
+            boards: getBoards(account),
+        };
+    }),
 );
 </script>
 
@@ -214,99 +273,22 @@ const hasCarouselCapableAccount = computed(() =>
             <p v-if="socialAccounts.length === 0" class="text-xs text-foreground/60">
                 {{ $t('automations.config.generate.social_accounts_empty') }}
             </p>
-            <div v-else class="space-y-2 px-1 pb-1">
-                <button
-                    v-for="account in socialAccounts"
-                    :key="account.id"
-                    type="button"
-                    class="relative flex w-full cursor-pointer items-center gap-2 rounded-xl border-2 border-foreground bg-card p-2.5 text-left text-sm shadow-2xs transition-all hover:bg-foreground/5"
-                    :class="{ '!bg-violet-100 shadow-md': isSelected(account.id) }"
-                    @click="toggleAccount(account)"
-                >
-                    <span class="inline-flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 border-foreground bg-card shadow-2xs">
-                        <img
-                            v-if="account.avatar_url"
-                            :src="account.avatar_url"
-                            :alt="account.display_name"
-                            class="size-full object-cover"
-                        />
-                        <span v-else class="text-xs font-bold text-foreground">{{ account.display_name.charAt(0).toUpperCase() }}</span>
-                    </span>
-                    <div class="min-w-0 flex-1">
-                        <p class="truncate text-xs font-bold leading-tight text-foreground">{{ account.display_name }}</p>
-                        <p class="truncate text-xs font-medium capitalize text-foreground/60">
-                            {{ account.platform }}<span v-if="account.username"> · @{{ account.username }}</span>
-                        </p>
-                    </div>
-                    <IconCheck
-                        v-if="isSelected(account.id)"
-                        class="absolute right-2 top-2 size-3.5 text-foreground"
-                        stroke-width="3"
-                    />
-                </button>
-            </div>
+            <ChannelConfigurator
+                v-else
+                :channels="channels"
+                :selected-ids="selectedAccountIds"
+                :preview-only="true"
+                @toggle="onToggleAccount"
+                @update:content-type="updateContentType"
+                @update:meta="updateMeta"
+            />
         </div>
 
-        <div v-if="selectedAccounts.length > 0" class="space-y-3">
-            <template v-for="{ entry, account } in selectedAccounts" :key="account.id">
-                <InstagramSettings
-                    v-if="account.platform === Platform.Instagram || account.platform === Platform.InstagramFacebook"
-                    :social-account="account"
-                    :content-type="entry.content_type"
-                    :media="[]"
-                    :meta="entry.meta"
-                    :preview-only="true"
-                    @update:content-type="updateContentType(account.id, $event)"
-                    @update:meta="updateMeta(account.id, $event)"
-                />
-                <FacebookSettings
-                    v-else-if="account.platform === Platform.Facebook"
-                    :social-account="account"
-                    :content-type="entry.content_type"
-                    :media="[]"
-                    :preview-only="true"
-                    @update:content-type="updateContentType(account.id, $event)"
-                />
-                <TikTokSettings
-                    v-else-if="account.platform === Platform.TikTok"
-                    :social-account="account"
-                    :publish-config="getPublishConfig(account)"
-                    :creator-info="getCreatorInfo(account)"
-                    :video-duration-sec="null"
-                    :content-type="entry.content_type"
-                    :meta="entry.meta"
-                    :preview-only="true"
-                    @update:content-type="updateContentType(account.id, $event)"
-                    @update:meta="updateMeta(account.id, $event)"
-                />
-                <PinterestSettings
-                    v-else-if="account.platform === Platform.Pinterest"
-                    :social-account="account"
-                    :content-type="entry.content_type"
-                    :media="[]"
-                    :boards="getBoards(account)"
-                    :meta="entry.meta"
-                    :preview-only="true"
-                    @update:content-type="updateContentType(account.id, $event)"
-                    @update:meta="updateMeta(account.id, $event)"
-                />
-                <LinkedInSettings
-                    v-else-if="account.platform === Platform.LinkedIn || account.platform === Platform.LinkedInPage"
-                    :social-account="account"
-                    :platform="account.platform"
-                    :content-type="entry.content_type"
-                    :media="[]"
-                    :preview-only="true"
-                    @update:content-type="updateContentType(account.id, $event)"
-                />
-            </template>
-        </div>
-
-        <div v-if="hasCarouselCapableAccount" class="space-y-2">
+        <div v-if="supportsMultiImage" class="space-y-2">
             <Label class="text-sm font-bold">{{ $t('automations.config.generate.target_slide_count') }}</Label>
             <div class="flex flex-wrap gap-2">
                 <Button
-                    v-for="n in [2, 3, 4, 5, 6, 7, 8, 9, 10]"
+                    v-for="n in imageCountOptions"
                     :key="n"
                     type="button"
                     size="icon"

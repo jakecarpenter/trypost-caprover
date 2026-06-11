@@ -17,8 +17,8 @@ import {
 import { getMediaValidationWarning } from '@/composables/useMedia';
 import { usePageErrors } from '@/composables/usePageErrors';
 import { getPlatformLogo } from '@/composables/usePlatformLogo';
-import { ContentType } from '@/types/content-type';
 import type { PinterestBoard } from '@/types';
+import { ContentType } from '@/types/content-type';
 import type { MediaItem } from '@/types/media';
 
 interface SocialAccount {

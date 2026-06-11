@@ -14,12 +14,33 @@ return [
         'pause' => 'Pausar',
         'delete' => 'Excluir',
         'retry' => 'Tentar novamente',
-        'add_node' => 'Adicionar nó',
+    ],
+
+    'tabs' => [
+        'build' => 'Montar',
+        'variables' => 'Variáveis',
         'test' => 'Testar',
     ],
 
+    'categories' => [
+        'sources' => 'Fontes',
+        'content' => 'Conteúdo',
+        'flow' => 'Fluxo',
+        'output' => 'Saída',
+    ],
+
+    'variables' => [
+        'title' => 'Variáveis do workflow',
+        'hint' => 'Valores reutilizáveis referenciados em qualquer lugar com {{ variables.KEY }}. Armazenados encriptados.',
+        'empty' => 'Nenhuma variável ainda.',
+        'key' => 'Chave',
+        'value' => 'Valor',
+        'key_placeholder' => 'API_KEY',
+        'value_placeholder' => 'Valor',
+        'add' => 'Nova variável',
+    ],
+
     'test' => [
-        'title' => 'Execução de teste',
         'description' => 'Executa a automação ponta a ponta usando um payload de gatilho sintético. Útil pra validar cada nó sem esperar o agendamento ou o feed real.',
         'starting' => 'Iniciando execução de teste…',
         'in_progress' => 'Em andamento',
@@ -53,7 +74,6 @@ return [
             'name' => 'Nome',
             'status' => 'Status',
             'created' => 'Criada em',
-            'actions' => 'Ações',
         ],
     ],
 
@@ -76,7 +96,6 @@ return [
         'pause_error_fallback' => 'Não foi possível pausar a automação.',
         'save_error_fallback' => 'Não foi possível salvar a automação.',
         'save_success' => 'Automação salva.',
-        'config_title' => 'Configuração :type',
         'empty_canvas_title' => 'Comece a construir sua automação',
         'empty_canvas_description' => 'Arraste um nó do painel esquerdo para começar.',
         'name_placeholder' => 'Automação sem título',
@@ -253,6 +272,7 @@ return [
         'no_generated_post' => 'Nenhum post gerado encontrado para esta execução.',
         'webhook_server_error' => 'Erro no servidor do webhook.',
         'webhook_invalid_payload_json' => 'O template do payload não é um JSON válido.',
+        'url_not_allowed' => 'A URL da requisição aponta para um endereço privado ou inacessível e foi bloqueada.',
         'node_no_longer_exists' => 'O nó :node_id não existe mais nesta automação.',
         'no_trigger_connection' => 'Nenhum nó conectado ao nó de trigger.',
     ],

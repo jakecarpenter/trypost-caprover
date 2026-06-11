@@ -8,6 +8,8 @@ use App\Enums\Automation\Condition\Operator as ConditionOperator;
 use App\Enums\Automation\Node\Type as NodeType;
 use App\Enums\Automation\Publish\Mode as PublishMode;
 use App\Enums\Automation\Trigger\Type as TriggerType;
+use App\Services\Automation\GenerateNodeValidator;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -38,6 +40,9 @@ class UpdateAutomationRequest extends FormRequest
             'connections.*.target' => ['required', 'string'],
             'connections.*.source_handle' => ['nullable', 'string'],
             'connections.*.target_handle' => ['nullable', 'string'],
+            'variables' => ['sometimes', 'array', 'max:50'],
+            'variables.*.key' => ['required', 'string', 'max:60', 'regex:/^[A-Za-z_][A-Za-z0-9_]*$/', 'distinct'],
+            'variables.*.value' => ['nullable', 'string'],
         ];
 
         // Per-node data validation. We build these dynamically so each node's
@@ -57,6 +62,36 @@ class UpdateAutomationRequest extends FormRequest
     }
 
     /**
+     * Block saving a Generate node whose intended image count doesn't fit a
+     * selected account's content-type (mirrors the inline frontend validation),
+     * keyed so the frontend surfaces it under that node's accounts field.
+     */
+    public function withValidator(Validator $validator): void
+    {
+        $validator->after(function (Validator $validator): void {
+            $nodes = $this->input('nodes', []);
+
+            if (! is_array($nodes)) {
+                return;
+            }
+
+            $generateValidator = app(GenerateNodeValidator::class);
+
+            foreach ($nodes as $i => $node) {
+                if (data_get($node, 'type') !== NodeType::Generate->value) {
+                    continue;
+                }
+
+                $issue = $generateValidator->issueFor((array) data_get($node, 'data', []));
+
+                if ($issue !== null) {
+                    $validator->errors()->add("nodes.{$i}.data.accounts", $issue);
+                }
+            }
+        });
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function attributes(): array
@@ -73,7 +108,6 @@ class UpdateAutomationRequest extends FormRequest
             'nodes.*.data.method' => 'method',
             'nodes.*.data.trigger_type' => 'trigger type',
             'nodes.*.data.prompt_template' => 'prompt template',
-            'nodes.*.data.image_source' => 'image source',
             'nodes.*.data.accounts' => 'accounts',
         ];
     }
@@ -109,8 +143,7 @@ class UpdateAutomationRequest extends FormRequest
             NodeType::Generate->value => [
                 'accounts' => ['required', 'array', 'min:1'],
                 'prompt_template' => ['required', 'string'],
-                'image_source' => ['required', Rule::in(['ai', 'unsplash', 'none'])],
-                'target_slide_count' => ['nullable', 'integer', 'min:1', 'max:20'],
+                'target_slide_count' => ['nullable', 'integer', 'min:1', 'max:'.GenerateNodeValidator::MAX_GENERATED_IMAGES],
             ],
             NodeType::Delay->value => [
                 'duration' => ['required', 'integer', 'min:1'],

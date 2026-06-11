@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Models\Workspace;
 use App\Services\Ai\RecordAiUsage;
 use App\Services\Automation\ExpressionResolver;
+use App\Services\Automation\GenerateNodeValidator;
 use App\Services\Image\PostImagePipeline;
 use Illuminate\Support\Facades\Log;
 
@@ -26,7 +27,7 @@ class RunGenerateNode
 
     public function __invoke(AutomationRun $run, array $config): NodeRunResult
     {
-        $context = $run->context ?? [];
+        $context = $run->resolverContext();
         $prompt = $this->resolver->resolve(data_get($config, 'prompt_template', ''), $context);
 
         $accountsConfig = $this->resolveAccountsConfig($config);
@@ -238,26 +239,25 @@ class RunGenerateNode
      */
     public function deriveFormat(array $accountsConfig, array $config): array
     {
-        $carouselCapable = [
-            ContentType::InstagramFeed->value,
-            ContentType::LinkedInCarousel->value,
-            ContentType::LinkedInPageCarousel->value,
-            ContentType::PinterestCarousel->value,
-            ContentType::TikTokPhoto->value,
-        ];
-
-        $hasCarouselAccount = false;
+        // Multi-image capability comes from the same ContentType rules the
+        // publish flow uses — never a hardcoded list — so facebook_post,
+        // tiktok_photo, linkedin_carousel etc. are all recognised. We cap the
+        // slide count at MAX_GENERATED_IMAGES and at the tightest selected
+        // account's limit.
+        $maxImagesAcross = 0;
         foreach ($accountsConfig as $entry) {
-            if (in_array(data_get($entry, 'content_type'), $carouselCapable, strict: true)) {
-                $hasCarouselAccount = true;
-                break;
+            $contentType = ContentType::tryFrom((string) data_get($entry, 'content_type'));
+            if ($contentType instanceof ContentType && $contentType->supportsImage() && $contentType->maxMediaCount() > 1) {
+                $maxImagesAcross = max($maxImagesAcross, $contentType->maxMediaCount());
             }
         }
 
         $targetSlideCount = (int) data_get($config, 'target_slide_count', 1);
 
-        if ($hasCarouselAccount && $targetSlideCount > 1) {
-            return ['format' => 'carousel', 'slide_count' => $targetSlideCount];
+        if ($maxImagesAcross > 1 && $targetSlideCount > 1) {
+            $cap = min(GenerateNodeValidator::MAX_GENERATED_IMAGES, $maxImagesAcross);
+
+            return ['format' => 'carousel', 'slide_count' => min($targetSlideCount, $cap)];
         }
 
         return ['format' => 'single', 'slide_count' => 1];

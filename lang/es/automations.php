@@ -14,12 +14,33 @@ return [
         'pause' => 'Pausar',
         'delete' => 'Eliminar',
         'retry' => 'Reintentar',
-        'add_node' => 'Agregar nodo',
+    ],
+
+    'tabs' => [
+        'build' => 'Construir',
+        'variables' => 'Variables',
         'test' => 'Probar',
     ],
 
+    'categories' => [
+        'sources' => 'Fuentes',
+        'content' => 'Contenido',
+        'flow' => 'Flujo',
+        'output' => 'Salida',
+    ],
+
+    'variables' => [
+        'title' => 'Variables del workflow',
+        'hint' => 'Valores reutilizables referenciados en cualquier lugar con {{ variables.KEY }}. Almacenados cifrados.',
+        'empty' => 'Aún no hay variables.',
+        'key' => 'Clave',
+        'value' => 'Valor',
+        'key_placeholder' => 'API_KEY',
+        'value_placeholder' => 'Valor',
+        'add' => 'Nueva variable',
+    ],
+
     'test' => [
-        'title' => 'Ejecución de prueba',
         'description' => 'Ejecuta la automatización de punta a punta usando un payload de disparo sintético. Útil para validar cada nodo sin esperar el cronograma o el feed real.',
         'starting' => 'Iniciando ejecución de prueba…',
         'in_progress' => 'En progreso',
@@ -53,7 +74,6 @@ return [
             'name' => 'Nombre',
             'status' => 'Estado',
             'created' => 'Creada',
-            'actions' => 'Acciones',
         ],
     ],
 
@@ -76,7 +96,6 @@ return [
         'pause_error_fallback' => 'No se pudo pausar la automatización.',
         'save_error_fallback' => 'No se pudo guardar la automatización.',
         'save_success' => 'Automatización guardada.',
-        'config_title' => 'Config. de :type',
         'empty_canvas_title' => 'Empieza a construir tu automatización',
         'empty_canvas_description' => 'Arrastra un nodo del panel izquierdo para empezar.',
         'name_placeholder' => 'Automatización sin título',
@@ -253,6 +272,7 @@ return [
         'no_generated_post' => 'No se encontró un post generado en la ejecución.',
         'webhook_server_error' => 'Error del servidor del webhook.',
         'webhook_invalid_payload_json' => 'La plantilla de payload no es un JSON válido.',
+        'url_not_allowed' => 'La URL de la petición apunta a una dirección privada o inaccesible y fue bloqueada.',
         'node_no_longer_exists' => 'El nodo :node_id ya no existe en la automatización.',
         'no_trigger_connection' => 'Ningún nodo está conectado al nodo disparador.',
     ],

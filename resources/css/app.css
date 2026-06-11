@@ -225,6 +225,7 @@
 .automation-node__icon-tile--emerald { background: #d1fae5; color: #047857; }
 .automation-node__icon-tile--slate   { background: #e2e8f0; color: #334155; }
 .automation-node__icon-tile--zinc    { background: #e4e4e7; color: #27272a; }
+.automation-node__icon-tile--cyan    { background: #cffafe; color: #155e75; }
 
 .automation-node--accent-violet  .automation-node__header { background: #f5f3ff; }
 .automation-node--accent-blue    .automation-node__header { background: #eff6ff; }
@@ -233,6 +234,7 @@
 .automation-node--accent-emerald .automation-node__header { background: #ecfdf5; }
 .automation-node--accent-slate   .automation-node__header { background: #f1f5f9; }
 .automation-node--accent-zinc    .automation-node__header { background: #f4f4f5; }
+.automation-node--accent-cyan    .automation-node__header { background: #ecfeff; }
 
 .automation-node__title {
   min-width: 0;

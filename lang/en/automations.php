@@ -14,12 +14,33 @@ return [
         'pause' => 'Pause',
         'delete' => 'Delete',
         'retry' => 'Retry',
-        'add_node' => 'Add node',
+    ],
+
+    'tabs' => [
+        'build' => 'Build',
+        'variables' => 'Variables',
         'test' => 'Test',
     ],
 
+    'categories' => [
+        'sources' => 'Sources',
+        'content' => 'Content',
+        'flow' => 'Flow',
+        'output' => 'Output',
+    ],
+
+    'variables' => [
+        'title' => 'Workflow variables',
+        'hint' => 'Reusable values referenced anywhere with {{ variables.KEY }}. Stored encrypted.',
+        'empty' => 'No variables yet.',
+        'key' => 'Key',
+        'value' => 'Value',
+        'key_placeholder' => 'API_KEY',
+        'value_placeholder' => 'Value',
+        'add' => 'New variable',
+    ],
+
     'test' => [
-        'title' => 'Test run',
         'description' => 'Runs the automation end-to-end using a synthesized trigger payload. Useful for validating each node without waiting for the real schedule or feed.',
         'starting' => 'Starting test run…',
         'in_progress' => 'In progress',
@@ -53,7 +74,6 @@ return [
             'name' => 'Name',
             'status' => 'Status',
             'created' => 'Created',
-            'actions' => 'Actions',
         ],
     ],
 
@@ -76,7 +96,6 @@ return [
         'pause_error_fallback' => 'Could not pause automation.',
         'save_error_fallback' => 'Could not save automation.',
         'save_success' => 'Automation saved.',
-        'config_title' => ':type config',
         'empty_canvas_title' => 'Start building your automation',
         'empty_canvas_description' => 'Drag a node from the left panel to get started.',
         'name_placeholder' => 'Untitled automation',
@@ -253,6 +272,7 @@ return [
         'no_generated_post' => 'No generated post found on run.',
         'webhook_server_error' => 'Webhook server error.',
         'webhook_invalid_payload_json' => 'The payload template is not valid JSON.',
+        'url_not_allowed' => 'The request URL points to a private or unreachable address and was blocked.',
         'node_no_longer_exists' => 'Node :node_id no longer exists in the automation.',
         'no_trigger_connection' => 'No node connected to the Trigger node.',
     ],

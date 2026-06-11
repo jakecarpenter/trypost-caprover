@@ -1,21 +1,8 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { trans } from 'laravel-vue-i18n';
-import { toast } from 'vue-sonner';
-import {
-    IconBolt,
-    IconCircleX,
-    IconClock,
-    IconGitBranch,
-    IconRss,
-    IconSend,
-    IconSparkles,
-    IconTrash,
-    IconWebhook,
-    IconWorld,
-    IconX,
-} from '@tabler/icons-vue';
-import { computed, markRaw, ref, watch } from 'vue';
+import { IconBolt } from '@tabler/icons-vue';
+import { Background } from '@vue-flow/background';
+import { Controls } from '@vue-flow/controls';
 import {
     ConnectionMode,
     MarkerType,
@@ -26,38 +13,16 @@ import {
     type Node,
     type XYPosition,
 } from '@vue-flow/core';
-import { Background } from '@vue-flow/background';
-import { Controls } from '@vue-flow/controls';
+import { trans } from 'laravel-vue-i18n';
+import { computed, markRaw, ref, watch } from 'vue';
+import { toast } from 'vue-sonner';
 
 import '@vue-flow/core/dist/style.css';
 import '@vue-flow/core/dist/theme-default.css';
 import '@vue-flow/controls/dist/style.css';
 
-import { Button } from '@/components/ui/button';
-import AppLayout from '@/layouts/AppLayout.vue';
-import {
-    show as showAutomation,
-    update as updateAutomation,
-} from '@/routes/app/automations';
 
 import AutomationConnectionLine from '@/components/automations/AutomationConnectionLine.vue';
-import TestRunPanel from '@/components/automations/TestRunPanel.vue';
-import { useHistory } from '@/composables/history/useHistory';
-import { AddEdgeCommand } from '@/composables/history/commands/AddEdgeCommand';
-import { AddNodeCommand } from '@/composables/history/commands/AddNodeCommand';
-import { MoveNodeCommand } from '@/composables/history/commands/MoveNodeCommand';
-import { RemoveEdgeCommand } from '@/composables/history/commands/RemoveEdgeCommand';
-import { RemoveNodeCommand } from '@/composables/history/commands/RemoveNodeCommand';
-import { UpdateNodeDataCommand } from '@/composables/history/commands/UpdateNodeDataCommand';
-import { useShortcut } from '@/composables/useShortcut';
-import { usePageErrors } from '@/composables/usePageErrors';
-import type { Automation } from '@/types/automation/automation';
-import { NodeType } from '@/types/automation/node-type';
-import type { RawConnection } from '@/types/automation/raw-connection';
-import { ScheduleField } from '@/types/automation/schedule-field';
-import { TriggerType } from '@/types/automation/trigger-type';
-import ConditionNode from '@/components/automations/nodes/ConditionNode.vue';
-import DelayNode from '@/components/automations/nodes/DelayNode.vue';
 import EndNode from '@/components/automations/nodes/EndNode.vue';
 import HttpRequestNode from '@/components/automations/nodes/HttpRequestNode.vue';
 import FetchRssNode from '@/components/automations/nodes/FetchRssNode.vue';
@@ -75,6 +40,29 @@ import GenerateNodeConfig from '@/components/automations/config/GenerateNodeConf
 import PublishNodeConfig from '@/components/automations/config/PublishNodeConfig.vue';
 import TriggerNodeConfig from '@/components/automations/config/TriggerNodeConfig.vue';
 import WebhookNodeConfig from '@/components/automations/config/WebhookNodeConfig.vue';
+import EditorSidebar from '@/components/automations/EditorSidebar.vue';
+import ConditionNode from '@/components/automations/nodes/ConditionNode.vue';
+import DelayNode from '@/components/automations/nodes/DelayNode.vue';
+import { Button } from '@/components/ui/button';
+import { AddEdgeCommand } from '@/composables/history/commands/AddEdgeCommand';
+import { AddNodeCommand } from '@/composables/history/commands/AddNodeCommand';
+import { MoveNodeCommand } from '@/composables/history/commands/MoveNodeCommand';
+import { RemoveEdgeCommand } from '@/composables/history/commands/RemoveEdgeCommand';
+import { RemoveNodeCommand } from '@/composables/history/commands/RemoveNodeCommand';
+import { UpdateNodeDataCommand } from '@/composables/history/commands/UpdateNodeDataCommand';
+import { useHistory } from '@/composables/history/useHistory';
+import { usePageErrors } from '@/composables/usePageErrors';
+import { useShortcut } from '@/composables/useShortcut';
+import AppLayout from '@/layouts/AppLayout.vue';
+import {
+    show as showAutomation,
+    update as updateAutomation,
+} from '@/routes/app/automations';
+import type { Automation, AutomationVariable } from '@/types/automation/automation';
+import { NodeType } from '@/types/automation/node-type';
+import type { RawConnection } from '@/types/automation/raw-connection';
+import { ScheduleField } from '@/types/automation/schedule-field';
+import { TriggerType } from '@/types/automation/trigger-type';
 
 const props = defineProps<{ automation: Automation }>();
 
@@ -102,28 +90,6 @@ const configByType: Record<string, unknown> = {
     [NodeType.HttpRequest]: HttpRequestNodeConfig,
 };
 
-const nodeTypeOptions = computed(() => [
-    { type: NodeType.Trigger, label: trans('automations.nodes.trigger'), icon: IconBolt, accent: 'violet' },
-    { type: NodeType.FetchRss, label: trans('automations.nodes.fetch_rss'), icon: IconRss, accent: 'amber' },
-    { type: NodeType.HttpRequest, label: trans('automations.nodes.http_request'), icon: IconWorld, accent: 'slate' },
-    { type: NodeType.Generate, label: trans('automations.nodes.generate'), icon: IconSparkles, accent: 'blue' },
-    { type: NodeType.Delay, label: trans('automations.nodes.delay'), icon: IconClock, accent: 'amber' },
-    { type: NodeType.Condition, label: trans('automations.nodes.condition'), icon: IconGitBranch, accent: 'rose' },
-    { type: NodeType.Publish, label: trans('automations.nodes.publish'), icon: IconSend, accent: 'emerald' },
-    { type: NodeType.Webhook, label: trans('automations.nodes.webhook'), icon: IconWebhook, accent: 'slate' },
-    { type: NodeType.End, label: trans('automations.nodes.end'), icon: IconCircleX, accent: 'zinc' },
-]);
-
-const accentClasses: Record<string, { dot: string; tint: string; text: string }> = {
-    violet: { dot: 'bg-violet-500', tint: 'bg-violet-200', text: 'text-violet-900' },
-    blue: { dot: 'bg-blue-500', tint: 'bg-blue-200', text: 'text-blue-900' },
-    amber: { dot: 'bg-amber-500', tint: 'bg-amber-200', text: 'text-amber-900' },
-    rose: { dot: 'bg-rose-500', tint: 'bg-rose-200', text: 'text-rose-900' },
-    emerald: { dot: 'bg-emerald-500', tint: 'bg-emerald-200', text: 'text-emerald-900' },
-    slate: { dot: 'bg-slate-500', tint: 'bg-slate-200', text: 'text-slate-900' },
-    zinc: { dot: 'bg-zinc-500', tint: 'bg-zinc-200', text: 'text-zinc-900' },
-};
-
 const hydrateEdges = (list: RawConnection[]): Edge[] =>
     list.map((e) => ({
         id: e.id,
@@ -137,6 +103,7 @@ const nodes = ref<Node[]>(props.automation.nodes ?? []);
 const edges = ref<Edge[]>(hydrateEdges(props.automation.connections ?? []));
 const selectedNodeId = ref<string | null>(null);
 const name = ref(props.automation.name);
+const variables = ref<AutomationVariable[]>(props.automation.variables ?? []);
 
 watch(
     () => [props.automation.nodes, props.automation.connections] as const,
@@ -152,6 +119,10 @@ watch(
 
 watch(() => props.automation.name, (newName) => {
     name.value = newName;
+});
+
+watch(() => props.automation.variables, (newVariables) => {
+    variables.value = newVariables ?? [];
 });
 
 const selectedNode = computed(() => nodes.value.find((n) => n.id === selectedNodeId.value));
@@ -189,7 +160,6 @@ const {
 } = useVueFlow();
 
 onNodeClick(({ node }) => {
-    isTestPanelOpen.value = false;
     selectedNodeId.value = node.id;
 });
 
@@ -301,16 +271,6 @@ const createNodeAt = (type: string, position: { x: number; y: number }) => {
     history.push(new AddNodeCommand(node, nodes));
 };
 
-const addNodeOfType = (type: string) => {
-    createNodeAt(type, { x: 200 + Math.random() * 100, y: 100 + Math.random() * 200 });
-};
-
-const onDragStart = (event: DragEvent, nodeType: string) => {
-    if (!event.dataTransfer) return;
-    event.dataTransfer.setData('application/automation-node-type', nodeType);
-    event.dataTransfer.effectAllowed = 'move';
-};
-
 const onDragOver = (event: DragEvent) => {
     event.preventDefault();
     if (event.dataTransfer) {
@@ -328,6 +288,8 @@ const onDrop = (event: DragEvent) => {
 
 const deleteSelectedNode = () => {
     if (!selectedNode.value) return;
+    // The trigger is the automation's single entry point — it can't be deleted.
+    if (selectedNode.value.type === NodeType.Trigger) return;
     const node = selectedNode.value;
     const cascadedEdges = edges.value.filter((e) => e.source === node.id || e.target === node.id);
 
@@ -342,11 +304,7 @@ const deleteSelectedNode = () => {
 };
 
 const isSaving = ref(false);
-const isTestPanelOpen = ref(false);
-
-const handleTestClick = () => {
-    isTestPanelOpen.value = true;
-};
+const activeTab = ref('build');
 
 const sanitizeNodes = (list: Node[]) =>
     list.map((n) => ({
@@ -378,6 +336,7 @@ const save = (): Promise<boolean> =>
                 name: name.value.trim() || props.automation.name,
                 nodes: sanitizeNodes(nodes.value),
                 connections: sanitizeEdges(edges.value),
+                variables: variables.value.filter((variable) => variable.key.trim() !== ''),
             },
             {
                 preserveScroll: true,
@@ -387,8 +346,15 @@ const save = (): Promise<boolean> =>
                     resolve(true);
                 },
                 onError: (errors: Record<string, string>) => {
-                    const msg = (errors as any).message ?? trans('automations.form.save_error_fallback');
-                    toast.error(msg);
+                    // Field errors render inline via the node config's <InputError>,
+                    // so we just reveal the node carrying the first one. Only general
+                    // failures (no field to attach to) fall back to a toast.
+                    const erroredNodeIndex = Object.keys(errors).find((key) => key.startsWith('nodes.'))?.split('.')[1];
+                    if (erroredNodeIndex !== undefined) {
+                        selectedNodeId.value = nodes.value[Number(erroredNodeIndex)]?.id ?? selectedNodeId.value;
+                    } else {
+                        toast.error(errors.message ?? trans('automations.form.save_error_fallback'));
+                    }
                     resolve(false);
                 },
             },
@@ -435,8 +401,8 @@ const defaultEdgeOptions = {
 <template>
     <Head :title="`Edit ${automation.name}`" />
 
-    <AppLayout>
-        <div class="fixed inset-0 z-50 flex flex-col bg-background">
+    <AppLayout full-width>
+        <div class="flex min-h-0 flex-1 flex-col bg-background">
             <header class="grid flex-shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-3 border-b-2 border-foreground/10 bg-card px-4 py-2">
                 <div class="flex items-center">
                     <Link :href="showAutomation.url(automation.id)">
@@ -450,31 +416,11 @@ const defaultEdgeOptions = {
                     class="w-72 rounded-md border-2 border-transparent bg-transparent px-3 py-1 text-center text-sm font-semibold text-foreground transition-colors hover:border-foreground/15 focus:border-foreground focus:bg-background focus:outline-none"
                 />
                 <div class="flex items-center justify-end gap-2">
-                    <Button variant="outline" size="sm" @click="handleTestClick">{{ $t('automations.actions.test') }}</Button>
                     <Button size="sm" @click="save" :disabled="isSaving">{{ $t('automations.actions.save') }}</Button>
                 </div>
             </header>
 
             <div class="flex flex-1 overflow-hidden">
-                <aside class="flex w-56 flex-shrink-0 flex-col gap-2 border-r-2 border-foreground/10 bg-card/30 p-4">
-                    <p class="mb-1 text-[11px] font-black uppercase tracking-widest text-foreground/60">
-                        {{ $t('automations.actions.add_node') }}
-                    </p>
-                    <button
-                        v-for="option in nodeTypeOptions"
-                        :key="option.type"
-                        draggable="true"
-                        class="group flex cursor-grab items-center gap-2.5 rounded-xl border-2 border-foreground bg-card p-2.5 text-left text-sm font-bold text-foreground shadow-[2px_2px_0_var(--foreground)] transition-all hover:-translate-x-px hover:-translate-y-px hover:shadow-[3px_3px_0_var(--foreground)] active:translate-x-0 active:translate-y-0 active:rotate-[-1deg] active:cursor-grabbing active:shadow-[1px_1px_0_var(--foreground)]"
-                        @dragstart="onDragStart($event, option.type)"
-                        @click="addNodeOfType(option.type)"
-                    >
-                        <div :class="['flex size-7 -rotate-3 items-center justify-center rounded-md border-2 border-foreground', accentClasses[option.accent].tint]">
-                            <component :is="option.icon" :size="14" :class="accentClasses[option.accent].text" />
-                        </div>
-                        <span class="flex-1">{{ option.label }}</span>
-                    </button>
-                </aside>
-
                 <main
                     class="automations-canvas-host relative flex-1"
                     @drop="onDrop"
@@ -515,35 +461,26 @@ const defaultEdgeOptions = {
                     </div>
                 </main>
 
-                <TestRunPanel
-                    v-if="isTestPanelOpen"
-                    v-model:open="isTestPanelOpen"
+                <EditorSidebar
+                    v-model:tab="activeTab"
+                    v-model:variables="variables"
                     :automation-id="automation.id"
                     :before-run="save"
-                />
-
-                <aside
-                    v-else-if="selectedNode"
-                    class="flex w-[36rem] flex-shrink-0 flex-col gap-4 overflow-y-auto border-l-2 border-foreground/10 px-4 pt-4 pb-12"
+                    :editing="!!selectedNode"
+                    :node-title="selectedNode ? $t(`automations.nodes.${selectedNode.type}`) : ''"
+                    :deletable="selectedNode?.type !== NodeType.Trigger"
+                    @back="closePanel"
+                    @delete="deleteSelectedNode"
                 >
-                    <div class="flex items-center justify-between">
-                        <h2 class="font-semibold capitalize">{{ $t('automations.form.config_title', { type: $t(`automations.nodes.${selectedNode.type}`) }) }}</h2>
-                        <div class="flex items-center gap-1">
-                            <Button variant="ghost" size="icon-sm" @click="deleteSelectedNode">
-                                <IconTrash class="size-4" />
-                            </Button>
-                            <Button variant="ghost" size="icon-sm" @click="closePanel">
-                                <IconX class="size-4" />
-                            </Button>
-                        </div>
-                    </div>
-                    <component
-                        :is="selectedConfigComponent"
-                        :data="selectedNode.data"
-                        :errors="selectedNodeErrors"
-                        @update="updateSelectedConfig"
-                    />
-                </aside>
+                    <template v-if="selectedNode" #config>
+                        <component
+                            :is="selectedConfigComponent"
+                            :data="selectedNode.data"
+                            :errors="selectedNodeErrors"
+                            @update="updateSelectedConfig"
+                        />
+                    </template>
+                </EditorSidebar>
             </div>
         </div>
     </AppLayout>
@@ -576,8 +513,8 @@ const defaultEdgeOptions = {
     background: var(--card);
     border-bottom: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
     color: var(--foreground);
-    width: 28px;
-    height: 28px;
+    width: 24px;
+    height: 24px;
     transition: background-color 120ms ease;
 }
 
@@ -591,8 +528,8 @@ const defaultEdgeOptions = {
 
 .automations-canvas .vue-flow__controls-button svg {
     fill: currentColor;
-    max-width: 14px;
-    max-height: 14px;
+    max-width: 12px;
+    max-height: 12px;
 }
 
 /* Edges — TryPost ink-on-cream. Default uses the foreground color at 55% so

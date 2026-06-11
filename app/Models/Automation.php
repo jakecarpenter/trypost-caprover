@@ -33,6 +33,7 @@ class Automation extends Model
         'status' => Status::class,
         'nodes' => 'array',
         'connections' => 'array',
+        'variables' => 'array',
         'activated_at' => 'datetime',
         'paused_at' => 'datetime',
     ];
@@ -44,7 +45,33 @@ class Automation extends Model
                 $automation->nodes ?? [],
                 $automation->getOriginal('nodes') ?? [],
             );
+            $automation->variables = self::encryptVariables(
+                $automation->variables ?? [],
+                $automation->getOriginal('variables') ?? [],
+            );
         });
+    }
+
+    /**
+     * Workflow variables decrypted into a `key => value` map for use during a
+     * run (e.g. `{{ variables.API_KEY }}` resolution). Encrypted at rest and
+     * never returned to the frontend in plain text.
+     *
+     * @return array<string, string>
+     */
+    public function resolvedVariables(): array
+    {
+        $resolved = [];
+
+        foreach ($this->variables ?? [] as $variable) {
+            $key = data_get($variable, 'key');
+            if (! is_string($key) || $key === '') {
+                continue;
+            }
+            $resolved[$key] = self::decryptValue((string) data_get($variable, 'value', ''));
+        }
+
+        return $resolved;
     }
 
     public function workspace(): BelongsTo
@@ -102,6 +129,52 @@ class Automation extends Model
         }
 
         return $incoming;
+    }
+
+    /**
+     * Reconciles workflow variable values exactly like node credentials, matched
+     * by variable `key`: a PLACEHOLDER value keeps the existing ciphertext,
+     * plaintext gets encrypted, already-encrypted strings pass through.
+     *
+     * @param  array<int, array<string, mixed>>  $incoming
+     * @param  array<int, array<string, mixed>>|string  $original
+     * @return array<int, array<string, mixed>>
+     */
+    private static function encryptVariables(array $incoming, array|string $original): array
+    {
+        $original = is_array($original) ? $original : (json_decode($original, true) ?: []);
+        $originalByKey = collect($original)->keyBy('key');
+
+        foreach ($incoming as &$variable) {
+            $value = data_get($variable, 'value');
+            if (! is_string($value) || $value === '') {
+                continue;
+            }
+            if ($value === self::SENSITIVE_PLACEHOLDER) {
+                $variable['value'] = (string) data_get($originalByKey->get($variable['key'] ?? null), 'value', '');
+
+                continue;
+            }
+            if (self::looksEncrypted($value)) {
+                continue;
+            }
+            $variable['value'] = Crypt::encryptString($value);
+        }
+
+        return $incoming;
+    }
+
+    private static function decryptValue(string $value): string
+    {
+        if ($value === '') {
+            return '';
+        }
+
+        try {
+            return Crypt::decryptString($value);
+        } catch (Throwable) {
+            return $value;
+        }
     }
 
     /**

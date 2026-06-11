@@ -22,6 +22,7 @@ class AutomationResource extends JsonResource
             'status' => $this->status->value,
             'nodes' => $this->maskSensitiveNodeFields($this->nodes ?? []),
             'connections' => $this->connections ?? [],
+            'variables' => $this->maskVariables($this->variables ?? []),
             'activated_at' => $this->activated_at,
             'paused_at' => $this->paused_at,
             'created_at' => $this->created_at,
@@ -49,5 +50,25 @@ class AutomationResource extends JsonResource
         }
 
         return $nodes;
+    }
+
+    /**
+     * Replace stored variable values with the placeholder so secrets never
+     * leave the server. The frontend references variables by key
+     * (`{{ variables.KEY }}`), so the masked value doesn't hinder reuse, and
+     * re-saving the placeholder keeps the stored ciphertext.
+     *
+     * @param  array<int, array<string, mixed>>  $variables
+     * @return array<int, array<string, mixed>>
+     */
+    private function maskVariables(array $variables): array
+    {
+        foreach ($variables as &$variable) {
+            if (data_get($variable, 'value') !== null && data_get($variable, 'value') !== '') {
+                $variable['value'] = Automation::SENSITIVE_PLACEHOLDER;
+            }
+        }
+
+        return $variables;
     }
 }

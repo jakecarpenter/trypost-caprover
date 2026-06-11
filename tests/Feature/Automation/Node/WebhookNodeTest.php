@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Http;
 
 it('posts interpolated payload to the configured url', function () {
     Http::fake([
-        'hooks.example.com/*' => Http::response(['ok' => true], 200),
+        '1.1.1.1/*' => Http::response(['ok' => true], 200),
     ]);
 
     $run = AutomationRun::factory()->create([
@@ -17,7 +17,7 @@ it('posts interpolated payload to the configured url', function () {
     ]);
 
     $result = app(RunWebhookNode::class)($run, [
-        'url' => 'https://hooks.example.com/test',
+        'url' => 'https://1.1.1.1/test',
         'method' => 'POST',
         'headers' => ['X-Source' => 'TryPost'],
         'payload_template' => '{"title":"{{ trigger.title }}","post_url":"{{ generated.post_url }}"}',
@@ -29,13 +29,13 @@ it('posts interpolated payload to the configured url', function () {
 
 it('sends the branded user-agent header', function () {
     Http::fake([
-        'hooks.example.com/*' => Http::response(['ok' => true], 200),
+        '1.1.1.1/*' => Http::response(['ok' => true], 200),
     ]);
 
     $run = AutomationRun::factory()->create();
 
     app(RunWebhookNode::class)($run, [
-        'url' => 'https://hooks.example.com/test',
+        'url' => 'https://1.1.1.1/test',
         'method' => 'POST',
         'headers' => ['User-Agent' => 'user-supplied-agent'],
         'payload_template' => '{}',
@@ -45,12 +45,12 @@ it('sends the branded user-agent header', function () {
 });
 
 it('fails on 5xx response', function () {
-    Http::fake(['hooks.example.com/*' => Http::response('err', 500)]);
+    Http::fake(['1.1.1.1/*' => Http::response('err', 500)]);
 
     $run = AutomationRun::factory()->create();
 
     $result = app(RunWebhookNode::class)($run, [
-        'url' => 'https://hooks.example.com/test',
+        'url' => 'https://1.1.1.1/test',
         'method' => 'POST',
         'payload_template' => '{}',
     ]);
@@ -59,12 +59,12 @@ it('fails on 5xx response', function () {
 });
 
 it('fails on malformed payload json instead of silently sending an empty body', function () {
-    Http::fake(['hooks.example.com/*' => Http::response(['ok' => true], 200)]);
+    Http::fake(['1.1.1.1/*' => Http::response(['ok' => true], 200)]);
 
     $run = AutomationRun::factory()->create();
 
     $result = app(RunWebhookNode::class)($run, [
-        'url' => 'https://hooks.example.com/test',
+        'url' => 'https://1.1.1.1/test',
         'method' => 'POST',
         'payload_template' => '{ "a": }',
     ]);
@@ -74,13 +74,61 @@ it('fails on malformed payload json instead of silently sending an empty body', 
     Http::assertNothingSent();
 });
 
-it('treats 4xx responses as completed (only 5xx fails)', function () {
-    Http::fake(['hooks.example.com/*' => Http::response('not found', 404)]);
+it('does not fire a real request on a dry run', function () {
+    Http::fake(['1.1.1.1/*' => Http::response(['ok' => true], 200)]);
+
+    $run = AutomationRun::factory()->create(['is_dry_run' => true]);
+
+    $result = app(RunWebhookNode::class)($run, [
+        'url' => 'https://1.1.1.1/test',
+        'method' => 'POST',
+        'payload_template' => '{"a":1}',
+    ]);
+
+    expect($result->status)->toBe(Status::Completed);
+    expect($result->output['webhook']['dry_run'])->toBeTrue();
+    Http::assertNothingSent();
+});
+
+it('still validates payload json on a dry run', function () {
+    Http::fake(['1.1.1.1/*' => Http::response(['ok' => true], 200)]);
+
+    $run = AutomationRun::factory()->create(['is_dry_run' => true]);
+
+    $result = app(RunWebhookNode::class)($run, [
+        'url' => 'https://1.1.1.1/test',
+        'method' => 'POST',
+        'payload_template' => '{ "a": }',
+    ]);
+
+    expect($result->status)->toBe(Status::Failed);
+    expect($result->error['reason'])->toBe('invalid_payload_json');
+    Http::assertNothingSent();
+});
+
+it('blocks a request to a private or reserved address', function () {
+    Http::fake();
 
     $run = AutomationRun::factory()->create();
 
     $result = app(RunWebhookNode::class)($run, [
-        'url' => 'https://hooks.example.com/test',
+        'url' => 'http://169.254.169.254/latest/meta-data/',
+        'method' => 'POST',
+        'payload_template' => '{}',
+    ]);
+
+    expect($result->status)->toBe(Status::Failed);
+    expect($result->error['reason'])->toBe('url_not_allowed');
+    Http::assertNothingSent();
+});
+
+it('treats 4xx responses as completed (only 5xx fails)', function () {
+    Http::fake(['1.1.1.1/*' => Http::response('not found', 404)]);
+
+    $run = AutomationRun::factory()->create();
+
+    $result = app(RunWebhookNode::class)($run, [
+        'url' => 'https://1.1.1.1/test',
         'method' => 'POST',
         'payload_template' => '{}',
     ]);

@@ -4,11 +4,15 @@ declare(strict_types=1);
 
 namespace App\Actions\Automation\Automation;
 
+use App\Enums\Automation\Node\Type as NodeType;
 use App\Enums\Automation\Status;
 use App\Models\Automation;
+use App\Services\Automation\GenerateNodeValidator;
 
 class ActivateAutomation
 {
+    public function __construct(private GenerateNodeValidator $generateValidator) {}
+
     public function __invoke(Automation $automation): Automation
     {
         $this->validate($automation);
@@ -36,6 +40,18 @@ class ActivateAutomation
         $hasTargetFromTrigger = collect($connections)->contains('source', $trigger['id']);
         if (! $hasTargetFromTrigger) {
             throw new \DomainException(__('automations.errors.trigger_must_be_connected'));
+        }
+
+        foreach ($nodes as $node) {
+            if (data_get($node, 'type') !== NodeType::Generate->value) {
+                continue;
+            }
+
+            $issue = $this->generateValidator->issueFor((array) data_get($node, 'data', []));
+
+            if ($issue !== null) {
+                throw new \DomainException($issue);
+            }
         }
     }
 }

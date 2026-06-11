@@ -10,10 +10,12 @@ use App\Jobs\Automation\ProcessAutomationNode;
 use App\Models\AutomationNodeState;
 use App\Models\AutomationRun;
 use App\Services\Automation\ExpressionResolver;
+use App\Services\Brand\SafeHttpFetcher;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Http;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -35,7 +37,10 @@ class RunHttpRequestNode
 {
     private const ITEM_HANDLE = 'default';
 
-    public function __construct(private ExpressionResolver $resolver) {}
+    public function __construct(
+        private ExpressionResolver $resolver,
+        private SafeHttpFetcher $safeHttp,
+    ) {}
 
     public function __invoke(AutomationRun $run, array $config): NodeRunResult
     {
@@ -45,13 +50,23 @@ class RunHttpRequestNode
         $itemKeyPath = data_get($config, 'item_key_path');
         $itemDatePath = data_get($config, 'item_date_path');
         $nodeId = (string) $run->current_node_id;
-        $context = $run->context ?? [];
+        $context = $run->resolverContext();
 
         if ($url === '') {
             return NodeRunResult::failed('HTTP request node missing url.');
         }
 
         $resolvedUrl = $this->resolver->resolve($url, $context);
+
+        try {
+            $this->safeHttp->guardAgainstSsrf($resolvedUrl);
+        } catch (RuntimeException) {
+            return NodeRunResult::failed(__('automations.errors.url_not_allowed'), [
+                'reason' => 'url_not_allowed',
+                'url' => $resolvedUrl,
+            ]);
+        }
+
         $request = $this->buildRequest($config, $context);
         $body = $this->buildJsonBody($method, $config, $context);
 

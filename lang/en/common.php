@@ -53,5 +53,6 @@ return [
     'actions' => [
         'copy' => 'Copy',
         'copied' => 'Copied',
+        'copy_failed' => 'Failed to copy to clipboard',
     ],
 ];

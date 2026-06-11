@@ -20,11 +20,11 @@ const summary = computed(() => {
 
 <template>
     <div
-        class="automation-node automation-node--accent-amber"
+        class="automation-node automation-node--accent-cyan"
         :class="{ 'is-selected': selected }"
     >
         <div class="automation-node__header">
-            <div class="automation-node__icon-tile automation-node__icon-tile--amber">
+            <div class="automation-node__icon-tile automation-node__icon-tile--cyan">
                 <IconClock :size="16" />
             </div>
             <span class="automation-node__title">{{ $t('automations.nodes.delay') }}</span>
@@ -35,12 +35,12 @@ const summary = computed(() => {
         <Handle
             type="target"
             :position="Position.Left"
-            class="!bg-amber-500"
+            class="!bg-cyan-500"
         />
         <Handle
             type="source"
             :position="Position.Right"
-            class="!bg-amber-500"
+            class="!bg-cyan-500"
         />
     </div>
 </template>

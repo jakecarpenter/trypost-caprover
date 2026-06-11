@@ -53,5 +53,6 @@ return [
     'actions' => [
         'copy' => 'Copiar',
         'copied' => 'Copiado',
+        'copy_failed' => 'No se pudo copiar al portapapeles',
     ],
 ];

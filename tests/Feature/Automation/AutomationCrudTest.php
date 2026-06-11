@@ -26,6 +26,18 @@ it('creates an automation with the default name (web sends no name)', function (
     expect($automation->name)->toBe(__('automations.default_name'));
 });
 
+it('seeds exactly one schedule trigger when creating an automation', function () {
+    $this->actingAs($this->user)
+        ->post(route('app.automations.store'))
+        ->assertRedirect();
+
+    $automation = Automation::where('workspace_id', $this->workspace->id)->sole();
+
+    expect($automation->nodes)->toHaveCount(1);
+    expect($automation->nodes[0]['type'])->toBe('trigger');
+    expect($automation->nodes[0]['data']['trigger_type'])->toBe('schedule');
+});
+
 it('updates nodes and connections via PUT', function () {
     $automation = Automation::factory()->for($this->workspace)->create();
 

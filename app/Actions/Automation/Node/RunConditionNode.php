@@ -17,9 +17,10 @@ class RunConditionNode
 
     public function __invoke(AutomationRun $run, array $config): NodeRunResult
     {
-        $field = $this->resolver->resolve(data_get($config, 'field', ''), $run->context ?? []);
+        $context = $run->resolverContext();
+        $field = $this->resolver->resolve(data_get($config, 'field', ''), $context);
         $operator = Operator::from(data_get($config, 'operator', 'equals'));
-        $value = (string) data_get($config, 'value', '');
+        $value = $this->resolver->resolve((string) data_get($config, 'value', ''), $context);
 
         $matched = match ($operator) {
             Operator::Contains => str_contains($field, $value),

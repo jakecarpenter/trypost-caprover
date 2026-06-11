@@ -53,5 +53,6 @@ return [
     'actions' => [
         'copy' => 'Copiar',
         'copied' => 'Copiado',
+        'copy_failed' => 'Falha ao copiar para a área de transferência',
     ],
 ];
