@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Models\Workspace;
 use App\Services\Media\MediaOptimizer;
 use App\Services\Social\BlueskyPublisher;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 
 beforeEach(function () {
@@ -234,6 +235,52 @@ test('bluesky publisher skips mention facet when handle cannot be resolved', fun
 
         return str_contains($record['text'], '@ghost.bsky.social') && ! $hasMentionFacet;
     });
+});
+
+test('bluesky publisher publishes as plain text when handle resolution errors', function () {
+    $this->post->update(['content' => 'hi @friend.bsky.social']);
+
+    Http::fake(function ($request) {
+        if (str_contains($request->url(), 'resolveHandle')) {
+            throw new ConnectionException('connection refused');
+        }
+
+        return Http::response([
+            'uri' => 'at://did:plc:testuser123/app.bsky.feed.post/3abc123xyz',
+            'cid' => 'bafyreiabc123',
+        ], 200);
+    });
+
+    // A network error resolving the handle must degrade to plain text, not fail the post.
+    $result = $this->publisher->publish($this->postPlatform);
+
+    expect($result['id'])->toBe('3abc123xyz');
+
+    Http::assertSent(function ($request) {
+        if (! str_contains($request->url(), 'createRecord')) {
+            return false;
+        }
+
+        $hasMention = collect($request['record']['facets'] ?? [])
+            ->contains(fn ($facet) => $facet['features'][0]['$type'] === 'app.bsky.richtext.facet#mention');
+
+        return str_contains($request['record']['text'], '@friend.bsky.social') && ! $hasMention;
+    });
+});
+
+test('bluesky publisher builds the post url from the configured web app host', function () {
+    config(['trypost.platforms.bluesky.web_app' => 'https://custom.bsky.example']);
+
+    Http::fake([
+        config('trypost.platforms.bluesky.default_service').'/xrpc/com.atproto.repo.createRecord' => Http::response([
+            'uri' => 'at://did:plc:testuser123/app.bsky.feed.post/3abc123xyz',
+            'cid' => 'bafyreiabc123',
+        ], 200),
+    ]);
+
+    $result = $this->publisher->publish($this->postPlatform);
+
+    expect($result['url'])->toBe('https://custom.bsky.example/profile/testuser.bsky.social/post/3abc123xyz');
 });
 
 test('bluesky publisher resolves some mentions and skips the unresolvable ones', function () {
