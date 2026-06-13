@@ -1,0 +1,13 @@
+.json-viewer__body {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  margin: 0;
+  background: #ffffff;
+  color: #24292f;
+}
+
+.json-viewer .hljs-attr        { color: #0550ae; }
+.json-viewer .hljs-string      { color: #0a3069; }
+.json-viewer .hljs-number      { color: #0550ae; }
+.json-viewer .hljs-literal     { color: #cf222e; }
+.json-viewer .hljs-punctuation { color: #57606a; }
+.json-viewer .hljs-comment     { color: #6e7781; font-style: italic; }

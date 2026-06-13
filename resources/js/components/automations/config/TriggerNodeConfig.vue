@@ -10,6 +10,7 @@ import {
 } from '@/components/automations/schedule-summary';
 import InputError from '@/components/InputError.vue';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -113,7 +114,7 @@ watch(local, (val) => emit('update', val), { deep: true });
 <template>
     <div class="space-y-3">
         <div>
-            <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.trigger.type') }}</label>
+            <Label class="mb-1 block">{{ $t('automations.config.trigger.type') }}</Label>
             <Select v-model="local.trigger_type">
                 <SelectTrigger class="w-full">
                     <SelectValue :placeholder="$t('automations.config.select_placeholder')" />
@@ -141,7 +142,7 @@ watch(local, (val) => emit('update', val), { deep: true });
 
         <template v-if="local.trigger_type === TriggerType.Schedule">
             <div>
-                <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.trigger.schedule.field') }}</label>
+                <Label class="mb-1 block">{{ $t('automations.config.trigger.schedule.field') }}</Label>
                 <Select v-model="local.schedule_field">
                     <SelectTrigger class="w-full">
                         <SelectValue :placeholder="$t('automations.config.select_placeholder')" />
@@ -157,17 +158,17 @@ watch(local, (val) => emit('update', val), { deep: true });
             </div>
 
             <div v-if="local.schedule_field === ScheduleField.Minutes">
-                <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.trigger.schedule.minutes_interval') }}</label>
+                <Label class="mb-1 block">{{ $t('automations.config.trigger.schedule.minutes_interval') }}</Label>
                 <Input type="number" v-model.number="local.schedule_minutes_interval" min="1" max="59" />
             </div>
 
             <template v-if="local.schedule_field === ScheduleField.Hours">
                 <div>
-                    <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.trigger.schedule.hours_interval') }}</label>
+                    <Label class="mb-1 block">{{ $t('automations.config.trigger.schedule.hours_interval') }}</Label>
                     <Input type="number" v-model.number="local.schedule_hours_interval" min="1" max="23" />
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.trigger.schedule.minute') }}</label>
+                    <Label class="mb-1 block">{{ $t('automations.config.trigger.schedule.minute') }}</Label>
                     <Select v-model="scheduleMinuteStr">
                         <SelectTrigger class="w-full">
                             <SelectValue />
@@ -181,12 +182,12 @@ watch(local, (val) => emit('update', val), { deep: true });
 
             <template v-if="local.schedule_field === ScheduleField.Days">
                 <div>
-                    <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.trigger.schedule.days_interval') }}</label>
+                    <Label class="mb-1 block">{{ $t('automations.config.trigger.schedule.days_interval') }}</Label>
                     <Input type="number" v-model.number="local.schedule_days_interval" min="1" max="31" />
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.trigger.schedule.hour') }}</label>
+                        <Label class="mb-1 block">{{ $t('automations.config.trigger.schedule.hour') }}</Label>
                         <Select v-model="scheduleHourStr">
                             <SelectTrigger class="w-full">
                                 <SelectValue />
@@ -197,7 +198,7 @@ watch(local, (val) => emit('update', val), { deep: true });
                         </Select>
                     </div>
                     <div>
-                        <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.trigger.schedule.minute') }}</label>
+                        <Label class="mb-1 block">{{ $t('automations.config.trigger.schedule.minute') }}</Label>
                         <Select v-model="scheduleMinuteStr">
                             <SelectTrigger class="w-full">
                                 <SelectValue />
@@ -212,7 +213,7 @@ watch(local, (val) => emit('update', val), { deep: true });
 
             <template v-if="local.schedule_field === ScheduleField.Weeks">
                 <div>
-                    <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.trigger.schedule.weekdays') }}</label>
+                    <Label class="mb-1 block">{{ $t('automations.config.trigger.schedule.weekdays') }}</Label>
                     <div class="flex flex-wrap gap-1.5">
                         <button
                             v-for="day in weekdays"
@@ -230,7 +231,7 @@ watch(local, (val) => emit('update', val), { deep: true });
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.trigger.schedule.hour') }}</label>
+                        <Label class="mb-1 block">{{ $t('automations.config.trigger.schedule.hour') }}</Label>
                         <Select v-model="scheduleHourStr">
                             <SelectTrigger class="w-full">
                                 <SelectValue />
@@ -241,7 +242,7 @@ watch(local, (val) => emit('update', val), { deep: true });
                         </Select>
                     </div>
                     <div>
-                        <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.trigger.schedule.minute') }}</label>
+                        <Label class="mb-1 block">{{ $t('automations.config.trigger.schedule.minute') }}</Label>
                         <Select v-model="scheduleMinuteStr">
                             <SelectTrigger class="w-full">
                                 <SelectValue />
@@ -256,12 +257,12 @@ watch(local, (val) => emit('update', val), { deep: true });
 
             <template v-if="local.schedule_field === ScheduleField.Months">
                 <div>
-                    <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.trigger.schedule.day_of_month') }}</label>
+                    <Label class="mb-1 block">{{ $t('automations.config.trigger.schedule.day_of_month') }}</Label>
                     <Input type="number" v-model.number="local.schedule_day_of_month" min="1" max="31" />
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.trigger.schedule.hour') }}</label>
+                        <Label class="mb-1 block">{{ $t('automations.config.trigger.schedule.hour') }}</Label>
                         <Select v-model="scheduleHourStr">
                             <SelectTrigger class="w-full">
                                 <SelectValue />
@@ -272,7 +273,7 @@ watch(local, (val) => emit('update', val), { deep: true });
                         </Select>
                     </div>
                     <div>
-                        <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.trigger.schedule.minute') }}</label>
+                        <Label class="mb-1 block">{{ $t('automations.config.trigger.schedule.minute') }}</Label>
                         <Select v-model="scheduleMinuteStr">
                             <SelectTrigger class="w-full">
                                 <SelectValue />

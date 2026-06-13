@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Handle, Position } from '@vue-flow/core';
 import { IconRss } from '@tabler/icons-vue';
+import { Handle, Position } from '@vue-flow/core';
 import { computed } from 'vue';
 
 const props = defineProps<{

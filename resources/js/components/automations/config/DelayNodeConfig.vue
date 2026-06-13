@@ -3,6 +3,7 @@ import { ref, watch } from 'vue';
 
 import InputError from '@/components/InputError.vue';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -34,13 +35,13 @@ watch(local, (val) => emit('update', val), { deep: true });
 <template>
     <div class="space-y-3">
         <div>
-            <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.delay.duration') }}</label>
+            <Label class="mb-1 block">{{ $t('automations.config.delay.duration') }}</Label>
             <Input type="number" v-model.number="local.duration" placeholder="1" />
             <InputError :message="errors?.duration" class="mt-1" />
         </div>
 
         <div>
-            <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.delay.unit') }}</label>
+            <Label class="mb-1 block">{{ $t('automations.config.delay.unit') }}</Label>
             <Select v-model="local.unit">
                 <SelectTrigger class="w-full">
                     <SelectValue :placeholder="$t('automations.config.select_placeholder')" />

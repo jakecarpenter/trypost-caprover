@@ -3,6 +3,7 @@ import { ref, watch } from 'vue';
 
 import InputError from '@/components/InputError.vue';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 interface FetchRssConfig {
     feed_url: string;
@@ -24,7 +25,7 @@ watch(local, (val) => emit('update', val), { deep: true });
 <template>
     <div class="space-y-3">
         <div>
-            <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.fetch_rss.feed_url') }}</label>
+            <Label class="mb-1 block">{{ $t('automations.config.fetch_rss.feed_url') }}</Label>
             <Input v-model="local.feed_url" placeholder="https://example.com/feed.xml" />
             <InputError :message="errors?.feed_url" class="mt-1" />
             <p class="mt-1 text-xs text-foreground/50">{{ $t('automations.config.fetch_rss.feed_url_hint') }}</p>

@@ -3,6 +3,7 @@ import { ref, watch } from 'vue';
 
 import InputError from '@/components/InputError.vue';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -36,13 +37,13 @@ watch(local, (val) => emit('update', val), { deep: true });
 <template>
     <div class="space-y-3">
         <div>
-            <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.condition.field') }}</label>
+            <Label class="mb-1 block">{{ $t('automations.config.condition.field') }}</Label>
             <Input v-model="local.field" placeholder="{{ trigger.title }}" />
             <InputError :message="errors?.field" class="mt-1" />
         </div>
 
         <div>
-            <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.condition.operator') }}</label>
+            <Label class="mb-1 block">{{ $t('automations.config.condition.operator') }}</Label>
             <Select v-model="local.operator">
                 <SelectTrigger class="w-full">
                     <SelectValue :placeholder="$t('automations.config.select_placeholder')" />
@@ -61,7 +62,7 @@ watch(local, (val) => emit('update', val), { deep: true });
         </div>
 
         <div>
-            <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.condition.value') }}</label>
+            <Label class="mb-1 block">{{ $t('automations.config.condition.value') }}</Label>
             <Input v-model="local.value" placeholder="keyword" />
             <InputError :message="errors?.value" class="mt-1" />
         </div>

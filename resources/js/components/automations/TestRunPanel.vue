@@ -8,6 +8,7 @@ import { showRun as showRunRoute } from '@/actions/App/Http/Controllers/App/Auto
 import JsonViewer from '@/components/JsonViewer.vue';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 import { useAutomationEcho } from '@/composables/echo/useAutomationEcho';
 import { test as testAutomation } from '@/routes/app/automations';
 
@@ -152,10 +153,10 @@ const isZeroFetchResult = (nodeRun: NodeRun): boolean => {
         </div>
 
         <div class="flex items-center justify-between gap-3 rounded-xl border-2 border-foreground bg-card p-3 shadow-[3px_3px_0_var(--foreground)]">
-            <label class="flex cursor-pointer items-center gap-2 text-sm font-semibold text-foreground/70">
+            <Label class="cursor-pointer font-semibold text-foreground/70">
                 <Checkbox v-model="realData" :disabled="isStarting" />
                 {{ $t('automations.test.with_real_data') }}
-            </label>
+            </Label>
             <Button size="sm" :disabled="isStarting || !!configIssue" @click="runTest">
                 <IconLoader2 v-if="isStarting" class="size-4 animate-spin" />
                 <IconPlayerPlay v-else class="size-4" />

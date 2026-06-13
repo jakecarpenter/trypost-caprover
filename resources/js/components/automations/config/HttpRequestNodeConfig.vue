@@ -7,6 +7,7 @@ import CodeEditor from '@/components/CodeEditor.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -115,7 +116,7 @@ const isBodyJsonInvalid = computed(() => {
     <div class="space-y-4">
         <div class="grid grid-cols-[110px_1fr] gap-2">
             <div>
-                <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.http_request.method') }}</label>
+                <Label class="mb-1 block">{{ $t('automations.config.http_request.method') }}</Label>
                 <Select v-model="local.method">
                     <SelectTrigger class="w-full">
                         <SelectValue />
@@ -127,14 +128,14 @@ const isBodyJsonInvalid = computed(() => {
                 <InputError :message="errors?.method" class="mt-1" />
             </div>
             <div>
-                <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.http_request.url') }}</label>
+                <Label class="mb-1 block">{{ $t('automations.config.http_request.url') }}</Label>
                 <Input v-model="local.url" placeholder="https://api.example.com/items" />
                 <InputError :message="errors?.url" class="mt-1" />
             </div>
         </div>
 
         <div>
-            <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.http_request.auth_type') }}</label>
+            <Label class="mb-1 block">{{ $t('automations.config.http_request.auth_type') }}</Label>
             <Select v-model="local.auth_type">
                 <SelectTrigger class="w-full">
                     <SelectValue />
@@ -149,19 +150,19 @@ const isBodyJsonInvalid = computed(() => {
         </div>
 
         <div v-if="local.auth_type === AuthType.Bearer">
-            <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.http_request.bearer_token') }}</label>
+            <Label class="mb-1 block">{{ $t('automations.config.http_request.bearer_token') }}</Label>
             <Input v-model="local.auth_token" type="password" autocomplete="off" placeholder="sk-…" />
             <InputError :message="errors?.auth_token" class="mt-1" />
         </div>
 
         <template v-if="local.auth_type === AuthType.Basic">
             <div>
-                <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.http_request.basic_username') }}</label>
+                <Label class="mb-1 block">{{ $t('automations.config.http_request.basic_username') }}</Label>
                 <Input v-model="local.auth_username" autocomplete="off" />
                 <InputError :message="errors?.auth_username" class="mt-1" />
             </div>
             <div>
-                <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.http_request.basic_password') }}</label>
+                <Label class="mb-1 block">{{ $t('automations.config.http_request.basic_password') }}</Label>
                 <Input v-model="local.auth_password" type="password" autocomplete="off" />
                 <InputError :message="errors?.auth_password" class="mt-1" />
             </div>
@@ -169,18 +170,18 @@ const isBodyJsonInvalid = computed(() => {
 
         <template v-if="local.auth_type === AuthType.ApiKey">
             <div>
-                <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.http_request.api_key_header') }}</label>
+                <Label class="mb-1 block">{{ $t('automations.config.http_request.api_key_header') }}</Label>
                 <Input v-model="local.auth_header_name" placeholder="X-API-Key" />
             </div>
             <div>
-                <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.http_request.api_key_value') }}</label>
+                <Label class="mb-1 block">{{ $t('automations.config.http_request.api_key_value') }}</Label>
                 <Input v-model="local.auth_token" type="password" autocomplete="off" />
                 <InputError :message="errors?.auth_token" class="mt-1" />
             </div>
         </template>
 
         <div v-if="supportsBody" v-show="!editorExpanded">
-            <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.http_request.body_template') }}</label>
+            <Label class="mb-1 block">{{ $t('automations.config.http_request.body_template') }}</Label>
             <div class="h-36">
                 <CodeEditor
                     v-model="local.body_template"
@@ -197,7 +198,7 @@ const isBodyJsonInvalid = computed(() => {
         </div>
 
         <div>
-            <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.http_request.headers') }}</label>
+            <Label class="mb-1 block">{{ $t('automations.config.http_request.headers') }}</Label>
             <div class="space-y-2">
                 <div v-for="(row, index) in headerRows" :key="index" class="flex items-center gap-2">
                     <Input
@@ -237,19 +238,19 @@ const isBodyJsonInvalid = computed(() => {
 
             <div class="space-y-3">
                 <div>
-                    <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.http_request.items_path') }}</label>
+                    <Label class="mb-1 block">{{ $t('automations.config.http_request.items_path') }}</Label>
                     <Input v-model="local.items_path" placeholder="data.items" />
                     <p class="mt-1 text-xs text-foreground/50">{{ $t('automations.config.http_request.items_path_hint') }}</p>
                     <InputError :message="errors?.items_path" class="mt-1" />
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.http_request.item_date_path') }}</label>
+                    <Label class="mb-1 block">{{ $t('automations.config.http_request.item_date_path') }}</Label>
                     <Input v-model="local.item_date_path" placeholder="published_at" />
                     <p class="mt-1 text-xs text-foreground/50">{{ $t('automations.config.http_request.item_date_path_hint') }}</p>
                     <InputError :message="errors?.item_date_path" class="mt-1" />
                 </div>
                 <div>
-                    <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.http_request.item_key_path') }}</label>
+                    <Label class="mb-1 block">{{ $t('automations.config.http_request.item_key_path') }}</Label>
                     <Input v-model="local.item_key_path" placeholder="id" />
                     <p class="mt-1 text-xs text-foreground/50">{{ $t('automations.config.http_request.item_key_path_hint') }}</p>
                     <InputError :message="errors?.item_key_path" class="mt-1" />

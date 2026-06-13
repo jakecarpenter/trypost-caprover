@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue';
 
 import InputError from '@/components/InputError.vue';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
 interface EndConfig {
@@ -24,7 +25,7 @@ watch(local, (val) => emit('update', val), { deep: true });
 <template>
     <div class="space-y-3">
         <div>
-            <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.end.reason') }}</label>
+            <Label class="mb-1 block">{{ $t('automations.config.end.reason') }}</Label>
             <Textarea v-model="local.reason" :placeholder="$t('automations.config.end.reason_placeholder')" :rows="3" />
             <InputError :message="errors?.reason" class="mt-1" />
         </div>

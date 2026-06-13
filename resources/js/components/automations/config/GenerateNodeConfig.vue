@@ -5,10 +5,10 @@ import { computed, ref, watch } from 'vue';
 import ChannelConfigurator from '@/components/ChannelConfigurator.vue';
 import CodeEditor from '@/components/CodeEditor.vue';
 import InputError from '@/components/InputError.vue';
-import { useExpandedEditor } from '@/composables/useExpandedEditor';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { useExpandedEditor } from '@/composables/useExpandedEditor';
 import { getMediaRulesForContentType } from '@/composables/useMediaRules';
 import { getMediaIncompatibilityReason, getPlatformMetaIssue } from '@/composables/usePostCompliance';
 import type { PinterestBoard } from '@/types';
@@ -316,7 +316,7 @@ const channels = computed<Channel[]>(() =>
         </div>
 
         <div v-show="!editorExpanded">
-            <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.generate.prompt_template') }}</label>
+            <Label class="mb-1 block">{{ $t('automations.config.generate.prompt_template') }}</Label>
             <div class="h-40">
                 <CodeEditor
                     v-model="local.prompt_template"

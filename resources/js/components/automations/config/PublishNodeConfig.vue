@@ -3,6 +3,7 @@ import { ref, watch } from 'vue';
 
 import InputError from '@/components/InputError.vue';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -34,7 +35,7 @@ watch(local, (val) => emit('update', val), { deep: true });
 <template>
     <div class="space-y-3">
         <div>
-            <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.publish.mode') }}</label>
+            <Label class="mb-1 block">{{ $t('automations.config.publish.mode') }}</Label>
             <Select v-model="local.mode">
                 <SelectTrigger class="w-full">
                     <SelectValue :placeholder="$t('automations.config.select_placeholder')" />
@@ -49,7 +50,7 @@ watch(local, (val) => emit('update', val), { deep: true });
         </div>
 
         <div v-if="local.mode === PublishMode.Scheduled">
-            <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.publish.scheduled_offset') }}</label>
+            <Label class="mb-1 block">{{ $t('automations.config.publish.scheduled_offset') }}</Label>
             <Input type="number" v-model.number="local.scheduled_offset" placeholder="60" />
             <InputError :message="errors?.scheduled_offset" class="mt-1" />
         </div>

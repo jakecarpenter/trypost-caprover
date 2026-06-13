@@ -5,6 +5,7 @@ import { isPayloadTemplateValid } from '@/components/automations/config-validati
 import CodeEditor from '@/components/CodeEditor.vue';
 import InputError from '@/components/InputError.vue';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
     Select,
     SelectContent,
@@ -45,13 +46,13 @@ const isPayloadJsonInvalid = computed(() => !isPayloadTemplateValid(local.value.
 <template>
     <div class="space-y-3">
         <div>
-            <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.webhook.url') }}</label>
+            <Label class="mb-1 block">{{ $t('automations.config.webhook.url') }}</Label>
             <Input v-model="local.url" placeholder="https://hooks.example.com/…" />
             <InputError :message="errors?.url" class="mt-1" />
         </div>
 
         <div>
-            <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.webhook.method') }}</label>
+            <Label class="mb-1 block">{{ $t('automations.config.webhook.method') }}</Label>
             <Select v-model="local.method">
                 <SelectTrigger class="w-full">
                     <SelectValue :placeholder="$t('automations.config.select_placeholder')" />
@@ -64,7 +65,7 @@ const isPayloadJsonInvalid = computed(() => !isPayloadTemplateValid(local.value.
         </div>
 
         <div v-show="!editorExpanded">
-            <label class="mb-1 block text-sm font-medium">{{ $t('automations.config.webhook.payload_template') }}</label>
+            <Label class="mb-1 block">{{ $t('automations.config.webhook.payload_template') }}</Label>
             <div class="h-40">
                 <CodeEditor
                     v-model="local.payload_template"
