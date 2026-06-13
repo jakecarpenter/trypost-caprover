@@ -1,6 +1,5 @@
 import { trans, transChoice } from 'laravel-vue-i18n';
 
-import dayjs from '@/dayjs';
 import type { ScheduleData } from '@/types/automation/schedule-data';
 import { ScheduleField } from '@/types/automation/schedule-field';
 import { TriggerType } from '@/types/automation/trigger-type';
@@ -155,7 +154,3 @@ export const triggerSummary = (data: ScheduleData): string => {
     }
     return '';
 };
-
-export const userTimezone = (): string => Intl.DateTimeFormat().resolvedOptions().timeZone;
-
-export const timezoneAbbr = (): string => dayjs().format('z');

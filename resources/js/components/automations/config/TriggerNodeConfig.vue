@@ -5,8 +5,6 @@ import {
     generateScheduleCron,
     humanSchedule as scheduleSummary,
     normalizeScheduleData,
-    timezoneAbbr as getTimezoneAbbr,
-    userTimezone as getUserTimezone,
 } from '@/components/automations/schedule-summary';
 import InputError from '@/components/InputError.vue';
 import { Input } from '@/components/ui/input';
@@ -18,6 +16,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import date from '@/date';
 import type { ScheduleData } from '@/types/automation/schedule-data';
 import { ScheduleField } from '@/types/automation/schedule-field';
 import { TriggerType, type TriggerTypeValue } from '@/types/automation/trigger-type';
@@ -30,9 +29,9 @@ const emit = defineEmits<{ update: [Record<string, unknown>] }>();
 
 const pad2 = (n: number) => String(n).padStart(2, '0');
 const clamp = (n: number, min: number, max: number) => Math.min(Math.max(n, min), max);
-const snap5 = (n: number) => (Math.round(n / 5) * 5) % 60;
+const snapToFiveMinutes = (n: number) => (Math.round(n / 5) * 5) % 60;
 
-const timezoneAbbr = computed(() => getTimezoneAbbr());
+const timezoneAbbr = date.getTimezoneAbbr();
 
 // Single source of truth for default + inferred field values, shared with the
 // Trigger card via `triggerSummary`. Anything beyond `normalizeScheduleData`'s
@@ -41,8 +40,8 @@ const local = ref<ScheduleData & { trigger_type: TriggerTypeValue; cron: string;
     ...normalizeScheduleData(props.data as ScheduleData),
     trigger_type: (props.data.trigger_type as TriggerTypeValue) ?? TriggerType.Schedule,
     cron: (props.data.cron as string) ?? '0 9 * * *',
-    schedule_minute: snap5(Number(props.data.schedule_minute ?? normalizeScheduleData(props.data as ScheduleData).schedule_minute) || 0),
-    schedule_timezone: (props.data.schedule_timezone as string) ?? getUserTimezone(),
+    schedule_minute: snapToFiveMinutes(Number(props.data.schedule_minute ?? normalizeScheduleData(props.data as ScheduleData).schedule_minute) || 0),
+    schedule_timezone: (props.data.schedule_timezone as string) ?? date.getUserTimezone(),
 });
 
 const num = (key: keyof typeof local.value, fallback: number, min: number, max: number) =>
@@ -97,14 +96,14 @@ const scheduleSummaryLine = computed(() => {
         || local.value.schedule_field === ScheduleField.Months;
 
     return pinsClockTime
-        ? `${humanSchedule.value} (${timezoneAbbr.value})`
+        ? `${humanSchedule.value} (${timezoneAbbr})`
         : humanSchedule.value;
 });
 
 watch(generatedCron, (cron) => {
     if (local.value.trigger_type === TriggerType.Schedule) {
         local.value.cron = cron;
-        local.value.schedule_timezone = getUserTimezone();
+        local.value.schedule_timezone = date.getUserTimezone();
     }
 }, { immediate: true });
 

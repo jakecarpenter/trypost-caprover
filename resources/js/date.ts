@@ -156,6 +156,14 @@ export default {
     getUserTimezone,
 
     /**
+     * Abreviação do timezone do usuário para exibição (ex.: "GMT-3")
+     * @returns Abreviação do timezone
+     */
+    getTimezoneAbbr(): string {
+        return dayjs().format('z');
+    },
+
+    /**
      * Formata uma data para o formato YYYY-MM-DD (usado em DatePicker)
      * Evita problemas de timezone ao não criar objeto Date
      * @param date - Data no formato YYYY-MM-DD ou ISO string

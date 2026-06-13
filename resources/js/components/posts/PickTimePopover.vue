@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Dialog, DialogContent, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import date from '@/date';
 import dayjs from '@/dayjs';
 
 const props = defineProps<{
@@ -14,7 +15,7 @@ const props = defineProps<{
     showRemove?: boolean;
 }>();
 
-const timezoneAbbr = computed(() => dayjs().format('z'));
+const timezoneAbbr = date.getTimezoneAbbr();
 
 const emit = defineEmits<{
     'update:modelValue': [value: string];
@@ -27,8 +28,8 @@ const open = ref(false);
 const parseInput = (value: string) => {
     if (!value) return undefined;
     try {
-        const date = dayjs(value);
-        if (date.isValid()) return parseDate(date.format('YYYY-MM-DD'));
+        const parsed = dayjs(value);
+        if (parsed.isValid()) return parseDate(parsed.format('YYYY-MM-DD'));
     } catch {
         return undefined;
     }
