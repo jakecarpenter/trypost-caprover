@@ -48,13 +48,6 @@ class RunGenerateNode
             ->get()
             ->keyBy('id');
 
-        if ($accountIds !== [] && $activeAccounts->isEmpty()) {
-            Log::warning('RunGenerateNode: no active social accounts found, skipping account assignment', [
-                'automation_id' => $run->automation_id,
-                'social_account_ids' => $accountIds,
-            ]);
-        }
-
         // Per-automation toggle: when off, the brand persona/voice is NOT
         // injected, so the post stays faithful to a third-party source (news /
         // RSS curation) instead of being rewritten in the brand's voice.
