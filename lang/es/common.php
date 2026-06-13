@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 return [
+    'back' => 'Volver',
+
     'confirm_modal' => [
         'cannot_be_undone' => 'Esta acción no se puede deshacer.',
         'type' => 'Escribe',
@@ -47,4 +49,10 @@ return [
     'clear' => 'Limpiar',
     'close' => 'Cerrar',
     'loading_more' => 'Cargando más...',
+
+    'actions' => [
+        'copy' => 'Copiar',
+        'copied' => 'Copiado',
+        'copy_failed' => 'No se pudo copiar al portapapeles',
+    ],
 ];

@@ -89,3 +89,22 @@ test('AI single feed generation stores the post as an instagram feed', function 
 
     expect($platform->content_type)->toBe(ContentType::InstagramFeed);
 });
+
+test('the humanizer is given the same platform context as the generator so the rewrite honours the character cap', function () {
+    PostContentGenerator::fake([[
+        'content' => 'A single productivity tip',
+        'image_title' => 'Tip',
+        'image_body' => 'Do less',
+        'image_keywords' => [],
+    ]]);
+    PostContentHumanizer::fake([[
+        'content' => 'A single productivity tip',
+        'image_title' => 'Tip',
+        'image_body' => 'Do less',
+    ]]);
+
+    runStreamPostCreation('instagram_feed', $this->account, 0);
+
+    PostContentGenerator::assertPrompted(fn ($prompt) => $prompt->agent->platformContext === 'instagram_feed');
+    PostContentHumanizer::assertPrompted(fn ($prompt) => $prompt->agent->platformContext === 'instagram_feed');
+});

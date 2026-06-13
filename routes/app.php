@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\App\AnalyticsController;
 use App\Http\Controllers\App\ApiKeyController;
 use App\Http\Controllers\App\AssetController;
+use App\Http\Controllers\App\AutomationController;
 use App\Http\Controllers\App\BillingController;
 use App\Http\Controllers\App\GiphyController;
 use App\Http\Controllers\App\NotificationController;
@@ -205,6 +206,22 @@ Route::middleware(['auth', EnsureAccountReady::class])->group(function () {
     Route::post('labels', [WorkspaceLabelController::class, 'store'])->name('app.labels.store');
     Route::put('labels/{label}', [WorkspaceLabelController::class, 'update'])->name('app.labels.update');
     Route::delete('labels/{label}', [WorkspaceLabelController::class, 'destroy'])->name('app.labels.destroy');
+
+    // Automations
+    Route::get('automations', [AutomationController::class, 'index'])->name('app.automations.index');
+    Route::post('automations', [AutomationController::class, 'store'])->name('app.automations.store');
+    Route::get('automations/{automation}', [AutomationController::class, 'show'])->name('app.automations.show');
+    Route::get('automations/{automation}/workflow', [AutomationController::class, 'workflow'])->name('app.automations.workflow');
+    Route::get('automations/{automation}/invocations', [AutomationController::class, 'invocations'])->name('app.automations.invocations');
+    Route::get('automations/{automation}/metrics', [AutomationController::class, 'metrics'])->name('app.automations.metrics');
+    Route::get('automations/{automation}/settings', [AutomationController::class, 'settings'])->name('app.automations.settings');
+    Route::put('automations/{automation}', [AutomationController::class, 'update'])->name('app.automations.update');
+    Route::delete('automations/{automation}', [AutomationController::class, 'destroy'])->name('app.automations.destroy');
+    Route::post('automations/{automation}/activate', [AutomationController::class, 'activate'])->name('app.automations.activate');
+    Route::post('automations/{automation}/pause', [AutomationController::class, 'pause'])->name('app.automations.pause');
+    Route::post('automations/{automation}/runs/{run}/retry', [AutomationController::class, 'retryRun'])->name('app.automations.runs.retry');
+    Route::post('automations/{automation}/test', [AutomationController::class, 'test'])->name('app.automations.test');
+    Route::get('automations/{automation}/runs/{run}', [AutomationController::class, 'showRun'])->name('app.automations.runs.show');
 
     // API Keys
     Route::get('settings/workspace/api-keys', [ApiKeyController::class, 'index'])->name('app.api-keys.index');

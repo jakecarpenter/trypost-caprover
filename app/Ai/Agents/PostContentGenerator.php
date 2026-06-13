@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Ai\Agents;
 
-use App\Enums\PostPlatform\ContentType;
+use App\Ai\Agents\Concerns\ResolvesPlatformCopyBudget;
 use App\Models\Workspace;
 use App\Services\Ai\TemplateContextResolver;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -18,6 +18,7 @@ use Laravel\Ai\Promptable;
 class PostContentGenerator implements Agent, HasStructuredOutput
 {
     use Promptable;
+    use ResolvesPlatformCopyBudget;
 
     public function __construct(
         public Workspace $workspace,
@@ -25,6 +26,7 @@ class PostContentGenerator implements Agent, HasStructuredOutput
         public string $format = 'single',
         public int $slideCount = 1,
         public ?string $platformContext = null,
+        public bool $applyBrandVoice = true,
     ) {}
 
     public function instructions(): string
@@ -46,30 +48,20 @@ class PostContentGenerator implements Agent, HasStructuredOutput
         // Two budgets: the platform's HARD cap (must never exceed — would break
         // publishing) and the recommended SWEET SPOT length (what well-performing
         // posts actually look like, way below the hard cap on most platforms).
-        $hardMaxChars = null;
-        $targetChars = null;
-        $platformLabel = null;
-        $contentType = $this->platformContext ? ContentType::tryFrom($this->platformContext) : null;
-        if ($contentType) {
-            $platform = $contentType->platform();
-            $hardMaxChars = $platform->maxContentLength();
-            $targetChars = $platform->recommendedAiContentLength();
-            $platformLabel = $platform->label();
-        }
+        $budget = $this->platformCopyBudget($this->platformContext);
 
         return view('prompts.post_content.generator', [
             'brand_name' => $this->workspace->name ?? '',
-            'brand_description' => $this->workspace->brand_description ?? '',
-            'brand_tone' => $this->workspace->brand_tone ?? '',
-            'brand_voice_notes' => $this->workspace->brand_voice_notes ?? '',
+            'brand_description' => $this->applyBrandVoice ? ($this->workspace->brand_description ?? '') : '',
+            'brand_voice_traits' => $this->applyBrandVoice ? ($this->workspace->brand_voice_traits ?? []) : [],
             'content_language' => $this->workspace->content_language,
             'current_content' => $this->currentContent,
             'format' => $this->format,
             'slide_count' => $this->slideCount,
             'examples' => $examples,
-            'hard_max_chars' => $hardMaxChars,
-            'target_chars' => $targetChars,
-            'platform_label' => $platformLabel,
+            'hard_max_chars' => $budget['hard_max_chars'],
+            'target_chars' => $budget['target_chars'],
+            'platform_label' => $budget['platform_label'],
         ])->render();
     }
 

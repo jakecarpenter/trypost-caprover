@@ -359,18 +359,17 @@ test('when llm is configured, polishes description/tone/language/voice_notes via
     BrandAnalyzer::fake([
         [
             'description' => 'Widget Co helps small teams ship production widgets faster.',
-            'tone' => 'friendly',
             'language' => 'en',
-            'voice_notes' => 'Use short punchy sentences. Focus on developer benefits.',
+            // A bogus value (dropped) and a second POV (dropped — single-select).
+            'voice_traits' => ['third_person', 'first_person', 'direct', 'no_hype', 'not_a_trait'],
         ],
     ]);
 
     $result = ($this->autofill)('https://example.com');
 
     expect($result->description)->toBe('Widget Co helps small teams ship production widgets faster.');
-    expect($result->tone)->toBe('friendly');
     expect($result->language)->toBe('en');
-    expect($result->voiceNotes)->toBe('Use short punchy sentences. Focus on developer benefits.');
+    expect($result->toArray()['brand_voice_traits'])->toBe(['third_person', 'direct', 'no_hype']);
 });
 
 test('when llm is not configured, falls back to meta tags only', function () {
@@ -394,8 +393,6 @@ test('when llm is not configured, falls back to meta tags only', function () {
 
     expect($result->description)->toBe('Uma descrição curta.');
     expect($result->language)->toBe('pt-BR');
-    expect($result->tone)->toBeNull();
-    expect($result->voiceNotes)->toBeNull();
 });
 
 test('falls back to meta tags when BrandAnalyzer throws', function () {
@@ -422,8 +419,6 @@ test('falls back to meta tags when BrandAnalyzer throws', function () {
 
     expect($result->description)->toBe('Fallback desc.');
     expect($result->language)->toBe('en');
-    expect($result->tone)->toBeNull();
-    expect($result->voiceNotes)->toBeNull();
 });
 
 test('toArray swaps site background and text colours for the image palette fields', function () {
@@ -453,8 +448,10 @@ test('BrandMetadata toArray exposes the shape the controller expects', function 
         'name',
         'brand_description',
         'content_language',
-        'brand_tone',
-        'brand_voice_notes',
+        'brand_color',
+        'background_color',
+        'text_color',
         'logo_url',
+        'brand_voice_traits',
     ]);
 });

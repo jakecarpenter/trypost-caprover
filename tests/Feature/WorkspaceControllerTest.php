@@ -220,6 +220,30 @@ test('update workspace settings updates workspace and redirects back', function 
     expect($this->workspace->name)->toBe('Updated Name');
 });
 
+test('update workspace settings persists brand voice traits', function () {
+    $this->actingAs($this->user)
+        ->from(route('app.workspace.brand'))
+        ->put(route('app.workspace.settings.update'), [
+            'name' => $this->workspace->name,
+            'brand_font' => 'Inter',
+            'image_style' => 'cinematic',
+            'brand_voice_traits' => ['third_person', 'no_hype', 'data_driven'],
+        ])->assertRedirect(route('app.workspace.brand'));
+
+    expect($this->workspace->refresh()->brand_voice_traits)->toBe(['third_person', 'no_hype', 'data_driven']);
+});
+
+test('update workspace settings rejects an unknown brand voice trait', function () {
+    $this->actingAs($this->user)
+        ->from(route('app.workspace.brand'))
+        ->put(route('app.workspace.settings.update'), [
+            'name' => $this->workspace->name,
+            'brand_font' => 'Inter',
+            'image_style' => 'cinematic',
+            'brand_voice_traits' => ['third_person', 'not_a_real_trait'],
+        ])->assertSessionHasErrors('brand_voice_traits.1');
+});
+
 test('update workspace settings persists the image_style choice', function () {
     $this->actingAs($this->user)
         ->from(route('app.workspace.brand'))
@@ -438,7 +462,7 @@ test('autofillBrand returns metadata without persisting anything', function () {
         ->postJson(route('app.workspaces.autofill'), ['url' => 'https://example.com']);
 
     $response->assertOk();
-    $response->assertJsonStructure(['name', 'brand_description', 'brand_tone', 'brand_voice_notes', 'content_language', 'logo_url']);
+    $response->assertJsonStructure(['name', 'brand_description', 'content_language', 'logo_url']);
 
     expect(Workspace::count())->toBe($initialWorkspaceCount);
 });
@@ -470,8 +494,7 @@ test('store persists brand fields and redirects to /accounts with openDialog fla
         'name' => 'Acme Inc',
         'brand_website' => 'https://acme.example',
         'brand_description' => 'We sell rockets.',
-        'brand_tone' => 'professional',
-        'brand_voice_notes' => 'short, punchy.',
+        'brand_voice_traits' => ['third_person', 'no_hype'],
         'content_language' => 'en',
     ]);
 

@@ -11,8 +11,7 @@ interface Workspace {
     name: string;
     brand_website: string | null;
     brand_description: string | null;
-    brand_tone: string;
-    brand_voice_notes: string | null;
+    brand_voice_traits: string[] | null;
     brand_color: string | null;
     background_color: string | null;
     text_color: string | null;
@@ -25,14 +24,14 @@ const props = defineProps<{
     workspace: Workspace;
     availableFonts: string[];
     availableImageStyles: string[];
+    availableVoiceTraits: Record<string, string[]>;
 }>();
 
 const form = useForm({
     name: props.workspace.name,
     brand_website: props.workspace.brand_website ?? '',
     brand_description: props.workspace.brand_description ?? '',
-    brand_tone: props.workspace.brand_tone ?? 'professional',
-    brand_voice_notes: props.workspace.brand_voice_notes ?? '',
+    brand_voice_traits: props.workspace.brand_voice_traits ?? [],
     brand_color: props.workspace.brand_color,
     background_color: props.workspace.background_color,
     text_color: props.workspace.text_color,
@@ -58,6 +57,7 @@ const submit = () => {
             :errors="form.errors"
             :available-fonts="availableFonts"
             :available-image-styles="availableImageStyles"
+            :available-voice-traits="availableVoiceTraits"
         />
 
         <Button :disabled="form.processing">{{ $t('settings.workspace.save') }}</Button>

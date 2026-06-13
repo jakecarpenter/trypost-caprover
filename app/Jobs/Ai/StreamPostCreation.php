@@ -7,8 +7,6 @@ namespace App\Jobs\Ai;
 use App\Actions\Post\CreatePost;
 use App\Ai\Agents\PostContentGenerator;
 use App\Ai\Agents\PostContentHumanizer;
-use App\Enums\Media\Source;
-use App\Enums\Media\Type as MediaType;
 use App\Enums\Notification\Channel as NotificationChannel;
 use App\Enums\Notification\Type as NotificationType;
 use App\Enums\PostPlatform\ContentType;
@@ -18,17 +16,14 @@ use App\Models\Post;
 use App\Models\SocialAccount;
 use App\Models\User;
 use App\Models\Workspace;
-use App\Services\Ai\AiImageClient;
 use App\Services\Ai\RecordAiUsage;
-use App\Services\Image\BrandColorMapper;
-use App\Services\Image\TemplateImageGenerator;
+use App\Services\Image\PostImagePipeline;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 class StreamPostCreation implements ShouldQueue
 {
@@ -102,32 +97,6 @@ class StreamPostCreation implements ShouldQueue
     }
 
     /**
-     * Run the structured generator output through the humanizer pass and merge
-     * the humanized text fields back over the original structure (preserving
-     * image_keywords and slide order/count). Failures are logged and the
-     * original structure is returned so generation never breaks because of the
-     * polish step.
-     *
-     * @param  array<string, mixed>  $structured
-     * @return array<string, mixed>
-     */
-    /**
-     * Look up the AI image dimensions for the current format. Falls back to
-     * the generator's defaults (4:5 portrait) if the format string isn't a
-     * known ContentType case.
-     *
-     * @return array{width: int, height: int}
-     */
-    private function dimensionsForFormat(): array
-    {
-        $type = $this->resolvedContentType();
-
-        return $type
-            ? $type->aiImageDimensions()
-            : ['width' => TemplateImageGenerator::DEFAULT_WIDTH, 'height' => TemplateImageGenerator::DEFAULT_HEIGHT];
-    }
-
-    /**
      * The stored content type for the requested generation format. The carousel
      * generation format is persisted as an Instagram feed post.
      */
@@ -140,6 +109,16 @@ class StreamPostCreation implements ShouldQueue
         return ContentType::tryFrom($this->format);
     }
 
+    /**
+     * Run the structured generator output through the humanizer pass and merge
+     * the humanized text fields back over the original structure (preserving
+     * image_keywords and slide order/count). Failures are logged and the
+     * original structure is returned so generation never breaks because of the
+     * polish step.
+     *
+     * @param  array<string, mixed>  $structured
+     * @return array<string, mixed>
+     */
     private function humanize(Workspace $workspace, array $structured, string $format): array
     {
         try {
@@ -160,7 +139,7 @@ class StreamPostCreation implements ShouldQueue
                     'image_body' => data_get($structured, 'image_body', ''),
                 ];
 
-            $humanizer = new PostContentHumanizer($workspace, $format);
+            $humanizer = new PostContentHumanizer($workspace, $format, platformContext: $this->format);
             $response = $humanizer->prompt(json_encode($input, JSON_UNESCAPED_UNICODE));
             $humanized = $response->structured ?? [];
 
@@ -207,29 +186,16 @@ class StreamPostCreation implements ShouldQueue
     private function handleCarousel(Workspace $workspace, ?SocialAccount $socialAccount, array $structured): void
     {
         $caption = (string) data_get($structured, 'caption', '');
-        $slides = data_get($structured, 'slides', []);
 
         $media = [];
 
         if ($socialAccount) {
-            $generator = new TemplateImageGenerator(new BrandColorMapper, new AiImageClient);
-            ['width' => $width, 'height' => $height] = $this->dimensionsForFormat();
-
-            foreach ($slides as $slide) {
-                $rendered = $generator->render(
-                    workspace: $workspace,
-                    socialAccount: $socialAccount,
-                    title: data_get($slide, 'title', ''),
-                    body: data_get($slide, 'body', ''),
-                    imageKeywords: data_get($slide, 'image_keywords', []),
-                    width: $width,
-                    height: $height,
-                );
-
-                if ($rendered) {
-                    $media[] = $this->buildAiMediaItem($workspace, $rendered);
-                }
-            }
+            $media = app(PostImagePipeline::class)->forCarousel(
+                workspace: $workspace,
+                account: $socialAccount,
+                structured: $structured,
+                contentType: $this->resolvedContentType(),
+            );
         }
 
         $post = $this->createPost($workspace, $caption, $media, $socialAccount);
@@ -246,29 +212,16 @@ class StreamPostCreation implements ShouldQueue
         $supportsCaption = $contentType?->supportsCaption() ?? true;
 
         $rawContent = (string) data_get($structured, 'content', data_get($structured, 'text', ''));
-        $imageTitle = (string) data_get($structured, 'image_title', '');
-        $imageBody = (string) data_get($structured, 'image_body', '');
-        $keywords = data_get($structured, 'image_keywords', []);
 
         $media = [];
 
         if ($this->imageCount > 0 && $socialAccount) {
-            $generator = new TemplateImageGenerator(new BrandColorMapper, new AiImageClient);
-            ['width' => $width, 'height' => $height] = $this->dimensionsForFormat();
-
-            $rendered = $generator->render(
+            $media = app(PostImagePipeline::class)->forSingle(
                 workspace: $workspace,
-                socialAccount: $socialAccount,
-                title: $imageTitle,
-                body: $imageBody,
-                imageKeywords: $keywords,
-                width: $width,
-                height: $height,
+                account: $socialAccount,
+                structured: $structured,
+                contentType: $this->resolvedContentType(),
             );
-
-            if ($rendered) {
-                $media[] = $this->buildAiMediaItem($workspace, $rendered);
-            }
         }
 
         $caption = $supportsCaption ? $rawContent : '';
@@ -344,32 +297,5 @@ class StreamPostCreation implements ShouldQueue
             abs($ratio - 16 / 9) < 0.01 => '16:9',
             default => null,
         };
-    }
-
-    /**
-     * @param  array{path: string, source_meta: array<string, mixed>}  $rendered
-     * @return array<string, mixed>
-     */
-    private function buildAiMediaItem(Workspace $workspace, array $rendered): array
-    {
-        $media = $workspace->media()->create([
-            'collection' => 'ai-generated',
-            'type' => MediaType::Image,
-            'path' => $rendered['path'],
-            'original_filename' => basename($rendered['path']),
-            'mime_type' => 'image/webp',
-            'size' => Storage::size($rendered['path']),
-            'order' => 0,
-        ]);
-
-        return [
-            'id' => $media->id,
-            'path' => $media->path,
-            'url' => $media->url,
-            'type' => 'image',
-            'mime_type' => 'image/webp',
-            'source' => Source::Ai->value,
-            'source_meta' => $rendered['source_meta'],
-        ];
     }
 }

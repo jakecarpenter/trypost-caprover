@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Http\Middleware\Api\LoadWorkspaceFromToken;
 use App\Http\Middleware\App\EnsureRegistrationEnabled;
 use App\Http\Middleware\App\HandleInertiaRequests;
@@ -52,6 +54,12 @@ return Application::configure(basePath: dirname(__DIR__))
                     'name' => 'rate_limit_exceeded',
                     'message' => $message,
                 ], 429)->withHeaders($e->getHeaders());
+            }
+        });
+
+        $exceptions->render(function (DomainException $e, Request $request) {
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $e->getMessage()], 422);
             }
         });
     })->create();

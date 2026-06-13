@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { getPlatformLogo } from '@/composables/usePlatformLogo';
-import { ContentType, type ContentTypeValue } from '@/enums/content-type';
+import { ContentType, type ContentTypeValue } from '@/types/content-type';
 import { loading as loadingRoute } from '@/routes/app/posts/ai';
 
 interface SocialAccount {

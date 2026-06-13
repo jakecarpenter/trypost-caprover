@@ -15,16 +15,14 @@ test('CreateWorkspace persists name and brand fields', function () {
         'name' => 'Acme Inc',
         'brand_website' => 'https://acme.example',
         'brand_description' => 'We sell rockets.',
-        'brand_tone' => 'professional',
-        'brand_voice_notes' => 'short, punchy.',
+        'brand_voice_traits' => ['third_person', 'no_hype'],
         'content_language' => 'en',
     ]);
 
     expect($workspace->name)->toBe('Acme Inc');
     expect($workspace->brand_website)->toBe('https://acme.example');
     expect($workspace->brand_description)->toBe('We sell rockets.');
-    expect($workspace->brand_tone)->toBe('professional');
-    expect($workspace->brand_voice_notes)->toBe('short, punchy.');
+    expect($workspace->brand_voice_traits)->toBe(['third_person', 'no_hype']);
     expect($workspace->content_language)->toBe('en');
     expect($workspace->account_id)->toBe($account->id);
     expect($workspace->user_id)->toBe($user->id);

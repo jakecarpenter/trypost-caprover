@@ -5,7 +5,7 @@ import { computed, ref } from 'vue';
 import { Avatar } from '@/components/ui/avatar';
 import { getMediaValidationWarning } from '@/composables/useMedia';
 import { getPlatformLogo } from '@/composables/usePlatformLogo';
-import { ContentType } from '@/enums/content-type';
+import { ContentType } from '@/types/content-type';
 import type { MediaItem } from '@/types/media';
 
 interface SocialAccount {
@@ -22,11 +22,13 @@ interface Props {
     media: MediaItem[];
     meta?: Record<string, any>;
     disabled?: boolean;
+    previewOnly?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
     disabled: false,
     meta: () => ({}),
+    previewOnly: false,
 });
 
 const emit = defineEmits<{
@@ -138,7 +140,7 @@ const warning = computed(() => getMediaValidationWarning(props.contentType, prop
             </div>
 
             <p
-                v-if="warning"
+                v-if="warning && !previewOnly"
                 class="flex items-start gap-2 rounded-lg border-2 border-foreground bg-rose-50 p-2 text-xs font-semibold text-rose-700"
             >
                 <IconAlertTriangle class="mt-0.5 size-3.5 shrink-0" />

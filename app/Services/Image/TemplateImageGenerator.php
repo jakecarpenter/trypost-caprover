@@ -51,6 +51,7 @@ class TemplateImageGenerator
         int $width = self::DEFAULT_WIDTH,
         int $height = self::DEFAULT_HEIGHT,
         ?string $backgroundPath = null,
+        bool $applyBrandVisuals = true,
     ): ?array {
         $this->width = $width;
         $this->height = $height;
@@ -63,6 +64,14 @@ class TemplateImageGenerator
             default => ImageStyle::DEFAULT,
         };
         $language = $workspace->content_language;
+
+        // When brand visuals are off (e.g. faithful curation), the AI background
+        // is generated without brand colours or identity — neutral imagery driven
+        // only by the post's own keywords.
+        $brandColor = $applyBrandVisuals ? $workspace->brand_color : null;
+        $backgroundColor = $applyBrandVisuals ? $workspace->background_color : null;
+        $textColor = $applyBrandVisuals ? $workspace->text_color : null;
+        $brandDescription = $applyBrandVisuals ? $workspace->brand_description : null;
 
         $generatedNewBackground = false;
         $resolvedBackgroundPath = null;
@@ -79,10 +88,10 @@ class TemplateImageGenerator
                 style: $imageStyle,
                 orientation: $orientation,
                 language: $language,
-                brandColor: $workspace->brand_color,
-                backgroundColor: $workspace->background_color,
-                textColor: $workspace->text_color,
-                brandDescription: $workspace->brand_description,
+                brandColor: $brandColor,
+                backgroundColor: $backgroundColor,
+                textColor: $textColor,
+                brandDescription: $brandDescription,
             );
 
             if ($imageData === null) {
@@ -134,9 +143,9 @@ class TemplateImageGenerator
                 'body' => $body,
                 'width' => $this->width,
                 'height' => $this->height,
-                'brand_color' => $workspace->brand_color,
-                'background_color' => $workspace->background_color,
-                'text_color' => $workspace->text_color,
+                'brand_color' => $brandColor,
+                'background_color' => $backgroundColor,
+                'text_color' => $textColor,
                 'background_path' => $resolvedBackgroundPath,
             ],
         ];

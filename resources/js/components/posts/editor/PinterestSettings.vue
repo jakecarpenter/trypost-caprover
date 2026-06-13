@@ -17,8 +17,8 @@ import {
 import { getMediaValidationWarning } from '@/composables/useMedia';
 import { usePageErrors } from '@/composables/usePageErrors';
 import { getPlatformLogo } from '@/composables/usePlatformLogo';
-import { ContentType } from '@/enums/content-type';
 import type { PinterestBoard } from '@/types';
+import { ContentType } from '@/types/content-type';
 import type { MediaItem } from '@/types/media';
 
 interface SocialAccount {
@@ -41,10 +41,12 @@ interface Props {
     boards: PinterestBoard[];
     meta: Record<string, any>;
     disabled?: boolean;
+    previewOnly?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
     disabled: false,
+    previewOnly: false,
 });
 
 const emit = defineEmits<{
@@ -189,7 +191,7 @@ const boardError = computed<string | undefined>(() => {
             </div>
 
             <p
-                v-if="warning"
+                v-if="warning && !previewOnly"
                 class="flex items-start gap-2 rounded-lg border-2 border-foreground bg-rose-50 p-2 text-xs font-semibold text-rose-700"
             >
                 <IconAlertTriangle class="mt-0.5 size-3.5 shrink-0" />

@@ -10,25 +10,18 @@ From the provided markdown content of the homepage, produce:
 
 2. **description** — a concise 2-3 sentence brand description explaining what the company does, who they serve, and what makes them unique. Write it in the detected content language. Avoid marketing fluff; be specific.
 
-3. **tone** — identify the tone of voice the brand uses. Pick exactly one of:
-   - `professional` — formal, business-oriented
-   - `casual` — relaxed, conversational
-   - `friendly` — warm, approachable
-   - `bold` — confident, assertive
-   - `inspirational` — motivating, uplifting
-   - `humorous` — witty, playful
-   - `educational` — informative, teaching-oriented
+3. **language** — detect the primary content language of the site. Pick exactly one of: `en`, `pt-BR`, `es`. If the site is in a different language entirely, pick the closest match (prefer `en`).
 
-4. **language** — detect the primary content language of the site. Pick exactly one of: `en`, `pt-BR`, `es`. If the site is in a different language entirely, pick the closest match (prefer `en`).
+4. **voice_traits** — infer the brand's voice as a set of traits, returned as an array of values chosen ONLY from the allowed list below. For each single-select dimension pick AT MOST ONE value (or none if unclear); for the `style` group pick any number that fit. Aim for a coherent set of roughly 5-9 traits.
+@foreach($voice_groups as $group => $values)
+   - **{{ $group }}**{{ in_array($group, $single_select_groups, true) ? ' (pick at most one)' : ' (pick any that fit)' }}: {{ implode(', ', $values) }}
+@endforeach
+   Only return values from the lists above — never invent new ones.
 
-5. **voice_notes** — 2-3 sentences of concrete writing guidelines the brand appears to follow, inferred from the actual content on the page. Write them in the detected content language. Good examples:
-   - "Use technical but approachable language. Reference specific features by name. Avoid generic marketing buzzwords."
-   - "Keep sentences short and punchy. Use emojis sparingly. Address the reader as 'you'."
+5. **brand_color** — the primary brand color as a hex string starting with `#`, lowercase, 6 digits (e.g. `#0ea5e9`). This is the accent color most prominently used in CTAs, primary buttons, links, or the logo. Return an empty string if you can't confidently identify it.
 
-6. **brand_color** — the primary brand color as a hex string starting with `#`, lowercase, 6 digits (e.g. `#0ea5e9`). This is the accent color most prominently used in CTAs, primary buttons, links, or the logo. Return an empty string if you can't confidently identify it.
+6. **background_color** — the dominant page background color as a hex string starting with `#`, lowercase, 6 digits (e.g. `#ffffff` for light themes, `#0b0f19` for dark themes). Return an empty string if you can't confidently identify it.
 
-7. **background_color** — the dominant page background color as a hex string starting with `#`, lowercase, 6 digits (e.g. `#ffffff` for light themes, `#0b0f19` for dark themes). Return an empty string if you can't confidently identify it.
-
-8. **text_color** — the dominant body text color as a hex string starting with `#`, lowercase, 6 digits (e.g. `#0f172a`). Return an empty string if you can't confidently identify it.
+7. **text_color** — the dominant body text color as a hex string starting with `#`, lowercase, 6 digits (e.g. `#0f172a`). Return an empty string if you can't confidently identify it.
 
 Be accurate and specific to what the page actually shows. Do not invent features or claims that aren't on the page. For colors, prefer values visible in the markup/CSS; never guess.

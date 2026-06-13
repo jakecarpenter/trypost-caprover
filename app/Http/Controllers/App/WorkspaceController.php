@@ -8,6 +8,7 @@ use App\Actions\Ai\AutofillBrand;
 use App\Actions\Workspace\CreateWorkspace;
 use App\Actions\Workspace\DeleteWorkspace;
 use App\Enums\Workspace\BrandFont;
+use App\Enums\Workspace\BrandVoiceTrait;
 use App\Enums\Workspace\ImageStyle;
 use App\Http\Requests\App\Workspace\StoreWorkspaceRequest;
 use App\Http\Requests\App\Workspace\UpdateWorkspaceRequest;
@@ -81,6 +82,7 @@ class WorkspaceController extends Controller
         return Inertia::render('workspaces/Create', [
             'availableFonts' => BrandFont::values(),
             'availableImageStyles' => ImageStyle::values(),
+            'availableVoiceTraits' => BrandVoiceTrait::grouped(),
         ]);
     }
 
@@ -178,6 +180,7 @@ class WorkspaceController extends Controller
             'workspace' => $workspace,
             'availableFonts' => BrandFont::values(),
             'availableImageStyles' => ImageStyle::values(),
+            'availableVoiceTraits' => BrandVoiceTrait::grouped(),
         ]);
     }
 

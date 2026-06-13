@@ -10,8 +10,7 @@ test('instructions render brand context', function () {
     $workspace = Workspace::factory()->make([
         'name' => 'TryPost',
         'brand_description' => 'Social media scheduling tool',
-        'brand_tone' => 'friendly',
-        'brand_voice_notes' => 'Use everyday language, no jargon.',
+        'brand_voice_traits' => ['friendly', 'direct'],
         'content_language' => 'en',
     ]);
 
@@ -19,8 +18,26 @@ test('instructions render brand context', function () {
     $instructions = $agent->instructions();
 
     expect($instructions)->toContain('TryPost');
-    expect($instructions)->toContain('friendly');
-    expect($instructions)->toContain('everyday language');
+    expect($instructions)->toContain('friendly'); // "Be warm and friendly."
+    expect($instructions)->toContain('direct'); // "Use direct, plain, accessible language."
+    expect($instructions)->toContain('en');
+});
+
+test('instructions omit brand description and voice when applyBrandVoice is false', function () {
+    $workspace = Workspace::factory()->make([
+        'name' => 'TryPost',
+        'brand_description' => 'A social scheduling tool for founders',
+        'brand_voice_traits' => ['first_person', 'transparent'],
+        'content_language' => 'en',
+    ]);
+
+    $agent = new PostContentGenerator(workspace: $workspace, applyBrandVoice: false);
+    $instructions = $agent->instructions();
+
+    expect($instructions)->not->toContain('A social scheduling tool for founders');
+    expect($instructions)->not->toContain('first person');
+    expect($instructions)->not->toContain('behind-the-scenes');
+    // Language still applies — it isn't part of the brand voice.
     expect($instructions)->toContain('en');
 });
 
@@ -148,4 +165,17 @@ test('instructions do not include examples section when platform context is null
     );
 
     expect($agent->instructions())->not->toContain('curated library');
+});
+
+test('instructions inject the platform character cap from the shared budget', function () {
+    $agent = new PostContentGenerator(
+        workspace: Workspace::factory()->make(),
+        format: 'single',
+        platformContext: 'x_post',
+    );
+
+    $instructions = $agent->instructions();
+
+    expect($instructions)->toContain('280'); // X hard cap
+    expect($instructions)->toContain('Hard cap');
 });

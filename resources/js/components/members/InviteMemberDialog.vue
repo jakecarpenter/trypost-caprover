@@ -22,7 +22,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { WorkspaceRole } from '@/enums/workspace-role';
+import { WorkspaceRole } from '@/types/workspace-role';
 import { store as storeInvite } from '@/routes/app/invites';
 
 const open = defineModel<boolean>('open', { default: false });

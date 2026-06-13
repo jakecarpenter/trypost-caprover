@@ -2,6 +2,7 @@
 import { Link, router, usePage } from '@inertiajs/vue3';
 import {
     IconAffiliate,
+    IconBolt,
     IconCalendar,
     IconChartBar,
     IconChevronRight,
@@ -45,6 +46,7 @@ import { useFeatureAccess } from '@/composables/useFeatureAccess';
 import { useUpgradeDialog } from '@/composables/useUpgradeDialog';
 import { accounts, analytics, calendar, settings as settingsHub } from '@/routes/app';
 import { index as assets } from '@/routes/app/assets';
+import { index as automations } from '@/routes/app/automations';
 import { index as labels } from '@/routes/app/labels';
 import { index as signatures } from '@/routes/app/signatures';
 import { create as createWorkspaceRoute, switchMethod } from '@/routes/app/workspaces';
@@ -70,6 +72,12 @@ const mainNavItems = computed<NavItem[]>(() => [
         title: trans('sidebar.analytics'),
         href: analytics.url(),
         icon: IconChartBar,
+    },
+    {
+        title: trans('sidebar.automations'),
+        href: automations.url(),
+        icon: IconBolt,
+        badge: 'Beta',
     },
 ]);
 

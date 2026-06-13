@@ -10,6 +10,13 @@ import FontPicker from '@/components/FontPicker.vue';
 import HexColorInput from '@/components/HexColorInput.vue';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+    Field,
+    FieldGroup,
+    FieldLabel,
+    FieldTitle,
+} from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -26,8 +33,7 @@ interface BrandFields {
     name?: string;
     brand_website: string;
     brand_description: string;
-    brand_tone: string;
-    brand_voice_notes: string;
+    brand_voice_traits: string[];
     brand_color: string | null;
     background_color: string | null;
     text_color: string | null;
@@ -41,12 +47,11 @@ interface AutofillResponse {
     name: string | null;
     brand_description: string | null;
     content_language: string | null;
-    brand_tone: string | null;
-    brand_voice_notes: string | null;
     brand_color: string | null;
     background_color: string | null;
     text_color: string | null;
     logo_url: string | null;
+    brand_voice_traits: string[] | null;
 }
 
 const props = withDefaults(
@@ -55,6 +60,7 @@ const props = withDefaults(
         errors: Partial<Record<keyof BrandFields, string>>;
         availableFonts: string[];
         availableImageStyles: string[];
+        availableVoiceTraits: Record<string, string[]>;
         autofill?: boolean;
         showName?: boolean;
     }>(),
@@ -68,9 +74,26 @@ const autofillHttp = useHttp<{ url: string }, AutofillResponse>({ url: '' });
 const isAutofilling = ref(false);
 const logoPreview = ref<string | null>(null);
 
-const toneLabel = computed(() =>
-    props.fields.brand_tone ? trans(`settings.brand.tone_${props.fields.brand_tone}`) : '',
-);
+// Only the `style` group stacks; every spectrum group (pov, formality, …) is
+// single-select, so picking an option clears the others in that group.
+const isTraitSelected = (value: string): boolean => (props.fields.brand_voice_traits ?? []).includes(value);
+
+const toggleTrait = (group: string, value: string): void => {
+    const current = props.fields.brand_voice_traits ?? [];
+
+    if (current.includes(value)) {
+        props.fields.brand_voice_traits = current.filter((v) => v !== value);
+        return;
+    }
+
+    if (group === 'style') {
+        props.fields.brand_voice_traits = [...current, value];
+        return;
+    }
+
+    const groupValues = props.availableVoiceTraits[group] ?? [];
+    props.fields.brand_voice_traits = [...current.filter((v) => !groupValues.includes(v)), value];
+};
 
 const languageLabel = computed(() => {
     const map: Record<string, string> = {
@@ -96,8 +119,9 @@ const runAutofill = async () => {
         if (data?.name && props.showName && !props.fields.name) props.fields.name = data.name;
         if (data?.brand_description) props.fields.brand_description = data.brand_description;
         if (data?.content_language) props.fields.content_language = data.content_language;
-        if (data?.brand_tone) props.fields.brand_tone = data.brand_tone;
-        if (data?.brand_voice_notes) props.fields.brand_voice_notes = data.brand_voice_notes;
+        if (data?.brand_voice_traits?.length) {
+            props.fields.brand_voice_traits = data.brand_voice_traits;
+        }
         if (data?.brand_color) props.fields.brand_color = data.brand_color;
         if (data?.background_color) props.fields.background_color = data.background_color;
         if (data?.text_color) props.fields.text_color = data.text_color;
@@ -164,59 +188,52 @@ const runAutofill = async () => {
             <InputError :message="errors.brand_description" />
         </div>
 
-        <div class="grid gap-4 sm:grid-cols-2">
-            <div class="grid gap-2">
-                <Label for="brand_tone">{{ $t('settings.brand.tone') }}</Label>
-                <Select v-model="fields.brand_tone">
-                    <SelectTrigger id="brand_tone" class="w-full">
-                        <SelectValue :placeholder="$t('settings.brand.tone')">
-                            {{ toneLabel }}
-                        </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="professional">{{ $t('settings.brand.tone_professional') }}</SelectItem>
-                        <SelectItem value="casual">{{ $t('settings.brand.tone_casual') }}</SelectItem>
-                        <SelectItem value="friendly">{{ $t('settings.brand.tone_friendly') }}</SelectItem>
-                        <SelectItem value="bold">{{ $t('settings.brand.tone_bold') }}</SelectItem>
-                        <SelectItem value="inspirational">{{ $t('settings.brand.tone_inspirational') }}</SelectItem>
-                        <SelectItem value="humorous">{{ $t('settings.brand.tone_humorous') }}</SelectItem>
-                        <SelectItem value="educational">{{ $t('settings.brand.tone_educational') }}</SelectItem>
-                    </SelectContent>
-                </Select>
-                <InputError :message="errors.brand_tone" />
-            </div>
-
-            <div class="grid gap-2">
-                <Label for="content_language">{{ $t('settings.brand.content_language') }}</Label>
-                <Select v-model="fields.content_language">
-                    <SelectTrigger id="content_language" class="w-full">
-                        <SelectValue :placeholder="$t('settings.brand.content_language')">
-                            {{ languageLabel }}
-                        </SelectValue>
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="en">English</SelectItem>
-                        <SelectItem value="pt-BR">Português (Brasil)</SelectItem>
-                        <SelectItem value="es">Español</SelectItem>
-                    </SelectContent>
-                </Select>
-                <InputError :message="errors.content_language" />
-            </div>
+        <div class="grid gap-2">
+            <Label for="content_language">{{ $t('settings.brand.content_language') }}</Label>
+            <Select v-model="fields.content_language">
+                <SelectTrigger id="content_language" class="w-full">
+                    <SelectValue :placeholder="$t('settings.brand.content_language')">
+                        {{ languageLabel }}
+                    </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="pt-BR">Português (Brasil)</SelectItem>
+                    <SelectItem value="es">Español</SelectItem>
+                </SelectContent>
+            </Select>
+            <p class="text-xs font-medium text-foreground/60">
+                {{ $t('settings.brand.content_language_description') }}
+            </p>
+            <InputError :message="errors.content_language" />
         </div>
 
-        <p class="-mt-4 text-xs font-medium text-foreground/60">
-            {{ $t('settings.brand.content_language_description') }}
-        </p>
+        <div class="grid gap-5">
+            <div class="grid gap-1">
+                <Label>{{ $t('settings.brand.voice') }}</Label>
+                <p class="text-xs font-medium text-foreground/60">{{ $t('settings.brand.voice_description') }}</p>
+            </div>
 
-        <div class="grid gap-2">
-            <Label for="brand_voice_notes">{{ $t('settings.brand.voice_notes') }}</Label>
-            <Textarea
-                id="brand_voice_notes"
-                v-model="fields.brand_voice_notes"
-                :placeholder="$t('settings.brand.voice_notes_placeholder')"
-                rows="3"
-            />
-            <InputError :message="errors.brand_voice_notes" />
+            <div v-for="(values, group) in availableVoiceTraits" :key="group" class="grid gap-2">
+                <Label>{{ $t(`settings.brand.voice_group.${group}`) }}</Label>
+                <FieldGroup class="flex flex-row flex-wrap gap-2 [--radius:9999rem]">
+                    <FieldLabel v-for="value in values" :key="value" :for="`voice-${value}`" class="!w-fit">
+                        <Field
+                            orientation="horizontal"
+                            class="gap-1.5 overflow-hidden !px-3 !py-1.5 transition-all duration-100 ease-linear group-has-data-[state=checked]/field-label:!px-2"
+                        >
+                            <Checkbox
+                                :id="`voice-${value}`"
+                                :model-value="isTraitSelected(value)"
+                                class="-ml-6 -translate-x-1 rounded-full opacity-0 transition-all duration-100 ease-linear data-[state=checked]:ml-0 data-[state=checked]:translate-x-0 data-[state=checked]:opacity-100"
+                                @update:model-value="toggleTrait(group, value)"
+                            />
+                            <FieldTitle>{{ $t(`settings.brand.voice_trait.${value}`) }}</FieldTitle>
+                        </Field>
+                    </FieldLabel>
+                </FieldGroup>
+            </div>
+            <InputError :message="errors.brand_voice_traits" />
         </div>
 
         <div class="grid gap-4 sm:grid-cols-3">

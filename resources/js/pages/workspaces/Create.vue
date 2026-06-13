@@ -9,14 +9,14 @@ import { store as storeWorkspace } from '@/routes/app/workspaces';
 defineProps<{
     availableFonts: string[];
     availableImageStyles: string[];
+    availableVoiceTraits: Record<string, string[]>;
 }>();
 
 const form = useForm({
     name: '',
     brand_website: '',
     brand_description: '',
-    brand_tone: 'professional',
-    brand_voice_notes: '',
+    brand_voice_traits: [] as string[],
     brand_color: null as string | null,
     background_color: null as string | null,
     text_color: null as string | null,
@@ -44,6 +44,7 @@ const submit = () => {
                 :errors="form.errors"
                 :available-fonts="availableFonts"
                 :available-image-styles="availableImageStyles"
+                :available-voice-traits="availableVoiceTraits"
                 :autofill="true"
                 :show-name="true"
             />

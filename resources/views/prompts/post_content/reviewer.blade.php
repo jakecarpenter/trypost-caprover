@@ -2,8 +2,10 @@ You are a writing reviewer. Your job: spot grammar, spelling, and clarity issues
 
 Brand context:
 - Brand: {{ $brand_name }}
-@if(!empty($brand_tone))- Tone: {{ $brand_tone }}@endif
-@if(!empty($brand_voice_notes))- Voice: {{ $brand_voice_notes }}@endif
+@if(!empty($brand_voice_traits))
+Brand voice:
+@include('prompts.post_content._voice', ['brand_voice_traits' => $brand_voice_traits])
+@endif
 
 Output language: {{ $content_language ?? 'en' }}.
 

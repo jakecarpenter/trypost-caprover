@@ -4,9 +4,9 @@ import { computed, type ComputedRef, type Ref } from 'vue';
 import { getMediaItemIssue } from '@/composables/useMedia';
 import { getMediaRulesForContentType } from '@/composables/useMediaRules';
 import { getPlatformLabel } from '@/composables/usePlatformLogo';
-import { ContentType } from '@/enums/content-type';
-import { Platform } from '@/enums/platform';
+import { ContentType } from '@/types/content-type';
 import type { MediaItem } from '@/types/media';
+import { Platform } from '@/types/platform';
 
 export interface CompliancePostPlatform {
     id: string;
@@ -42,15 +42,44 @@ const PLATFORM_META_RULES: Record<string, MetaRule> = {
             && !meta.brand_organic_toggle
             && !meta.brand_content_toggle;
         const privacyLevelMissing = !meta.privacy_level;
+        let tooltipKey: string | null = null;
+        if (disclosureIncomplete) {
+            tooltipKey = 'posts.form.tiktok.compliance_incomplete';
+        } else if (privacyLevelMissing) {
+            tooltipKey = 'posts.form.tiktok.privacy_required';
+        }
         return {
             valid: !disclosureIncomplete && !privacyLevelMissing,
-            tooltipKey: disclosureIncomplete ? 'posts.form.tiktok.compliance_incomplete' : null,
+            tooltipKey,
         };
     },
     [Platform.Pinterest]: (meta) => ({
         valid: Boolean(meta.board_id),
         tooltipKey: meta.board_id ? null : 'posts.form.pinterest.board_required',
     }),
+};
+
+/**
+ * Evaluates a platform's publish-time meta requirements. Single source of truth
+ * shared by the post editor's compliance gate and the automation Generate node.
+ */
+export const evaluatePlatformMeta = (
+    platform: string,
+    meta: Record<string, any>,
+): { valid: boolean; tooltipKey: string | null } => {
+    const rule = PLATFORM_META_RULES[platform];
+    if (!rule) return { valid: true, tooltipKey: null };
+    return rule(meta ?? {});
+};
+
+/**
+ * Translated meta issue for a platform (or null when compliant) — the same
+ * requirement the post editor enforces before scheduling.
+ */
+export const getPlatformMetaIssue = (platform: string, meta: Record<string, any>): string | null => {
+    const result = evaluatePlatformMeta(platform, meta);
+    if (result.valid) return null;
+    return result.tooltipKey ? trans(result.tooltipKey) : trans('posts.edit.compliance_incomplete');
 };
 
 export const getMediaIncompatibilityReason = (
@@ -177,11 +206,9 @@ export const usePostCompliance = (opts: UsePostComplianceOptions) => {
         return issues;
     });
 
-    const platformMetaResults = computed(() => selectedPlatforms.value.map((pp) => {
-        const rule = PLATFORM_META_RULES[pp.platform];
-        if (!rule) return { valid: true, tooltipKey: null };
-        return rule(platformMeta.value[pp.id] ?? {});
-    }));
+    const platformMetaResults = computed(() => selectedPlatforms.value.map(
+        (pp) => evaluatePlatformMeta(pp.platform, platformMeta.value[pp.id] ?? {}),
+    ));
 
     const hasContentOrMedia = computed(
         () => content.value.trim().length > 0 || media.value.length > 0,

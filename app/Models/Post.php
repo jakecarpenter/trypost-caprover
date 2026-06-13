@@ -7,7 +7,9 @@ namespace App\Models;
 use App\DataTransferObjects\MediaItem;
 use App\Enums\Media\Type;
 use App\Enums\Post\Status as PostStatus;
+use App\Observers\PostObserver;
 use Database\Factories\PostFactory;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -19,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
+#[ObservedBy([PostObserver::class])]
 class Post extends Model
 {
     /** @use HasFactory<PostFactory> */

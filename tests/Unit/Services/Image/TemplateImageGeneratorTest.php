@@ -90,6 +90,32 @@ test('renders a slide and stores webp when AI returns bytes', function () use ($
         && $prompt->contains('blue'));
 })->skip(fn () => ! extension_loaded('gd'), 'GD extension required');
 
+test('omits the brand colour palette from the AI image prompt when brand visuals are off', function () use ($minimalPng) {
+    Image::fake([base64_encode($minimalPng())]);
+
+    if (! file_exists(base_path('resources/fonts/Inter-Bold.ttf'))) {
+        $this->markTestSkipped('Inter fonts not available — skipping render-dependent test.');
+    }
+
+    $service = new TemplateImageGenerator(new BrandColorMapper, new AiImageClient);
+    $service->render(
+        workspace: Workspace::factory()->make([
+            'brand_color' => '#0000ff',
+            'background_color' => '#ffffff',
+            'text_color' => '#000000',
+        ]),
+        socialAccount: SocialAccount::factory()->make(['username' => 'u', 'display_name' => 'U']),
+        title: 'Hello',
+        body: 'Body',
+        imageKeywords: ['kitchen'],
+        applyBrandVisuals: false,
+    );
+
+    // Despite the workspace having brand colours, the prompt must stay neutral.
+    Image::assertGenerated(fn ($prompt) => $prompt->contains('kitchen')
+        && ! $prompt->contains('BRAND COLOR PALETTE'));
+})->skip(fn () => ! extension_loaded('gd'), 'GD extension required');
+
 test('reuses existing background path when provided', function () use ($minimalPng) {
     if (! file_exists(base_path('resources/fonts/Inter-Bold.ttf'))) {
         $this->markTestSkipped('Inter fonts not available — skipping render-dependent test.');

@@ -1,6 +1,8 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import 'vue-sonner/style.css';
+@import './automations.css';
+@import './json-viewer.css';
 @plugin '@tailwindcss/typography';
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
@@ -164,3 +166,4 @@
 .trypost-container {
   @apply relative max-w-7xl w-full flex-1 mx-auto flex flex-col justify-center;
 }
+

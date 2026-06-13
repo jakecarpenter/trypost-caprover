@@ -16,8 +16,7 @@ interface Workspace {
     name: string;
     brand_website: string | null;
     brand_description: string | null;
-    brand_tone: string;
-    brand_voice_notes: string | null;
+    brand_voice_traits: string[] | null;
     brand_color: string | null;
     background_color: string | null;
     text_color: string | null;
@@ -30,6 +29,7 @@ defineProps<{
     workspace: Workspace;
     availableFonts: string[];
     availableImageStyles: string[];
+    availableVoiceTraits: Record<string, string[]>;
 }>();
 
 const tabs = computed(() => [
@@ -56,6 +56,7 @@ const tabs = computed(() => [
                 :workspace="workspace"
                 :available-fonts="availableFonts"
                 :available-image-styles="availableImageStyles"
+                :available-voice-traits="availableVoiceTraits"
             />
         </div>
     </AppLayout>

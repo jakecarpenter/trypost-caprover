@@ -26,8 +26,7 @@ class Workspace extends Model
         'name',
         'brand_website',
         'brand_description',
-        'brand_tone',
-        'brand_voice_notes',
+        'brand_voice_traits',
         'brand_color',
         'background_color',
         'text_color',
@@ -40,6 +39,7 @@ class Workspace extends Model
     {
         return [
             'image_style' => ImageStyle::class,
+            'brand_voice_traits' => 'array',
         ];
     }
 

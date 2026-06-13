@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 return [
+    'back' => 'Back',
+
     'confirm_modal' => [
         'cannot_be_undone' => 'This cannot be undone.',
         'type' => 'Type',
@@ -47,4 +49,10 @@ return [
     'clear' => 'Clear',
     'close' => 'Close',
     'loading_more' => 'Loading more...',
+
+    'actions' => [
+        'copy' => 'Copy',
+        'copied' => 'Copied',
+        'copy_failed' => 'Failed to copy to clipboard',
+    ],
 ];

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Ai\Agents;
 
+use App\Ai\Agents\Concerns\ResolvesPlatformCopyBudget;
 use App\Models\Workspace;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Attributes\Temperature;
@@ -22,20 +23,30 @@ use Laravel\Ai\Promptable;
 class PostContentHumanizer implements Agent, HasStructuredOutput
 {
     use Promptable;
+    use ResolvesPlatformCopyBudget;
 
     public function __construct(
         public Workspace $workspace,
         public string $format = 'single',
+        public ?string $platformContext = null,
+        public bool $applyBrandVoice = true,
     ) {}
 
     public function instructions(): string
     {
+        // The generator already wrote within the platform's character cap; the
+        // humanizer must preserve it, so it gets the same budget — otherwise the
+        // rewrite can drift past the limit the generator respected.
+        $budget = $this->platformCopyBudget($this->platformContext);
+
         return view('prompts.post_content.humanizer', [
             'brand_name' => $this->workspace->name ?? '',
-            'brand_tone' => $this->workspace->brand_tone ?? '',
-            'brand_voice_notes' => $this->workspace->brand_voice_notes ?? '',
+            'brand_voice_traits' => $this->applyBrandVoice ? ($this->workspace->brand_voice_traits ?? []) : [],
             'content_language' => $this->workspace->content_language,
             'format' => $this->format,
+            'hard_max_chars' => $budget['hard_max_chars'],
+            'target_chars' => $budget['target_chars'],
+            'platform_label' => $budget['platform_label'],
         ])->render();
     }
 

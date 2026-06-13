@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Ai\Agents;
 
+use App\Enums\Workspace\BrandVoiceTrait;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Contracts\HasStructuredOutput;
@@ -16,7 +17,10 @@ class BrandAnalyzer implements Agent, HasStructuredOutput
 
     public function instructions(): string
     {
-        return view('prompts.brand_analyzer')->render();
+        return view('prompts.brand_analyzer', [
+            'voice_groups' => BrandVoiceTrait::grouped(),
+            'single_select_groups' => BrandVoiceTrait::singleSelectGroups(),
+        ])->render();
     }
 
     public function provider(): Lab
@@ -42,16 +46,9 @@ class BrandAnalyzer implements Agent, HasStructuredOutput
             'description' => $schema->string()
                 ->description('A concise 2-3 sentence brand description summarizing what the company does, who they serve, and what makes them unique. Written in the detected content language.')
                 ->required(),
-            'tone' => $schema->string()
-                ->enum(['professional', 'casual', 'friendly', 'bold', 'inspirational', 'humorous', 'educational'])
-                ->description('The tone of voice the brand uses in their content.')
-                ->required(),
             'language' => $schema->string()
                 ->enum(['en', 'pt-BR', 'es'])
                 ->description('The primary language of the content.')
-                ->required(),
-            'voice_notes' => $schema->string()
-                ->description('2-3 sentences of concrete writing guidelines inferred from the site style (e.g. "Use technical but approachable language", "Avoid marketing buzzwords"). Written in the detected content language.')
                 ->required(),
             'brand_color' => $schema->string()
                 ->description('The primary brand color as a hex string starting with # (e.g. "#0ea5e9"). Pick the most prominent accent color used in CTAs, links, or logos. Return empty string if not confidently identifiable.')
@@ -61,6 +58,10 @@ class BrandAnalyzer implements Agent, HasStructuredOutput
                 ->required(),
             'text_color' => $schema->string()
                 ->description('The dominant body text color as a hex string starting with # (e.g. "#0f172a"). Return empty string if not confidently identifiable.')
+                ->required(),
+            'voice_traits' => $schema->array()
+                ->items($schema->string()->enum(BrandVoiceTrait::values()))
+                ->description('Brand voice traits inferred from the site, using only the allowed values. Pick AT MOST ONE per single-select dimension (point of view, formality, energy, humor, attitude, warmth, confidence) and any number of style traits. See the instructions for the groups and what each value means.')
                 ->required(),
         ];
     }

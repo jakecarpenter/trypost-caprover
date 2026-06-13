@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/table';
 import { useFeatureAccess } from '@/composables/useFeatureAccess';
 import { useUpgradeDialog } from '@/composables/useUpgradeDialog';
-import { WorkspaceRole } from '@/enums/workspace-role';
+import { WorkspaceRole } from '@/types/workspace-role';
 import { destroy as destroyInvite } from '@/routes/app/invites';
 import { remove as removeMemberRoute, updateRole } from '@/routes/app/members';
 

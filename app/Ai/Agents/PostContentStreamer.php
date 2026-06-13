@@ -33,8 +33,7 @@ class PostContentStreamer implements Agent
         return view('prompts.post_content.generator', [
             'brand_name' => $this->workspace->name ?? '',
             'brand_description' => $this->workspace->brand_description ?? '',
-            'brand_tone' => $this->workspace->brand_tone ?? '',
-            'brand_voice_notes' => $this->workspace->brand_voice_notes ?? '',
+            'brand_voice_traits' => $this->workspace->brand_voice_traits ?? [],
             'content_language' => $this->workspace->content_language,
             'current_content' => $this->currentContent,
             'format' => 'single',
