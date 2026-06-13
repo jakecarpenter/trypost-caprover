@@ -181,7 +181,7 @@ class BlueskyPublisher
 
         foreach ($urlMatches[0] as $match) {
             $url = $match[0];
-            $start = $this->getUtf8ByteOffset($text, $match[1]);
+            $start = $this->getUtf8ByteOffset($text, (int) $match[1]);
             $end = $start + strlen($url);
 
             $facets[] = [
@@ -212,12 +212,16 @@ class BlueskyPublisher
             $handle = substr($mention, 1); // Remove @
 
             // A mention facet needs the target's DID, not the handle; skip it if unresolvable.
-            $did = $didCache[$handle] ?? ($didCache[$handle] = $this->resolveHandleToDid($handle, $service, $account));
+            // Cache by key (not ??) so an unresolvable handle is resolved once, not per occurrence.
+            if (! array_key_exists($handle, $didCache)) {
+                $didCache[$handle] = $this->resolveHandleToDid($handle, $service, $account);
+            }
+            $did = $didCache[$handle];
             if ($did === null) {
                 continue;
             }
 
-            $start = $this->getUtf8ByteOffset($text, $match[1]);
+            $start = $this->getUtf8ByteOffset($text, (int) $match[1]);
             $end = $start + strlen($mention);
 
             $facets[] = [
@@ -245,7 +249,7 @@ class BlueskyPublisher
         foreach ($hashtagMatches[0] as $match) {
             $hashtag = $match[0];
             $tag = substr($hashtag, 1); // Remove #
-            $start = $this->getUtf8ByteOffset($text, $match[1]);
+            $start = $this->getUtf8ByteOffset($text, (int) $match[1]);
             $end = $start + strlen($hashtag);
 
             $facets[] = [
@@ -269,8 +273,8 @@ class BlueskyPublisher
      * Resolve a Bluesky handle to its DID via com.atproto.identity.resolveHandle.
      *
      * Tries the account's own PDS first (authenticated), then falls back to the
-     * public AppView and the bsky.social entryway. Returns null on failure so the
-     * caller can skip the mention facet instead of sending an invalid record.
+     * public AppView and the configured default service. Returns null on failure
+     * so the caller can skip the mention facet instead of sending an invalid record.
      */
     private function resolveHandleToDid(string $handle, ?string $service = null, ?SocialAccount $account = null): ?string
     {

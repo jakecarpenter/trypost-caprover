@@ -243,6 +243,39 @@ test('bluesky publisher resolves some mentions and skips the unresolvable ones',
     });
 });
 
+test('bluesky publisher resolves a repeated handle only once', function () {
+    $this->post->update(['content' => 'thanks @dup.bsky.social, really @dup.bsky.social']);
+
+    Http::fake([
+        '*/xrpc/com.atproto.identity.resolveHandle*' => Http::response(['did' => 'did:plc:dup789'], 200),
+        config('trypost.platforms.bluesky.default_service').'/xrpc/com.atproto.repo.createRecord' => Http::response([
+            'uri' => 'at://did:plc:testuser123/app.bsky.feed.post/3abc123xyz',
+            'cid' => 'bafyreiabc123',
+        ], 200),
+    ]);
+
+    $this->publisher->publish($this->postPlatform);
+
+    // The same handle appears twice but the per-post cache resolves it once.
+    $resolveCalls = Http::recorded(fn ($request) => str_contains($request->url(), 'resolveHandle'))->count();
+    expect($resolveCalls)->toBe(1);
+
+    // Both occurrences still become mention facets carrying the DID.
+    Http::assertSent(function ($request) {
+        $record = $request->data()['record'] ?? null;
+
+        if (! $record) {
+            return false;
+        }
+
+        $mentions = collect($record['facets'] ?? [])
+            ->filter(fn ($facet) => $facet['features'][0]['$type'] === 'app.bsky.richtext.facet#mention');
+
+        return $mentions->count() === 2
+            && $mentions->every(fn ($facet) => $facet['features'][0]['did'] === 'did:plc:dup789');
+    });
+});
+
 test('bluesky publisher uploads images', function () {
     // Create a media item through the PostPlatform's media() relation
     $this->post->update([
