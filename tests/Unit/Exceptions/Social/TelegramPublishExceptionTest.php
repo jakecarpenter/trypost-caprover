@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 use App\Exceptions\Social\ErrorCategory;
 use App\Exceptions\Social\TelegramPublishException;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 
-function telegramErrorResponse(array $body, int $status)
+function telegramErrorResponse(array $body, int $status): Response
 {
     return Http::fake(['*' => Http::response($body, $status)])->post('https://api.telegram.org/botX/sendMessage');
 }
