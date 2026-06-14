@@ -25,11 +25,14 @@ import {
     connect as connectTelegram,
     status as telegramStatus,
 } from '@/routes/app/social/telegram';
+import {
+    TelegramConnectStatus,
+    type TelegramConnectStatusValue,
+} from '@/types/telegram-connect-status';
 
 const open = defineModel<boolean>('open', { required: true });
 
 type Phase = 'loading' | 'ready' | 'connected' | 'expired' | 'error';
-type ConnectStatus = 'unknown' | 'pending' | 'connected';
 
 interface ConnectResponse {
     code: string;
@@ -46,9 +49,10 @@ const botUsername = ref('');
 const errorMessage = ref('');
 
 const httpConnect = useHttp<Record<string, never>, ConnectResponse>({});
-const httpStatus = useHttp<Record<string, never>, { status: ConnectStatus }>(
-    {},
-);
+const httpStatus = useHttp<
+    Record<string, never>,
+    { status: TelegramConnectStatusValue }
+>({});
 
 let pollTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -67,7 +71,7 @@ const poll = async () => {
             telegramStatus.url({ query: { code: code.value } }),
         );
 
-        if (response?.status === 'connected') {
+        if (response?.status === TelegramConnectStatus.Connected) {
             phase.value = 'connected';
             stopPolling();
             toast.success(trans('accounts.telegram.connected_toast'));
@@ -79,7 +83,7 @@ const poll = async () => {
         }
 
         // The signed code expired (or the session was lost): prompt a fresh one.
-        if (response?.status === 'unknown') {
+        if (response?.status === TelegramConnectStatus.Unknown) {
             phase.value = 'expired';
             stopPolling();
             return;
