@@ -14,6 +14,7 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog';
 import { useOAuthPopup } from '@/composables/useOAuthPopup';
+import { Platform } from '@/types/platform';
 
 export interface AvailablePlatform {
     value: string;
@@ -118,7 +119,7 @@ const { openOAuthPopup } = useOAuthPopup(() => {
 const connectPlatform = (platformValue: string) => {
     open.value = false;
 
-    if (platformValue === 'telegram') {
+    if (platformValue === Platform.Telegram) {
         telegramOpen.value = true;
         return;
     }
@@ -147,7 +148,6 @@ const connectPlatform = (platformValue: string) => {
                         :key="platform.value"
                         class="group relative flex flex-col items-center gap-3 rounded-xl border-2 border-foreground bg-card p-4 text-center shadow-xs transition-shadow hover:shadow-md"
                     >
-                        <!-- "+" sticker badge appears only on hover so the grid doesn't feel cluttered. -->
                         <span
                             class="pointer-events-none absolute -top-2 -right-2 inline-flex size-6 items-center justify-center rounded-full border-2 border-foreground bg-violet-200 text-foreground opacity-0 shadow-2xs transition-all group-hover:scale-110 group-hover:rotate-90 group-hover:opacity-100"
                             aria-hidden="true"
