@@ -48,7 +48,8 @@ it('persists Discord channel, mentions and embeds meta on store', function () {
         ->and($meta['embeds.0.title'] ?? data_get($meta, 'embeds.0.title'))->toBe('Release');
 });
 
-it('persists Pinterest board and TikTok privacy meta on store', function () {
+it('persists per-platform meta across networks on store', function () {
+    $instagram = SocialAccount::factory()->create(['workspace_id' => $this->workspace->id, 'platform' => Platform::Instagram]);
     $pinterest = SocialAccount::factory()->create(['workspace_id' => $this->workspace->id, 'platform' => Platform::Pinterest]);
     $tiktok = SocialAccount::factory()->create(['workspace_id' => $this->workspace->id, 'platform' => Platform::TikTok]);
 
@@ -56,14 +57,61 @@ it('persists Pinterest board and TikTok privacy meta on store', function () {
         ->postJson(route('api.posts.store'), [
             'content' => 'Cross-platform',
             'platforms' => [
+                ['social_account_id' => $instagram->id, 'content_type' => ContentType::InstagramFeed->value, 'meta' => ['aspect_ratio' => '4:5']],
                 ['social_account_id' => $pinterest->id, 'content_type' => ContentType::PinterestPin->value, 'meta' => ['board_id' => 'board-99']],
-                ['social_account_id' => $tiktok->id, 'content_type' => ContentType::TikTokVideo->value, 'meta' => ['privacy_level' => 'SELF_ONLY']],
+                ['social_account_id' => $tiktok->id, 'content_type' => ContentType::TikTokVideo->value, 'meta' => ['privacy_level' => 'SELF_ONLY', 'allow_comments' => true]],
             ],
         ])
         ->assertCreated();
 
-    expect(PostPlatform::where('social_account_id', $pinterest->id)->sole()->meta['board_id'])->toBe('board-99')
-        ->and(PostPlatform::where('social_account_id', $tiktok->id)->sole()->meta['privacy_level'])->toBe('SELF_ONLY');
+    expect(PostPlatform::where('social_account_id', $instagram->id)->sole()->meta['aspect_ratio'])->toBe('4:5')
+        ->and(PostPlatform::where('social_account_id', $pinterest->id)->sole()->meta['board_id'])->toBe('board-99')
+        ->and(PostPlatform::where('social_account_id', $tiktok->id)->sole()->meta['privacy_level'])->toBe('SELF_ONLY')
+        ->and(PostPlatform::where('social_account_id', $tiktok->id)->sole()->meta['allow_comments'])->toBeTrue();
+});
+
+it('allows saving a Discord draft without a channel', function () {
+    $post = Post::factory()->create(['workspace_id' => $this->workspace->id, 'user_id' => $this->user->id]);
+    $platform = PostPlatform::factory()->discord()->create([
+        'post_id' => $post->id,
+        'social_account_id' => $this->discordAccount->id,
+        'enabled' => true,
+        'meta' => [],
+    ]);
+
+    $this->withHeaders($this->headers)
+        ->putJson(route('api.posts.update', $post), [
+            'status' => PostStatus::Draft->value,
+            'platforms' => [['id' => $platform->id]],
+        ])
+        ->assertOk();
+});
+
+it('rejects publishing without TikTok privacy and Pinterest board', function () {
+    $pinterest = SocialAccount::factory()->create(['workspace_id' => $this->workspace->id, 'platform' => Platform::Pinterest]);
+    $tiktok = SocialAccount::factory()->create(['workspace_id' => $this->workspace->id, 'platform' => Platform::TikTok]);
+
+    $post = Post::factory()->create(['workspace_id' => $this->workspace->id, 'user_id' => $this->user->id]);
+    $pinterestPlatform = PostPlatform::factory()->pinterest()->create([
+        'post_id' => $post->id, 'social_account_id' => $pinterest->id, 'enabled' => true, 'meta' => [],
+    ]);
+    $tiktokPlatform = PostPlatform::factory()->tiktok()->create([
+        'post_id' => $post->id, 'social_account_id' => $tiktok->id, 'enabled' => true, 'meta' => [],
+    ]);
+
+    $this->withHeaders($this->headers)
+        ->putJson(route('api.posts.update', $post), [
+            'status' => PostStatus::Publishing->value,
+            'platforms' => [
+                ['id' => $pinterestPlatform->id],
+                ['id' => $tiktokPlatform->id],
+            ],
+        ])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors([
+            'platforms.0.meta.board_id',
+            'platforms.1.meta.privacy_level',
+        ]);
 });
 
 it('rejects publishing a Discord post without a channel', function () {
