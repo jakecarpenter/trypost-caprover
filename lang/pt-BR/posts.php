@@ -161,6 +161,24 @@ return [
             'no_board_found' => 'Nenhum quadro encontrado.',
             'board_required' => 'Selecione um quadro do Pinterest para publicar este post.',
         ],
+        'discord' => [
+            'settings' => 'Configurações do Discord',
+            'posting_to' => 'Publicando em',
+            'channel' => 'Canal',
+            'select_channel' => 'Selecione um canal',
+            'loading_channels' => 'Carregando canais…',
+            'channel_required' => 'Selecione um canal do Discord para publicar este post.',
+            'mentions' => 'Menções',
+            'search_mention' => 'Mencione um cargo ou membro…',
+            'embeds' => 'Embeds',
+            'embed' => 'Embed',
+            'add_embed' => 'Adicionar embed',
+            'embed_title' => 'Título do embed',
+            'embed_description' => 'Descrição do embed',
+            'embed_url' => 'URL do embed',
+            'embed_image' => 'URL da imagem',
+            'embed_color' => 'Cor',
+        ],
         'warnings' => [
             'no_variant' => 'Escolha um tipo de publicação para continuar.',
             'requires_media' => 'Este tipo exige pelo menos uma imagem ou vídeo.',
@@ -488,6 +506,10 @@ return [
             'label' => 'Post',
             'description' => 'Post de texto com mídia opcional',
         ],
+        'discord_message' => [
+            'label' => 'Mensagem',
+            'description' => 'Mensagem para um canal do Discord com mídia e embeds opcionais',
+        ],
     ],
 
     'platforms' => [
@@ -591,6 +613,7 @@ return [
                 'threads_post' => 'Post no Threads',
                 'mastodon_post' => 'Post no Mastodon',
                 'telegram_post' => 'Post no Telegram',
+                'discord_message' => 'Mensagem do Discord',
                 'facebook_post' => 'Post no Facebook',
                 'pinterest_pin' => 'Pin no Pinterest',
                 'instagram_story' => 'Story do Instagram',

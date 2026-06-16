@@ -7,6 +7,7 @@ use App\Http\Controllers\App\ApiKeyController;
 use App\Http\Controllers\App\AssetController;
 use App\Http\Controllers\App\AutomationController;
 use App\Http\Controllers\App\BillingController;
+use App\Http\Controllers\App\DiscordController as AppDiscordController;
 use App\Http\Controllers\App\GiphyController;
 use App\Http\Controllers\App\NotificationController;
 use App\Http\Controllers\App\PostAiCreateController;
@@ -29,6 +30,7 @@ use App\Http\Controllers\App\WorkspaceInviteController;
 use App\Http\Controllers\App\WorkspaceLabelController;
 use App\Http\Controllers\App\WorkspaceSignatureController;
 use App\Http\Controllers\Auth\BlueskyController;
+use App\Http\Controllers\Auth\DiscordController;
 use App\Http\Controllers\Auth\FacebookController;
 use App\Http\Controllers\Auth\InstagramController;
 use App\Http\Controllers\Auth\InstagramFacebookController;
@@ -120,10 +122,22 @@ Route::middleware(['auth'])->group(function () {
     Route::get('accounts/mastodon/callback', [MastodonController::class, 'callback'])->name('app.social.mastodon.callback');
 
     Route::post('connect/telegram', [TelegramController::class, 'connect'])->name('app.social.telegram.connect');
+
+    Route::get('connect/discord', [DiscordController::class, 'connect'])->name('app.social.discord.connect');
+    Route::get('accounts/discord/callback', [DiscordController::class, 'callback'])->name('app.social.discord.callback');
 });
 
 // Routes that require active subscription and completed onboarding
 Route::middleware(['auth', EnsureAccountReady::class])->group(function () {
+    // Discord — live lookups for the composer (channel picker + mention autocomplete).
+    // Throttled because they proxy the shared bot's (rate-limited) Discord API.
+    Route::get('discord/accounts/{account}/channels', [AppDiscordController::class, 'channels'])
+        ->middleware('throttle:60,1')
+        ->name('app.discord.channels');
+    Route::get('discord/accounts/{account}/mentions', [AppDiscordController::class, 'mentions'])
+        ->middleware('throttle:60,1')
+        ->name('app.discord.mentions');
+
     // Workspaces
     Route::get('workspaces', [WorkspaceController::class, 'index'])->name('app.workspaces.index');
     Route::post('workspaces/{workspace}/switch', [WorkspaceController::class, 'switch'])->name('app.workspaces.switch');

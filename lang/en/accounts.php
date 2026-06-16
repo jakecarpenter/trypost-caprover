@@ -52,6 +52,7 @@ return [
         'bluesky' => 'Connect your Bluesky account',
         'mastodon' => 'Connect your Mastodon account',
         'telegram' => 'Connect a Telegram channel or group',
+        'discord' => 'Connect a Discord server',
     ],
 
     'disconnect_modal' => [

@@ -202,6 +202,12 @@ class MediaOptimizer
                 'format' => 'image/jpeg',
                 'quality' => 100,
             ],
+            Platform::Discord => [
+                'max_width' => 2048,
+                'max_size' => 8 * 1024 * 1024,
+                'format' => 'image/jpeg',
+                'quality' => 100,
+            ],
         };
     }
 }

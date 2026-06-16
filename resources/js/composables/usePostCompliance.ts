@@ -57,6 +57,10 @@ const PLATFORM_META_RULES: Record<string, MetaRule> = {
         valid: Boolean(meta.board_id),
         tooltipKey: meta.board_id ? null : 'posts.form.pinterest.board_required',
     }),
+    [Platform.Discord]: (meta) => ({
+        valid: Boolean(meta.channel_id),
+        tooltipKey: meta.channel_id ? null : 'posts.form.discord.channel_required',
+    }),
 };
 
 /**

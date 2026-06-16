@@ -162,6 +162,20 @@ return [
             // Secret-token header Telegram echoes on every webhook call.
             'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET'),
         ],
+        'discord' => [
+            'enabled' => env('DISCORD_ENABLED', true),
+            // Single shared bot application. OAuth (bot scope) authorizes adding the
+            // bot to the user's server; channel listing, mentions and posting all
+            // use this bot token, not the user's OAuth token.
+            'bot_token' => env('DISCORD_BOT_TOKEN'),
+            'api' => env('DISCORD_API', 'https://discord.com/api/v10'),
+            'oauth_api' => env('DISCORD_OAUTH_API', 'https://discord.com/api/oauth2'),
+            // Permission bitfield requested for the bot: VIEW_CHANNEL (1<<10) +
+            // SEND_MESSAGES (1<<11) + EMBED_LINKS (1<<14) + ATTACH_FILES (1<<15) +
+            // READ_MESSAGE_HISTORY (1<<16) + MENTION_EVERYONE (1<<17) = 248832.
+            'permissions' => env('DISCORD_PERMISSIONS', '248832'),
+            'scopes' => array_values(array_filter(array_map('trim', explode(',', (string) env('DISCORD_SCOPES', 'bot,identify,guilds'))))),
+        ],
     ],
 
 ];

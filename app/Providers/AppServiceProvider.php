@@ -31,6 +31,7 @@ use App\Models\WorkspaceLabel;
 use App\Models\WorkspaceSignature;
 use App\Services\PostHogService;
 use App\Services\PostTemplate\Registry as PostTemplateRegistry;
+use App\Socialite\DiscordProvider;
 use App\Socialite\InstagramProvider;
 use App\Socialite\LinkedInPageExtendSocialite;
 use Carbon\CarbonImmutable;
@@ -184,6 +185,12 @@ class AppServiceProvider extends ServiceProvider
             $config = $app['config']['services.instagram'];
 
             return Socialite::buildProvider(InstagramProvider::class, $config);
+        });
+
+        Socialite::extend('discord', function ($app) {
+            $config = $app['config']['services.discord'];
+
+            return Socialite::buildProvider(DiscordProvider::class, $config);
         });
 
         Event::listen(SocialiteWasCalled::class, FacebookExtendSocialite::class);
