@@ -82,6 +82,17 @@ class UpdatePostRequest extends FormRequest
             'platforms.*.meta.brand_content_toggle' => ['sometimes', 'boolean'],
             'platforms.*.meta.brand_organic_toggle' => ['sometimes', 'boolean'],
             'platforms.*.meta.board_id' => ['sometimes', 'nullable', 'string'],
+            'platforms.*.meta.channel_id' => ['sometimes', 'nullable', 'string'],
+            'platforms.*.meta.channel_name' => ['sometimes', 'nullable', 'string'],
+            'platforms.*.meta.mentions' => ['sometimes', 'nullable', 'array'],
+            'platforms.*.meta.mentions.*.token' => ['required', 'string'],
+            'platforms.*.meta.mentions.*.label' => ['sometimes', 'nullable', 'string'],
+            'platforms.*.meta.embeds' => ['sometimes', 'nullable', 'array', 'max:10'],
+            'platforms.*.meta.embeds.*.title' => ['sometimes', 'nullable', 'string', 'max:256'],
+            'platforms.*.meta.embeds.*.description' => ['sometimes', 'nullable', 'string', 'max:4096'],
+            'platforms.*.meta.embeds.*.url' => ['sometimes', 'nullable', 'url'],
+            'platforms.*.meta.embeds.*.image' => ['sometimes', 'nullable', 'url'],
+            'platforms.*.meta.embeds.*.color' => ['sometimes', 'nullable', 'string', 'regex:/^#?[0-9A-Fa-f]{6}$/'],
             'label_ids' => ['sometimes', 'array'],
             'label_ids.*' => ['uuid', Rule::exists('workspace_labels', 'id')->where('workspace_id', $this->user()->currentWorkspace->id)],
         ];
@@ -117,6 +128,14 @@ class UpdatePostRequest extends FormRequest
                     $validator->errors()->add(
                         "platforms.{$i}.meta.board_id",
                         trans('posts.form.pinterest.board_required'),
+                    );
+                }
+
+                if ($platformEnum === Platform::Discord
+                    && blank(data_get($platform, 'meta.channel_id'))) {
+                    $validator->errors()->add(
+                        "platforms.{$i}.meta.channel_id",
+                        trans('posts.form.discord.channel_required'),
                     );
                 }
             }

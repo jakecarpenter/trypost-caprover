@@ -104,6 +104,11 @@ const platformTheme: Record<
         rotate: '-rotate-2',
         image: '/images/accounts/telegram.png',
     },
+    discord: {
+        bg: 'bg-indigo-200',
+        rotate: 'rotate-1',
+        image: '/images/accounts/discord.png',
+    },
 };
 
 const themeFor = (value: string) =>

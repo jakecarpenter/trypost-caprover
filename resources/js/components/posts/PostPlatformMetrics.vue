@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useHttp } from '@inertiajs/vue3';
-import { IconChartBar, IconLoader2, IconUsers } from '@tabler/icons-vue';
+import { IconChartBar, IconLoader2, IconMessageCircle, IconUsers } from '@tabler/icons-vue';
 import { computed, onMounted, ref } from 'vue';
 
 import {
@@ -33,6 +33,9 @@ const metrics = ref<Metric[]>([]);
 const stats = computed(() => metrics.value.filter((m) => !m.kind));
 const subscribers = computed(() =>
     metrics.value.find((m) => m.kind === 'subscribers'),
+);
+const comments = computed(() =>
+    metrics.value.find((m) => m.kind === 'comments'),
 );
 const reactions = computed(() =>
     metrics.value.filter((m) => m.kind === 'reaction'),
@@ -98,18 +101,17 @@ onMounted(async () => {
         </div>
 
         <div
-            v-if="subscribers || reactions.length > 0"
-            class="flex flex-wrap items-center gap-1.5"
+            v-if="subscribers || comments || reactions.length > 0"
+            class="flex flex-wrap items-center gap-x-3 gap-y-2"
             :class="{ 'mt-2': stats.length > 0 }"
         >
+            <!-- Audience counts: monochrome line icons read as stats, not reactions. -->
             <TooltipProvider v-if="subscribers">
                 <Tooltip>
                     <TooltipTrigger as-child>
-                        <span
-                            class="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-1 text-xs"
-                        >
-                            <IconUsers class="size-3.5 text-muted-foreground" />
-                            <span class="font-semibold tabular-nums">{{
+                        <span class="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                            <IconUsers class="size-4" :stroke="1.75" />
+                            <span class="font-semibold tabular-nums text-foreground">{{
                                 formatNumberCompact(subscribers.value)
                             }}</span>
                         </span>
@@ -120,19 +122,37 @@ onMounted(async () => {
                 </Tooltip>
             </TooltipProvider>
 
+            <TooltipProvider v-if="comments">
+                <Tooltip>
+                    <TooltipTrigger as-child>
+                        <span class="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                            <IconMessageCircle class="size-4" :stroke="1.75" />
+                            <span class="font-semibold tabular-nums text-foreground">{{
+                                formatNumberCompact(comments.value)
+                            }}</span>
+                        </span>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>{{ comments.label }}</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
+
+            <!-- Divider between audience stats and the reactions chip. -->
             <span
-                v-if="subscribers && reactions.length > 0"
-                class="mx-0.5 h-4 w-px bg-border"
+                v-if="(subscribers || comments) && reactions.length > 0"
+                class="h-3.5 w-px bg-border"
                 aria-hidden="true"
             />
 
+            <!-- Reactions: each emoji its own clean pill with its count. -->
             <span
                 v-for="reaction in reactions"
                 :key="reaction.label"
-                class="inline-flex items-center gap-1 rounded-full bg-muted/50 px-2 py-1 text-xs"
+                class="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs"
             >
-                <span class="text-sm leading-none">{{ reaction.label }}</span>
-                <span class="font-semibold tabular-nums">{{
+                <span class="text-[13px] leading-none">{{ reaction.label }}</span>
+                <span class="font-semibold tabular-nums text-foreground/80">{{
                     formatNumberCompact(reaction.value)
                 }}</span>
             </span>

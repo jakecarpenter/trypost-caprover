@@ -8,6 +8,7 @@ use App\Enums\SocialAccount\Platform;
 use App\Models\Post;
 use App\Models\PostPlatform;
 use App\Services\Social\BlueskyAnalytics;
+use App\Services\Social\Discord\DiscordAnalytics;
 use App\Services\Social\FacebookAnalytics;
 use App\Services\Social\InstagramAnalytics;
 use App\Services\Social\LinkedInPageAnalytics;
@@ -66,6 +67,7 @@ class PostMetricsFetcher
             Platform::Bluesky => app(BlueskyAnalytics::class)->fetchPostMetrics($postPlatform),
             Platform::Mastodon => app(MastodonAnalytics::class)->fetchPostMetrics($postPlatform),
             Platform::Telegram => app(TelegramAnalytics::class)->fetchPostMetrics($postPlatform),
+            Platform::Discord => app(DiscordAnalytics::class)->fetchPostMetrics($postPlatform),
             Platform::Instagram, Platform::InstagramFacebook => app(InstagramAnalytics::class)->fetchPostMetrics($postPlatform),
             Platform::Facebook => app(FacebookAnalytics::class)->fetchPostMetrics($postPlatform),
             Platform::Threads => app(ThreadsAnalytics::class)->fetchPostMetrics($postPlatform),

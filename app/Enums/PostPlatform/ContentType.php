@@ -53,6 +53,9 @@ enum ContentType: string
     // Telegram
     case TelegramPost = 'telegram_post';
 
+    // Discord
+    case DiscordMessage = 'discord_message';
+
     /**
      * AI generation format for an Instagram carousel. Not a content type —
      * carousel posts are persisted as InstagramFeed.
@@ -81,6 +84,7 @@ enum ContentType: string
             self::BlueskyPost => 'Post',
             self::MastodonPost => 'Post',
             self::TelegramPost => 'Post',
+            self::DiscordMessage => 'Message',
         };
     }
 
@@ -104,6 +108,7 @@ enum ContentType: string
             self::BlueskyPost => SocialPlatform::Bluesky,
             self::MastodonPost => SocialPlatform::Mastodon,
             self::TelegramPost => SocialPlatform::Telegram,
+            self::DiscordMessage => SocialPlatform::Discord,
         };
     }
 
@@ -173,6 +178,7 @@ enum ContentType: string
             self::BlueskyPost => 4,
             self::MastodonPost => 4,
             self::TelegramPost => 10,
+            self::DiscordMessage => 10,
         };
     }
 
@@ -193,6 +199,7 @@ enum ContentType: string
             self::BlueskyPost => true,
             self::MastodonPost => true,
             self::TelegramPost => true,
+            self::DiscordMessage => true,
         };
     }
 
@@ -232,6 +239,7 @@ enum ContentType: string
             self::TelegramPost => false,
             self::FacebookPost => false,
             self::InstagramFeed => false,
+            self::DiscordMessage => false,
             default => true,
         };
     }
@@ -313,6 +321,7 @@ enum ContentType: string
             SocialPlatform::Bluesky => self::BlueskyPost,
             SocialPlatform::Mastodon => self::MastodonPost,
             SocialPlatform::Telegram => self::TelegramPost,
+            SocialPlatform::Discord => self::DiscordMessage,
         };
     }
 }

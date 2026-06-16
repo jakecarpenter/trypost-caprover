@@ -448,3 +448,31 @@ test('bluesky 5xx during refresh raises PlatformUnavailable even when password f
 
     expect(fn () => $verifier->refreshToken($account))->toThrow(PlatformUnavailableException::class);
 });
+
+test('verifies discord by checking the bot is still in the guild', function () {
+    config(['trypost.platforms.discord.bot_token' => 'BOTTOKEN']);
+
+    Http::fake([
+        config('trypost.platforms.discord.api').'/guilds/*' => Http::response(['id' => '999000111'], 200),
+    ]);
+
+    $account = SocialAccount::factory()->discord()->create([
+        'platform_user_id' => '999000111',
+    ]);
+
+    expect((new ConnectionVerifier)->verify($account))->toBeTrue();
+});
+
+test('reports discord disconnected when the bot was removed from the guild', function () {
+    config(['trypost.platforms.discord.bot_token' => 'BOTTOKEN']);
+
+    Http::fake([
+        config('trypost.platforms.discord.api').'/guilds/*' => Http::response(['message' => 'Unknown Guild'], 404),
+    ]);
+
+    $account = SocialAccount::factory()->discord()->create([
+        'platform_user_id' => '999000111',
+    ]);
+
+    expect((new ConnectionVerifier)->verify($account))->toBeFalse();
+});

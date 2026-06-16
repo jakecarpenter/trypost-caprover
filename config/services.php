@@ -111,6 +111,13 @@ return [
         'redirect' => env('PINTEREST_CLIENT_REDIRECT'),
     ],
 
+    // Discord
+    'discord' => [
+        'client_id' => env('DISCORD_CLIENT_ID'),
+        'client_secret' => env('DISCORD_CLIENT_SECRET'),
+        'redirect' => env('DISCORD_CLIENT_REDIRECT'),
+    ],
+
     'gtm' => [
         'id' => env('GTM_ID'),
     ],

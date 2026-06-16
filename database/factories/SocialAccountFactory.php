@@ -154,6 +154,19 @@ class SocialAccountFactory extends Factory
         ]);
     }
 
+    public function discord(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'platform' => Platform::Discord,
+            'scopes' => Platform::Discord->requiredPublishScopes(),
+            'token_expires_at' => null, // posting uses the global bot token
+            'access_token' => '',
+            'refresh_token' => '',
+            'platform_user_id' => '999000111', // guild id
+            'display_name' => 'My Server',
+        ]);
+    }
+
     public function disconnected(): static
     {
         return $this->state(fn (array $attributes) => [

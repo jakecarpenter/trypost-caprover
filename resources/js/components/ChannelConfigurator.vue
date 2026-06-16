@@ -2,6 +2,7 @@
 import { IconAlertCircle, IconCircleCheck } from '@tabler/icons-vue';
 import { computed } from 'vue';
 
+import DiscordSettings from '@/components/posts/editor/DiscordSettings.vue';
 import FacebookSettings from '@/components/posts/editor/FacebookSettings.vue';
 import InstagramSettings from '@/components/posts/editor/InstagramSettings.vue';
 import LinkedInSettings from '@/components/posts/editor/LinkedInSettings.vue';
@@ -167,6 +168,14 @@ const selectedChannels = computed(() => props.channels.filter((channel) => isSel
                 :disabled="disabled"
                 :preview-only="previewOnly"
                 @update:content-type="emit('update:contentType', channel.id, $event)"
+            />
+            <DiscordSettings
+                v-else-if="channel.platform === Platform.Discord"
+                :social-account="channel.socialAccount"
+                :meta="channel.meta"
+                :disabled="disabled"
+                :preview-only="previewOnly"
+                @update:meta="emit('update:meta', channel.id, $event)"
             />
         </template>
     </div>

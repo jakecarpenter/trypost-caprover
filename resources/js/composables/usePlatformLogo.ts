@@ -12,6 +12,7 @@ const PLATFORM_LOGOS: Record<string, string> = {
     pinterest: '/images/accounts/pinterest.png',
     mastodon: '/images/accounts/mastodon.png',
     telegram: '/images/accounts/telegram.png',
+    discord: '/images/accounts/discord.png',
 };
 
 const PLATFORM_LABELS: Record<string, string> = {
@@ -28,6 +29,7 @@ const PLATFORM_LABELS: Record<string, string> = {
     pinterest: 'Pinterest',
     mastodon: 'Mastodon',
     telegram: 'Telegram',
+    discord: 'Discord',
 };
 
 const PLATFORM_CONTENT_TYPES: Record<string, string[]> = {
@@ -48,6 +50,7 @@ const PLATFORM_CONTENT_TYPES: Record<string, string[]> = {
     bluesky: ['bluesky_post'],
     mastodon: ['mastodon_post'],
     telegram: ['telegram_post'],
+    discord: ['discord_message'],
 };
 
 export interface ContentTypeOption {

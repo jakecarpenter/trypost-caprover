@@ -541,3 +541,47 @@ test('instagram_carousel is rejected as a content_type — carousel is a feed po
 
     $response->assertSessionHasErrors('platforms.0.content_type');
 });
+
+test('publishing a discord post without a channel is rejected', function () {
+    $account = SocialAccount::factory()->discord()->create(['workspace_id' => $this->workspace->id]);
+    $postPlatform = PostPlatform::factory()->create([
+        'post_id' => $this->post->id,
+        'social_account_id' => $account->id,
+        'platform' => Platform::Discord,
+        'content_type' => ContentType::DiscordMessage,
+        'meta' => [],
+    ]);
+
+    $this->actingAs($this->user)
+        ->put(route('app.posts.update', $this->post), [
+            'status' => Status::Publishing->value,
+            'platforms' => [[
+                'id' => $postPlatform->id,
+                'content_type' => ContentType::DiscordMessage->value,
+                'meta' => [],
+            ]],
+        ])
+        ->assertSessionHasErrors('platforms.0.meta.channel_id');
+});
+
+test('saving a discord draft without a channel is allowed', function () {
+    $account = SocialAccount::factory()->discord()->create(['workspace_id' => $this->workspace->id]);
+    $postPlatform = PostPlatform::factory()->create([
+        'post_id' => $this->post->id,
+        'social_account_id' => $account->id,
+        'platform' => Platform::Discord,
+        'content_type' => ContentType::DiscordMessage,
+        'meta' => [],
+    ]);
+
+    $this->actingAs($this->user)
+        ->put(route('app.posts.update', $this->post), [
+            'status' => Status::Draft->value,
+            'platforms' => [[
+                'id' => $postPlatform->id,
+                'content_type' => ContentType::DiscordMessage->value,
+                'meta' => [],
+            ]],
+        ])
+        ->assertSessionDoesntHaveErrors('platforms.0.meta.channel_id');
+});

@@ -21,6 +21,7 @@ enum Platform: string
     case Bluesky = 'bluesky';
     case Mastodon = 'mastodon';
     case Telegram = 'telegram';
+    case Discord = 'discord';
 
     public function label(): string
     {
@@ -38,6 +39,7 @@ enum Platform: string
             self::Bluesky => 'Bluesky',
             self::Mastodon => 'Mastodon',
             self::Telegram => 'Telegram',
+            self::Discord => 'Discord',
         };
     }
 
@@ -56,6 +58,7 @@ enum Platform: string
             self::Bluesky => '#0085FF',
             self::Mastodon => '#6364FF',
             self::Telegram => '#26A5E4',
+            self::Discord => '#5865F2',
         };
     }
 
@@ -73,6 +76,7 @@ enum Platform: string
             self::Bluesky => [MediaType::Image, MediaType::Video],
             self::Mastodon => [MediaType::Image, MediaType::Video],
             self::Telegram => [MediaType::Image, MediaType::Video],
+            self::Discord => [MediaType::Image, MediaType::Video],
         };
     }
 
@@ -90,6 +94,7 @@ enum Platform: string
             self::Bluesky => 4,
             self::Mastodon => 4,
             self::Telegram => 10,
+            self::Discord => 10,
         };
     }
 
@@ -129,6 +134,7 @@ enum Platform: string
             self::Bluesky => 300,
             self::Mastodon => 500,
             self::Telegram => 4096,
+            self::Discord => 2000,
         };
     }
 
@@ -172,6 +178,8 @@ enum Platform: string
             self::YouTube => 80,
             // Telegram channel posts — short announcements read best
             self::Telegram => 400,
+            // Discord — conversational community posts read best when concise
+            self::Discord => 280,
         };
     }
 
@@ -194,6 +202,7 @@ enum Platform: string
             self::Bluesky => [],
             self::Mastodon => ['write:statuses'],
             self::Telegram => [],
+            self::Discord => [],
         };
     }
 
@@ -211,6 +220,7 @@ enum Platform: string
             self::Bluesky => true,
             self::Mastodon => true,
             self::Telegram => true,
+            self::Discord => true,
         };
     }
 

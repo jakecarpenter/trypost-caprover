@@ -4,6 +4,7 @@ import { computed } from 'vue';
 import type { MediaItem } from '@/types/media';
 
 import BlueskyPreview from './BlueskyPreview.vue';
+import DiscordPreview from './DiscordPreview.vue';
 import FacebookPreview from './FacebookPreview.vue';
 import InstagramPreview from './InstagramPreview.vue';
 import LinkedInPreview from './LinkedInPreview.vue';
@@ -68,6 +69,8 @@ const previewComponent = computed(() => {
             return MastodonPreview;
         case 'telegram':
             return TelegramPreview;
+        case 'discord':
+            return DiscordPreview;
         default:
             return LinkedInPreview;
     }

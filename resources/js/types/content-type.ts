@@ -20,6 +20,7 @@ export const ContentType = {
     BlueskyPost: 'bluesky_post',
     MastodonPost: 'mastodon_post',
     TelegramPost: 'telegram_post',
+    DiscordMessage: 'discord_message',
 } as const;
 
 export type ContentTypeValue = (typeof ContentType)[keyof typeof ContentType];

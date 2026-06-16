@@ -8,6 +8,7 @@ use App\Enums\SocialAccount\Platform;
 use App\Exceptions\PlatformUnavailableException;
 use App\Exceptions\TokenExpiredException;
 use App\Models\SocialAccount;
+use App\Services\Social\Discord\DiscordClient;
 use App\Services\Social\Telegram\TelegramApi;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -68,6 +69,7 @@ class ConnectionVerifier
             Platform::Bluesky => $this->verifyBluesky($account),
             Platform::Mastodon => $this->verifyMastodon($account),
             Platform::Telegram => $this->verifyTelegram($account),
+            Platform::Discord => $this->verifyDiscord($account),
         };
     }
 
@@ -514,6 +516,12 @@ class ConnectionVerifier
         ]);
 
         return $response->successful() && data_get($response->json(), 'ok') === true;
+    }
+
+    private function verifyDiscord(SocialAccount $account): bool
+    {
+        // The guild endpoint succeeds only while the bot is still a member.
+        return app(DiscordClient::class)->getGuild((string) $account->platform_user_id)->successful();
     }
 
     private function verifyMastodon(SocialAccount $account): bool

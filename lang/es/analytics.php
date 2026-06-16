@@ -21,6 +21,7 @@ return [
         'impressions' => 'Impresiones',
         'interactions' => 'Interacciones',
         'likes' => 'Me gusta',
+        'members' => 'Miembros',
         'minutes_watched' => 'Minutos Vistos',
         'organic_followers' => 'Seguidores Orgánicos',
         'outbound_clicks' => 'Clics Externos',
