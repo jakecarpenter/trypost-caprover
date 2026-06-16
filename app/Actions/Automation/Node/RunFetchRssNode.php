@@ -96,14 +96,24 @@ class RunFetchRssNode
             return NodeRunResult::completed(['fetch' => ['count' => 0]], nextHandle: self::NO_ITEMS_HANDLE);
         }
 
-        $first = array_shift($newItems);
+        $total = count($newItems);
 
-        if (! $isPreview) {
-            $this->spawnSiblings($run, $nodeId, $newItems);
+        // A preview (manual/dry test) surfaces ONE item and never fans out, so it
+        // shows the newest item — what the user expects to test against. A real run
+        // takes the oldest new item and fans the rest out as siblings, preserving
+        // feed chronology across branches (items are sorted oldest-first).
+        if ($isPreview) {
+            return NodeRunResult::completed([
+                'fetch' => ['count' => $total, 'spawned' => 0],
+                'fetched' => end($newItems),
+            ]);
         }
 
+        $first = array_shift($newItems);
+        $this->spawnSiblings($run, $nodeId, $newItems);
+
         return NodeRunResult::completed([
-            'fetch' => ['count' => count($newItems) + 1, 'spawned' => $isPreview ? 0 : count($newItems)],
+            'fetch' => ['count' => $total, 'spawned' => count($newItems)],
             'fetched' => $first,
         ]);
     }

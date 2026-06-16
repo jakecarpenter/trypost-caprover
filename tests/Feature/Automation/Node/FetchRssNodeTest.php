@@ -193,6 +193,11 @@ it('does not persist the production watermark on a manual real-data test', funct
     expect($result->status)->toBe(NodeRunStatus::Completed);
     expect($result->output['fetch']['count'])->toBeGreaterThan(0);
 
+    // ...surfaces the NEWEST item (key 'c', 15 Jun) — not the oldest — so the
+    // test reflects what the user just published, and spawns no siblings.
+    expect($result->output['fetched']['key'])->toBe('c');
+    expect($result->output['fetch']['spawned'])->toBe(0);
+
     // ...and never advances the persisted watermark.
     $state = AutomationNodeState::for($automation->id, 'fetch_1');
     expect($state->data['last_item_date'])->toBe('2030-01-01T00:00:00+00:00');
