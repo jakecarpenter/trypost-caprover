@@ -11,6 +11,7 @@ use App\Models\PostPlatform;
 use App\Models\SocialAccount;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Services\Media\MediaOptimizer;
 use App\Services\Social\Discord\DiscordPublisher;
 use Illuminate\Support\Facades\Http;
 
@@ -117,6 +118,41 @@ test('includes rich embeds with clamped color', function () {
         return data_get($embed, 'title') === 'Release v2'
             && data_get($embed, 'color') === hexdec('5865F2')
             && data_get($embed, 'image.url') === 'https://example.com/banner.png';
+    });
+});
+
+test('uploads media as a multipart attachment', function () {
+    $this->post->update([
+        'media' => [[
+            'id' => 'm1',
+            'path' => 'media/2026-01/pic.jpg',
+            'url' => 'https://example.com/media/2026-01/pic.jpg',
+            'mime_type' => 'image/jpeg',
+            'original_filename' => 'pic.jpg',
+        ]],
+    ]);
+
+    $this->mock(MediaOptimizer::class)
+        ->shouldReceive('optimizeImage')
+        ->andReturnUsing(fn () => tap(tempnam(sys_get_temp_dir(), 'discord_test_'), fn ($f) => file_put_contents($f, str_repeat('x', 1024))));
+
+    Http::fake([
+        config('trypost.platforms.discord.api').'/guilds/*/channels' => Http::response([['id' => '444555666', 'name' => 'general', 'type' => 0]], 200),
+        'example.com/*' => Http::response(str_repeat('x', 1024), 200),
+        config('trypost.platforms.discord.api').'/channels/*/messages' => Http::response(['id' => '901'], 200),
+    ]);
+
+    $result = $this->publisher->publish(($this->makePostPlatform)());
+
+    expect($result['id'])->toBe('901');
+
+    Http::assertSent(function ($request) {
+        if (! str_contains($request->url(), '/messages')) {
+            return false;
+        }
+        $names = collect($request->data())->pluck('name');
+
+        return $names->contains('payload_json') && $names->contains('files[0]');
     });
 });
 

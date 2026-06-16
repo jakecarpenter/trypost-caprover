@@ -87,6 +87,16 @@ const channelId = computed({
     set: (value: string) => updateMeta({ channel_id: value || null }),
 });
 
+// Keep a saved channel selectable even before the live list loads (or if the
+// lookup is unavailable), so editing a post never visually "loses" its channel.
+const channelOptions = computed<DiscordChannel[]>(() => {
+    if (channelId.value && !channels.value.some((channel) => channel.id === channelId.value)) {
+        return [{ id: channelId.value, name: channelId.value }, ...channels.value];
+    }
+
+    return channels.value;
+});
+
 const errors = usePageErrors();
 const channelError = computed<string | undefined>(() => {
     if (props.meta?.channel_id) {
@@ -202,7 +212,7 @@ const updateEmbed = (index: number, patch: Partial<EmbedDraft>) =>
                     <option value="">
                         {{ channelsLoading ? $t('posts.form.discord.loading_channels') : $t('posts.form.discord.select_channel') }}
                     </option>
-                    <option v-for="channel in channels" :key="channel.id" :value="channel.id">#{{ channel.name }}</option>
+                    <option v-for="channel in channelOptions" :key="channel.id" :value="channel.id">#{{ channel.name }}</option>
                 </select>
                 <InputError :message="channelError" />
             </div>
