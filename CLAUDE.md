@@ -277,6 +277,14 @@ Vue components must have a single root element.
 - Validation rules always live in a dedicated `Illuminate\Foundation\Http\FormRequest` subclass under `app/Http/Requests/App/<Group>/`. Controller actions must type-hint the FormRequest as the parameter — NEVER call `$request->validate([...])` inline in the controller.
 - Naming: `<Verb><Resource>Request.php` (e.g. `StorePostRequest`, `ApplyPostTemplateRequest`, `IndexPostTemplateRequest`).
 
+## Per-Platform Post Meta (`PostPlatform.meta`)
+
+- All `platforms.*.meta` validation (the parent array rule AND every per-platform sub-key: `aspect_ratio`, TikTok `privacy_level`/flags, Pinterest `board_id`, Discord `channel_id`/`mentions`/`embeds`, etc.) lives in ONE place: `App\Support\PostPlatformMetaRules`.
+    - Every post create/update entry point — web (`App\Http\Requests\App\Post\UpdatePostRequest`), public API (`App\Http\Requests\Api\Post\{Store,Update}PostRequest`), and MCP (`App\Mcp\Tools\Post\{Create,Update}PostTool`) — spreads `...PostPlatformMetaRules::rules()`. NEVER add a per-platform meta rule inline to a single request/tool.
+    - Why: `FormRequest::validated()` (and MCP `$request->validate()`) STRIPS any key without a rule. A meta field defined in only one entry point is silently dropped everywhere else — which is exactly how Discord/Pinterest/TikTok meta was lost via API/MCP before this was centralized.
+- Required-on-publish (meta a platform needs to publish, e.g. Discord `channel_id`) also lives there: `addRequiredOnPublishErrors()` for request-driven flows (web/API update `withValidator`), `assertStoredPostPublishable()` for flows that publish stored state without resubmitting platforms (MCP `PublishPostTool`). Add new required-meta rules to `requiredMetaViolation()`, not inline.
+- When adding a new platform's meta field, add it (and any publish requirement) to `PostPlatformMetaRules` ONLY, and cover it in `tests/Feature/Api/PostApiPlatformMetaTest.php` + `tests/Feature/Mcp/PostPlatformMetaToolTest.php`.
+
 ## Pest / Feature Tests
 
 - ALWAYS use named routes via the `route()` helper in feature tests. NEVER hardcode URL strings like `'/posts/ai/create'`.
