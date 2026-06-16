@@ -43,9 +43,12 @@ it('persists Discord channel, mentions and embeds meta on store', function () {
 
     $meta = PostPlatform::where('social_account_id', $this->discordAccount->id)->sole()->meta;
 
-    expect($meta['channel_id'])->toBe('444555666')
-        ->and($meta['mentions'])->toHaveCount(1)
-        ->and($meta['embeds.0.title'] ?? data_get($meta, 'embeds.0.title'))->toBe('Release');
+    // Assert nested keys survive validated() — the exact stripping bug this PR fixes.
+    expect(data_get($meta, 'channel_id'))->toBe('444555666')
+        ->and(data_get($meta, 'mentions.0.token'))->toBe('@everyone')
+        ->and(data_get($meta, 'mentions.0.label'))->toBe('@everyone')
+        ->and(data_get($meta, 'embeds.0.title'))->toBe('Release')
+        ->and(data_get($meta, 'embeds.0.color'))->toBe('#5865F2');
 });
 
 it('persists per-platform meta across networks on store', function () {
@@ -107,7 +110,7 @@ it('rejects publishing without TikTok privacy and Pinterest board', function () 
                 ['id' => $tiktokPlatform->id],
             ],
         ])
-        ->assertStatus(422)
+        ->assertUnprocessable()
         ->assertJsonValidationErrors([
             'platforms.0.meta.board_id',
             'platforms.1.meta.privacy_level',
@@ -128,7 +131,7 @@ it('rejects publishing a Discord post without a channel', function () {
             'status' => PostStatus::Publishing->value,
             'platforms' => [['id' => $platform->id]],
         ])
-        ->assertStatus(422)
+        ->assertUnprocessable()
         ->assertJsonValidationErrors(['platforms.0.meta.channel_id']);
 });
 

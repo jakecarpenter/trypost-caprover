@@ -130,6 +130,33 @@ test('publish post rejects a Discord platform without a channel', function () {
     $response->assertHasErrors([__('posts.form.discord.channel_required')]);
 });
 
+test('publish guard enforces required meta for TikTok and Pinterest', function (string $factoryState, string $field, string $messageKey) {
+    $account = SocialAccount::factory()->create([
+        'workspace_id' => $this->workspace->id,
+        'platform' => $factoryState === 'tiktok' ? Platform::TikTok : Platform::Pinterest,
+    ]);
+
+    $post = Post::factory()->create([
+        'workspace_id' => $this->workspace->id,
+        'user_id' => $this->user->id,
+        'status' => PostStatus::Draft,
+    ]);
+    PostPlatform::factory()->{$factoryState}()->create([
+        'post_id' => $post->id,
+        'social_account_id' => $account->id,
+        'enabled' => true,
+        'meta' => [],
+    ]);
+
+    $response = TryPostServer::actingAs($this->user)
+        ->tool(PublishPostTool::class, ['post_id' => $post->id]);
+
+    $response->assertHasErrors([__($messageKey)]);
+})->with([
+    'tiktok' => ['tiktok', 'privacy_level', 'posts.form.tiktok.privacy_required'],
+    'pinterest' => ['pinterest', 'board_id', 'posts.form.pinterest.board_required'],
+]);
+
 test('publish post succeeds for a Discord platform with a channel', function () {
     Queue::fake();
 

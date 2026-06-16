@@ -68,7 +68,7 @@ class UpdatePostRequest extends FormRequest
 
     public function withValidator(Validator $validator): void
     {
-        $validator->after(function ($validator): void {
+        $validator->after(function (Validator $validator): void {
             if (! in_array($this->input('status'), [Status::Scheduled->value, Status::Publishing->value], true)) {
                 return;
             }
