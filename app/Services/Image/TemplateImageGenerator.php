@@ -548,6 +548,186 @@ class TemplateImageGenerator
         imagecolordeallocate($core, $color);
     }
 
+    /**
+     * Renders the post as a fake X/Twitter card on a solid brand-color background.
+     * Text + identity composition only — never calls the AI image client.
+     *
+     * @return array{path: string, source_meta: array<string, mixed>}|null
+     */
+    public function renderTweetCard(Workspace $workspace, SocialAccount $socialAccount, string $tweetText): ?array
+    {
+        $this->width = self::DEFAULT_WIDTH;
+        $this->height = self::DEFAULT_HEIGHT;
+
+        $manager = new ImageManager(Driver::class);
+
+        $brandColor = $workspace->brand_color ?? '#1d9bf0';
+        [$pr, $pg, $pb] = $this->hexToRgb($brandColor);
+
+        $canvas = $manager->createImage($this->width, $this->height);
+        $core = $canvas->core()->native();
+
+        imagealphablending($core, true);
+        imagesavealpha($core, false);
+
+        $pageBg = imagecolorallocate($core, $pr, $pg, $pb);
+        imagefill($core, 0, 0, $pageBg);
+
+        $cardPadding = 64;
+        $cardX = 72;
+        $cardW = $this->width - 2 * $cardX;
+        $cardRadius = 24;
+
+        $fontBold = $this->fontPath('Inter-Bold.ttf');
+        $fontMedium = $this->fontPath('Inter-Medium.ttf');
+        $fontLight = $this->fontPath('Inter-Light.ttf');
+
+        $avatarSize = 56;
+        $headerH = $avatarSize + 2 * $cardPadding;
+        $nameSize = 28;
+        $handleSize = 22;
+        $bodySize = 30;
+        $bodyLineHeight = 1.55;
+        $paragraphGap = (int) round($bodySize * $bodyLineHeight * 0.6);
+
+        $textMaxWidth = $cardW - 2 * $cardPadding - $avatarSize - 24;
+
+        $paragraphs = array_filter(array_map('trim', explode("\n\n", $tweetText)), fn ($p) => $p !== '');
+        $allBodyLines = [];
+        foreach ($paragraphs as $i => $para) {
+            $lines = ($fontMedium ? $this->wrapText($para, $fontMedium, $bodySize, $cardW - 2 * $cardPadding) : [str_replace("\n", ' ', $para)]);
+            if ($i > 0) {
+                $allBodyLines[] = '';
+            }
+            foreach ($lines as $line) {
+                $allBodyLines[] = $line;
+            }
+        }
+
+        $bodyBlockH = 0;
+        $lineSpacing = (int) round($bodySize * $bodyLineHeight);
+        foreach ($allBodyLines as $line) {
+            $bodyBlockH += ($line === '') ? $paragraphGap : $lineSpacing;
+        }
+
+        $cardContentH = $headerH + 24 + $bodyBlockH + $cardPadding;
+        $cardH = max(400, $cardContentH);
+        $cardY = (int) (($this->height - $cardH) / 2);
+
+        $this->drawRoundedRect($core, $cardX, $cardY, $cardX + $cardW, $cardY + $cardH, $cardRadius, '#ffffff');
+
+        $avatarX = $cardX + $cardPadding;
+        $avatarY = $cardY + $cardPadding;
+
+        $avatarBinary = $this->fetchAvatarBinary($socialAccount);
+        if ($avatarBinary !== null) {
+            $this->drawCircularAvatar($canvas, $avatarBinary, $avatarX, $avatarY, $avatarSize);
+        }
+
+        $nameX = $avatarX + $avatarSize + 16;
+        $nameY = $avatarY + 4;
+
+        if ($fontBold) {
+            $canvas->text($socialAccount->display_name ?? '', $nameX, $nameY, function (FontFactory $font) use ($fontBold, $nameSize) {
+                $font->filename($fontBold);
+                $font->size($nameSize);
+                $font->color('#0f1419');
+                $font->align('left', 'top');
+            });
+        }
+
+        $verifiedPath = public_path('images/ai-templates/verified.png');
+        if ($fontBold && file_exists($verifiedPath)) {
+            $displayNameText = $socialAccount->display_name ?? '';
+            $nameBox = $fontBold ? imagettfbbox($nameSize, 0, $fontBold, $displayNameText) : [0, 0, 0, 0, 0, 0, 0, 0];
+            $nameWidth = abs($nameBox[2] - $nameBox[0]);
+            $badgeSize = (int) round($nameSize * 1.1);
+            $badgeX = $nameX + $nameWidth + 6;
+            $badgeY = $nameY + (int) round(($nameSize - $badgeSize) / 2);
+            $verifiedSrc = @imagecreatefrompng($verifiedPath);
+            if ($verifiedSrc) {
+                $verifiedResized = imagecreatetruecolor($badgeSize, $badgeSize);
+                imagealphablending($verifiedResized, false);
+                imagesavealpha($verifiedResized, true);
+                $transparent = imagecolorallocatealpha($verifiedResized, 0, 0, 0, 127);
+                imagefill($verifiedResized, 0, 0, $transparent);
+                imagecopyresampled($verifiedResized, $verifiedSrc, 0, 0, 0, 0, $badgeSize, $badgeSize, imagesx($verifiedSrc), imagesy($verifiedSrc));
+                imagealphablending($core, true);
+                imagecopy($core, $verifiedResized, $badgeX, $badgeY, 0, 0, $badgeSize, $badgeSize);
+                imagedestroy($verifiedSrc);
+                imagedestroy($verifiedResized);
+            }
+        }
+
+        $handleY = $nameY + (int) round($nameSize * 1.35);
+        if ($fontLight) {
+            $canvas->text('@'.($socialAccount->username ?? ''), $nameX, $handleY, function (FontFactory $font) use ($fontLight, $handleSize) {
+                $font->filename($fontLight);
+                $font->size($handleSize);
+                $font->color('#536471');
+                $font->align('left', 'top');
+            });
+        }
+
+        $bodyStartY = $cardY + $headerH + 8;
+        $bodyX = $cardX + $cardPadding;
+
+        if ($fontMedium) {
+            $ascent = (int) round($bodySize * 0.82);
+            $curY = $bodyStartY + $ascent;
+            foreach ($allBodyLines as $line) {
+                if ($line === '') {
+                    $curY += $paragraphGap;
+
+                    continue;
+                }
+                $color = $this->allocateColor($core, '#0f1419');
+                imagettftext($core, $bodySize, 0, $bodyX, $curY, $color, $fontMedium, $line);
+                $curY += $lineSpacing;
+            }
+        }
+
+        $filename = 'ai-images/tweet_'.uniqid('', true).'.webp';
+        Storage::put($filename, (string) $canvas->encode(new WebpEncoder(quality: 85)));
+
+        RecordAiUsage::recordTemplate(
+            workspace: $workspace,
+            provider: 'internal',
+            metadata: [
+                'template' => 'tweet_card',
+                'width' => $this->width,
+                'height' => $this->height,
+            ],
+        );
+
+        return [
+            'path' => $filename,
+            'source_meta' => [
+                'template' => 'tweet_card',
+                'tweet_text' => $tweetText,
+                'width' => $this->width,
+                'height' => $this->height,
+            ],
+        ];
+    }
+
+    /**
+     * Draw a filled rounded rectangle on the GD resource.
+     */
+    private function drawRoundedRect($core, int $x1, int $y1, int $x2, int $y2, int $radius, string $hexColor): void
+    {
+        [$r, $g, $b] = $this->hexToRgb($hexColor);
+        $color = imagecolorallocate($core, $r, $g, $b);
+
+        imagefilledrectangle($core, $x1 + $radius, $y1, $x2 - $radius, $y2, $color);
+        imagefilledrectangle($core, $x1, $y1 + $radius, $x2, $y2 - $radius, $color);
+
+        imagefilledellipse($core, $x1 + $radius, $y1 + $radius, $radius * 2, $radius * 2, $color);
+        imagefilledellipse($core, $x2 - $radius, $y1 + $radius, $radius * 2, $radius * 2, $color);
+        imagefilledellipse($core, $x1 + $radius, $y2 - $radius, $radius * 2, $radius * 2, $color);
+        imagefilledellipse($core, $x2 - $radius, $y2 - $radius, $radius * 2, $radius * 2, $color);
+    }
+
     private function fontPath(string $filename): ?string
     {
         $path = base_path('resources/fonts/'.$filename);

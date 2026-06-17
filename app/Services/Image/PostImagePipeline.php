@@ -81,6 +81,23 @@ class PostImagePipeline
     }
 
     /**
+     * Render a tweet-card image for the given text and return a one-element
+     * media-item array, or an empty array when the generator renders nothing.
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public function forTweetCard(Workspace $workspace, SocialAccount $account, string $tweetText): array
+    {
+        $rendered = $this->generator->renderTweetCard($workspace, $account, $tweetText);
+
+        if (! $rendered) {
+            return [];
+        }
+
+        return [$this->buildAiMediaItem($workspace, $rendered)];
+    }
+
+    /**
      * Resolve the AI image dimensions for the given content type, falling back
      * to the generator defaults (4:5 portrait) when no content type is known.
      *
