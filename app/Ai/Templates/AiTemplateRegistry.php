@@ -12,6 +12,7 @@ class AiTemplateRegistry
     private const TEMPLATES = [
         ImageCardTemplate::class,
         TweetCardTemplate::class,
+        TweetCardImageTemplate::class,
     ];
 
     /** @var array<int, AiContentTemplate>|null */

@@ -118,7 +118,7 @@ class StreamPostCreation implements ShouldQueue
      */
     private function humanize(Workspace $workspace, array $structured, string $format, string $styleKey = 'image_card'): array
     {
-        if ($styleKey === 'tweet_card') {
+        if ($styleKey === 'tweet_card' || $styleKey === 'tweet_card_image') {
             return $structured;
         }
 

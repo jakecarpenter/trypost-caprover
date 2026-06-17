@@ -154,6 +154,75 @@ test('tweet_card carousel produces caption as content and N media items without 
     PostContentHumanizer::assertNeverPrompted();
 });
 
+test('tweet_card_image single stores tweet_text as content, attaches media, and calls AI image client', function () {
+    PostContentGenerator::fake([[
+        'tweet_text' => 'Productivity is a mindset.',
+        'image_keywords' => ['laptop', 'desk', 'morning'],
+    ]]);
+
+    $minimalPng = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
+    Image::fake([base64_encode($minimalPng)]);
+
+    (new StreamPostCreation(
+        userId: $this->user->id,
+        creationId: (string) Str::uuid(),
+        workspaceId: $this->workspace->id,
+        format: 'x_post',
+        socialAccountId: $this->account->id,
+        imageCount: 1,
+        prompt: 'A punchy take on productivity',
+        template: 'tweet_card_image',
+    ))->handle();
+
+    $post = $this->user->currentWorkspace->posts()->latest()->first();
+
+    expect($post->content)->toBe('Productivity is a mindset.')
+        ->and($post->media)->toHaveCount(1);
+
+    $platform = PostPlatform::where('social_account_id', $this->account->id)->firstOrFail();
+    expect($platform->content_type)->toBe(ContentType::XPost);
+
+    PostContentHumanizer::assertNeverPrompted();
+
+    Image::assertGenerated(fn () => true);
+});
+
+test('tweet_card_image carousel stores caption and N media items each with an AI background', function () {
+    PostContentGenerator::fake([[
+        'caption' => 'Carousel about deep work',
+        'slides' => [
+            ['tweet_text' => 'First take.', 'image_keywords' => ['coffee', 'focus']],
+            ['tweet_text' => 'Second take.', 'image_keywords' => ['notebook', 'pen']],
+        ],
+    ]]);
+
+    $minimalPng = base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==');
+    Image::fake([base64_encode($minimalPng), base64_encode($minimalPng)]);
+
+    (new StreamPostCreation(
+        userId: $this->user->id,
+        creationId: (string) Str::uuid(),
+        workspaceId: $this->workspace->id,
+        format: 'instagram_carousel',
+        socialAccountId: $this->account->id,
+        imageCount: 2,
+        prompt: 'Deep work carousel',
+        template: 'tweet_card_image',
+    ))->handle();
+
+    $post = $this->user->currentWorkspace->posts()->latest()->first();
+
+    expect($post->content)->toBe('Carousel about deep work')
+        ->and($post->media)->toHaveCount(2);
+
+    $platform = PostPlatform::where('social_account_id', $this->account->id)->firstOrFail();
+    expect($platform->content_type)->toBe(ContentType::InstagramFeed);
+
+    PostContentHumanizer::assertNeverPrompted();
+
+    Image::assertGenerated(fn () => true);
+});
+
 test('the humanizer is given the same platform context as the generator so the rewrite honours the character cap', function () {
     PostContentGenerator::fake([[
         'content' => 'A single productivity tip',

@@ -8,26 +8,26 @@ use App\Enums\PostPlatform\ContentType;
 use App\Services\Image\PostImagePipeline;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 
-class TweetCardTemplate implements AiContentTemplate
+class TweetCardImageTemplate implements AiContentTemplate
 {
     public function key(): string
     {
-        return 'tweet_card';
+        return 'tweet_card_image';
     }
 
     public function name(): string
     {
-        return 'posts.ai.templates.tweet_card.name';
+        return 'posts.ai.templates.tweet_card_image.name';
     }
 
     public function description(): string
     {
-        return 'posts.ai.templates.tweet_card.description';
+        return 'posts.ai.templates.tweet_card_image.description';
     }
 
     public function previewAsset(): string
     {
-        return '/images/ai-templates/tweet-card.png';
+        return '/images/ai-templates/tweet-card-image.png';
     }
 
     public function needsAccount(): bool
@@ -49,8 +49,8 @@ class TweetCardTemplate implements AiContentTemplate
     public function promptView(TemplateContext $context): string
     {
         return $context->isCarousel
-            ? 'prompts.post_content.tweet_card_carousel'
-            : 'prompts.post_content.tweet_card';
+            ? 'prompts.post_content.tweet_card_image_carousel'
+            : 'prompts.post_content.tweet_card_image';
     }
 
     /**
@@ -68,6 +68,10 @@ class TweetCardTemplate implements AiContentTemplate
                         'tweet_text' => $s->string()
                             ->description('The tweet-style text for this slide. First-person, punchy, max ~560 characters.')
                             ->required(),
+                        'image_keywords' => $s->array()
+                            ->items($schema->string())
+                            ->description('2-4 English keywords for a background photo that fits this slide\'s theme. The photo will be blurred and darkened behind the card.')
+                            ->required(),
                     ]))
                     ->min($slideCount)
                     ->max($slideCount)
@@ -79,6 +83,10 @@ class TweetCardTemplate implements AiContentTemplate
         return [
             'tweet_text' => $schema->string()
                 ->description('The post body, written as a punchy first-person X/Twitter-style take. Paragraph breaks (\\n\\n) allowed. Max ~560 characters.')
+                ->required(),
+            'image_keywords' => $schema->array()
+                ->items($schema->string())
+                ->description('2-4 English keywords for a background photo that fits the post\'s theme. The photo will be blurred and darkened behind the card.')
                 ->required(),
         ];
     }
@@ -101,6 +109,7 @@ class TweetCardTemplate implements AiContentTemplate
     private function assembleSingle(array $structured, TemplateContext $context): GeneratedPost
     {
         $text = (string) data_get($structured, 'tweet_text', '');
+        $imageKeywords = data_get($structured, 'image_keywords', []);
 
         $media = [];
 
@@ -109,6 +118,7 @@ class TweetCardTemplate implements AiContentTemplate
                 workspace: $context->workspace,
                 account: $context->socialAccount,
                 tweetText: $text,
+                imageKeywords: $imageKeywords,
             );
         }
 
@@ -126,8 +136,11 @@ class TweetCardTemplate implements AiContentTemplate
     {
         $caption = (string) data_get($structured, 'caption', '');
 
-        $slideTexts = array_map(
-            fn ($slide) => (string) data_get($slide, 'tweet_text', ''),
+        $slides = array_map(
+            fn ($slide) => [
+                'tweet_text' => (string) data_get($slide, 'tweet_text', ''),
+                'image_keywords' => data_get($slide, 'image_keywords', []),
+            ],
             data_get($structured, 'slides', []),
         );
 
@@ -137,7 +150,7 @@ class TweetCardTemplate implements AiContentTemplate
             $media = app(PostImagePipeline::class)->forTweetCardCarousel(
                 workspace: $context->workspace,
                 account: $context->socialAccount,
-                slides: $slideTexts,
+                slides: $slides,
             );
         }
 

@@ -273,6 +273,10 @@ return [
                 'name' => 'Tweet card',
                 'description' => 'Your post styled as an X/Twitter post.',
             ],
+            'tweet_card_image' => [
+                'name' => 'Tweet card with photo',
+                'description' => 'Your post as an X/Twitter card over a blurred photo.',
+            ],
         ],
     ],
 

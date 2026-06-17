@@ -549,12 +549,18 @@ class TemplateImageGenerator
     }
 
     /**
-     * Renders the post as a fake X/Twitter card on a solid brand-color background.
-     * Text + identity composition only — never calls the AI image client.
+     * Renders the post as a fake X/Twitter card.
      *
+     * When $imageKeywords is null (default), a solid brand-color background is used
+     * (original tweet_card behaviour). When $imageKeywords is a non-empty array, an
+     * AI-generated photo is fetched, blurred, darkened, and used as the background
+     * (tweet_card_image behaviour). Falls back to the solid colour when AI generation
+     * returns null so the render never hard-fails.
+     *
+     * @param  array<int, string>|null  $imageKeywords
      * @return array{path: string, source_meta: array<string, mixed>}|null
      */
-    public function renderTweetCard(Workspace $workspace, SocialAccount $socialAccount, string $tweetText): ?array
+    public function renderTweetCard(Workspace $workspace, SocialAccount $socialAccount, string $tweetText, ?array $imageKeywords = null): ?array
     {
         $this->width = self::DEFAULT_WIDTH;
         $this->height = self::DEFAULT_HEIGHT;
@@ -570,9 +576,127 @@ class TemplateImageGenerator
         imagealphablending($core, true);
         imagesavealpha($core, false);
 
-        $pageBg = imagecolorallocate($core, $pr, $pg, $pb);
-        imagefill($core, 0, 0, $pageBg);
+        $useImageBackground = $imageKeywords !== null && $imageKeywords !== [];
 
+        if ($useImageBackground) {
+            $canvas = $this->applyTweetCardImageBackground($manager, $canvas, $core, $workspace, $imageKeywords);
+            $core = $canvas->core()->native();
+        } else {
+            $pageBg = imagecolorallocate($core, $pr, $pg, $pb);
+            imagefill($core, 0, 0, $pageBg);
+        }
+
+        $this->drawTweetCardContent($canvas, $core, $socialAccount, $tweetText);
+
+        $template = $useImageBackground ? 'tweet_card_image' : 'tweet_card';
+        $filename = "ai-images/tweet_{$template}_".uniqid('', true).'.webp';
+        Storage::put($filename, (string) $canvas->encode(new WebpEncoder(quality: 85)));
+
+        RecordAiUsage::recordTemplate(
+            workspace: $workspace,
+            provider: 'internal',
+            metadata: [
+                'template' => $template,
+                'width' => $this->width,
+                'height' => $this->height,
+            ],
+        );
+
+        $sourceMeta = [
+            'template' => $template,
+            'tweet_text' => $tweetText,
+            'width' => $this->width,
+            'height' => $this->height,
+        ];
+
+        if ($useImageBackground) {
+            $sourceMeta['keywords'] = array_values($imageKeywords);
+        }
+
+        return [
+            'path' => $filename,
+            'source_meta' => $sourceMeta,
+        ];
+    }
+
+    /**
+     * Generate and apply the blurred + darkened AI photo background for tweet_card_image.
+     * Falls back to a solid brand-color fill when the AI client returns null.
+     *
+     * @param  array<int, string>  $imageKeywords
+     */
+    private function applyTweetCardImageBackground(
+        ImageManager $manager,
+        ImageInterface $canvas,
+        mixed $core,
+        Workspace $workspace,
+        array $imageKeywords,
+    ): ImageInterface {
+        $rawStyle = $workspace->image_style;
+        $imageStyle = match (true) {
+            $rawStyle instanceof ImageStyle => $rawStyle,
+            is_string($rawStyle) => ImageStyle::tryFrom($rawStyle) ?? ImageStyle::DEFAULT,
+            default => ImageStyle::DEFAULT,
+        };
+
+        $imageData = $this->aiImage->generate(
+            keywords: $imageKeywords,
+            style: $imageStyle,
+            orientation: 'portrait',
+            language: $workspace->content_language,
+            brandColor: $workspace->brand_color,
+            backgroundColor: $workspace->background_color,
+            textColor: $workspace->text_color,
+            brandDescription: $workspace->brand_description,
+        );
+
+        if ($imageData === null) {
+            $brandColor = $workspace->brand_color ?? '#1d9bf0';
+            [$pr, $pg, $pb] = $this->hexToRgb($brandColor);
+            $pageBg = imagecolorallocate($core, $pr, $pg, $pb);
+            imagefill($core, 0, 0, $pageBg);
+
+            return $canvas;
+        }
+
+        RecordAiUsage::recordImage(
+            workspace: $workspace,
+            provider: 'openai',
+            model: AiImageClient::MODEL,
+            metadata: [
+                'image_style' => $imageStyle->value,
+                'width' => $this->width,
+                'height' => $this->height,
+            ],
+        );
+
+        $photo = $manager->decodeBinary($imageData)->cover($this->width, $this->height);
+
+        // Apply Gaussian blur passes to soften the background photo.
+        $photoCoreNative = $photo->core()->native();
+        for ($i = 0; $i < 8; $i++) {
+            imagefilter($photoCoreNative, IMG_FILTER_GAUSSIAN_BLUR);
+        }
+
+        // Composite the blurred photo onto the canvas.
+        imagecopy($core, $photoCoreNative, 0, 0, 0, 0, $this->width, $this->height);
+
+        // Paint a semi-transparent dark overlay (~50% opacity) so the white card pops.
+        imagealphablending($core, true);
+        $dark = imagecolorallocatealpha($core, 0, 0, 0, 63);
+        imagefilledrectangle($core, 0, 0, $this->width - 1, $this->height - 1, $dark);
+        imagecolordeallocate($core, $dark);
+
+        return $canvas;
+    }
+
+    /**
+     * Draw the tweet card content (rounded white card, avatar, name, badge, handle,
+     * body text) onto the given canvas / GD core. Shared by the solid-color and
+     * image-background render paths.
+     */
+    private function drawTweetCardContent(ImageInterface $canvas, mixed $core, SocialAccount $socialAccount, string $tweetText): void
+    {
         $cardPadding = 64;
         $cardX = 72;
         $cardW = $this->width - 2 * $cardX;
@@ -680,29 +804,6 @@ class TemplateImageGenerator
                 $curY += $lineSpacing;
             }
         }
-
-        $filename = 'ai-images/tweet_'.uniqid('', true).'.webp';
-        Storage::put($filename, (string) $canvas->encode(new WebpEncoder(quality: 85)));
-
-        RecordAiUsage::recordTemplate(
-            workspace: $workspace,
-            provider: 'internal',
-            metadata: [
-                'template' => 'tweet_card',
-                'width' => $this->width,
-                'height' => $this->height,
-            ],
-        );
-
-        return [
-            'path' => $filename,
-            'source_meta' => [
-                'template' => 'tweet_card',
-                'tweet_text' => $tweetText,
-                'width' => $this->width,
-                'height' => $this->height,
-            ],
-        ];
     }
 
     /**

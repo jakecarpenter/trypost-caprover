@@ -273,6 +273,10 @@ return [
                 'name' => 'Card de tweet',
                 'description' => 'Seu post no estilo de um post do X/Twitter.',
             ],
+            'tweet_card_image' => [
+                'name' => 'Card de tweet com foto',
+                'description' => 'Seu post como card do X/Twitter sobre uma foto desfocada.',
+            ],
         ],
     ],
 
