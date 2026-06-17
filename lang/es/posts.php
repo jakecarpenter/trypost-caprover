@@ -621,6 +621,7 @@ return [
             'retry' => 'Intentar de nuevo',
             'no_platforms' => 'Sin cuentas conectadas',
             'connect_first' => 'Conecta al menos una cuenta social para usar la generación con IA.',
+            'no_account_for_template' => 'Conecta una cuenta compatible para usar esta plantilla.',
 
             'format' => [
                 'instagram_feed' => 'Post de Feed de Instagram',

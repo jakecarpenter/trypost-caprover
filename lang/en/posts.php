@@ -620,6 +620,7 @@ return [
             'retry' => 'Try again',
             'no_platforms' => 'No connected accounts',
             'connect_first' => 'Connect at least one social account to use AI generation.',
+            'no_account_for_template' => 'Connect a compatible account to use this template.',
 
             'format' => [
                 'instagram_feed' => 'Instagram Feed Post',

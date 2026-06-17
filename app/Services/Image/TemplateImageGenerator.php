@@ -590,7 +590,7 @@ class TemplateImageGenerator
         $bodyLineHeight = 1.55;
         $paragraphGap = (int) round($bodySize * $bodyLineHeight * 0.6);
 
-        $paragraphs = array_filter(array_map('trim', explode("\n\n", $tweetText)), fn ($p) => $p !== '');
+        $paragraphs = array_values(array_filter(array_map('trim', explode("\n\n", $tweetText)), fn ($p) => $p !== ''));
         $allBodyLines = [];
         foreach ($paragraphs as $i => $para) {
             $lines = ($fontMedium ? $this->wrapText($para, $fontMedium, $bodySize, $cardW - 2 * $cardPadding) : [str_replace("\n", ' ', $para)]);

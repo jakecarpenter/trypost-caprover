@@ -337,7 +337,10 @@ const startGeneration = async () => {
             <!-- Account (when template needs_account OR there's a choice to make) -->
             <div v-if="selectedFormat && (templateNeedsAccount || showsAccountPicker)" class="space-y-2">
                 <Label class="text-sm font-bold">{{ $t('posts.create.steps.account_title') }}</Label>
-                <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                <p v-if="templateNeedsAccount && accountsForFormat.length === 0" class="text-sm text-foreground/60">
+                    {{ $t('posts.create.steps.no_account_for_template') }}
+                </p>
+                <div v-else class="grid grid-cols-2 gap-2 sm:grid-cols-3">
                     <button
                         v-for="account in accountsForFormat"
                         :key="account.id"

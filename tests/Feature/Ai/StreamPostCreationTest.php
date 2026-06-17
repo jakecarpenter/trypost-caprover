@@ -117,6 +117,8 @@ test('tweet_card template stores the tweet_text as post content and attaches a m
     $platform = PostPlatform::where('social_account_id', $this->account->id)->firstOrFail();
 
     expect($platform->content_type)->toBe(ContentType::XPost);
+
+    PostContentHumanizer::assertNeverPrompted();
 });
 
 test('the humanizer is given the same platform context as the generator so the rewrite honours the character cap', function () {

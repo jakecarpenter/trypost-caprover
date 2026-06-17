@@ -15,10 +15,13 @@ class AiTemplateRegistry
         TweetCardTemplate::class,
     ];
 
+    /** @var array<int, AiContentTemplate>|null */
+    private ?array $templates = null;
+
     /** @return array<int, AiContentTemplate> */
     public function all(): array
     {
-        return array_map(fn (string $class) => app($class), self::TEMPLATES);
+        return $this->templates ??= array_map(fn (string $class) => app($class), self::TEMPLATES);
     }
 
     /** @return array<int, string> */

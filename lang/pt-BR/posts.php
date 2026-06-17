@@ -620,6 +620,7 @@ return [
             'retry' => 'Tentar novamente',
             'no_platforms' => 'Nenhuma conta conectada',
             'connect_first' => 'Conecte pelo menos uma conta social para usar a geração com IA.',
+            'no_account_for_template' => 'Conecte uma conta compatível para usar este template.',
 
             'format' => [
                 'instagram_feed' => 'Post no Feed do Instagram',

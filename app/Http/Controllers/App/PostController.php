@@ -9,6 +9,7 @@ use App\Actions\Post\DeletePost;
 use App\Actions\Post\DuplicatePost;
 use App\Actions\Post\SyncPostPlatforms;
 use App\Actions\Post\UpdatePost;
+use App\Ai\Templates\AiContentTemplate;
 use App\Ai\Templates\AiTemplateRegistry;
 use App\Enums\Post\Action as PostAction;
 use App\Enums\Post\Status as PostStatus;
@@ -145,7 +146,7 @@ class PostController extends Controller
 
         $registry = app(AiTemplateRegistry::class);
 
-        $templates = array_map(fn ($t) => [
+        $templates = array_map(fn (AiContentTemplate $t) => [
             'key' => $t->key(),
             'name' => trans($t->name()),
             'description' => trans($t->description()),
