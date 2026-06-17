@@ -89,7 +89,7 @@ class StreamPostCreation implements ShouldQueue
             $structured = $response->structured ?? [];
 
             $humanizeFormat = $isCarousel ? 'carousel' : $agentFormat;
-            $structured = $this->humanize($workspace, $structured, $humanizeFormat);
+            $structured = $this->humanize($workspace, $structured, $humanizeFormat, $this->template);
 
             $generated = $style->assemble($structured, $context);
             $post = $this->createPostFromGenerated($workspace, $generated, $socialAccount);
@@ -116,9 +116,9 @@ class StreamPostCreation implements ShouldQueue
      * @param  array<string, mixed>  $structured
      * @return array<string, mixed>
      */
-    private function humanize(Workspace $workspace, array $structured, string $format): array
+    private function humanize(Workspace $workspace, array $structured, string $format, string $styleKey = 'image_card'): array
     {
-        if ($format === 'tweet_card') {
+        if ($styleKey === 'tweet_card') {
             return $structured;
         }
 
