@@ -48,7 +48,14 @@ interface GenerateConfig {
     prompt_template: string;
     use_brand_voice: boolean;
     use_brand_visuals: boolean;
+    style: string;
 }
+
+const contentStyles = [
+    { key: 'image_card', preview: '/images/ai-templates/image-card.png' },
+    { key: 'tweet_card', preview: '/images/ai-templates/tweet-card.png' },
+    { key: 'tweet_card_image', preview: '/images/ai-templates/tweet-card-image.png' },
+];
 
 const props = defineProps<{
     data: Record<string, unknown>;
@@ -143,6 +150,7 @@ const local = ref<GenerateConfig>({
     prompt_template: (props.data.prompt_template as string) ?? '',
     use_brand_voice: (props.data.use_brand_voice as boolean | undefined) ?? true,
     use_brand_visuals: (props.data.use_brand_visuals as boolean | undefined) ?? true,
+    style: (props.data.style as string) ?? 'image_card',
 });
 
 watch(local, (val) => emit('update', val), { deep: true });
@@ -280,6 +288,34 @@ const channels = computed<Channel[]>(() =>
                 @update:content-type="updateContentType"
                 @update:meta="updateMeta"
             />
+        </div>
+
+        <div class="space-y-2">
+            <Label class="text-sm font-bold">{{ $t('automations.config.generate.style') }}</Label>
+            <div class="grid grid-cols-3 gap-2">
+                <button
+                    v-for="s in contentStyles"
+                    :key="s.key"
+                    type="button"
+                    class="flex flex-col items-center gap-1.5 rounded-lg border p-2 text-left transition-colors"
+                    :class="local.style === s.key
+                        ? 'border-violet-500 bg-violet-50 dark:bg-violet-950/30'
+                        : 'border-border hover:border-violet-300 hover:bg-muted/50'"
+                    @click="local.style = s.key"
+                >
+                    <img
+                        :src="s.preview"
+                        :alt="$t('posts.ai.templates.' + s.key + '.name')"
+                        class="w-full rounded object-cover"
+                    />
+                    <span
+                        class="text-center text-[10px] font-medium leading-tight"
+                        :class="local.style === s.key ? 'text-violet-700 dark:text-violet-300' : 'text-foreground/70'"
+                    >
+                        {{ $t('posts.ai.templates.' + s.key + '.name') }}
+                    </span>
+                </button>
+            </div>
         </div>
 
         <div v-if="imageCountCap >= 1" class="space-y-2">

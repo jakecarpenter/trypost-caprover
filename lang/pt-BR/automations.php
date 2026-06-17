@@ -285,6 +285,7 @@ return [
             'use_brand_voice_hint' => 'Aplica a descrição e a voz da sua marca. Desligue para curadoria fiel de fontes de terceiros (notícias, RSS).',
             'use_brand_visuals' => 'Usar visual da marca',
             'use_brand_visuals_hint' => 'Guia as imagens de IA com as cores e identidade da sua marca. Desligue para imagens neutras, guiadas só pelo tema do post.',
+            'style' => 'Estilo',
             'account_summary' => ':count conta · :format|:count contas · :format',
             'formats' => [
                 'single' => 'único',
