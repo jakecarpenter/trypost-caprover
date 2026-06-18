@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\App\Automations;
 
+use App\Enums\Ai\ContentStyle;
 use App\Enums\Automation\AuthType;
 use App\Enums\Automation\Condition\Operator as ConditionOperator;
 use App\Enums\Automation\DelayUnit;
@@ -156,6 +157,7 @@ class UpdateAutomationRequest extends FormRequest
                 'target_slide_count' => ['nullable', 'integer', 'min:0', 'max:'.GenerateNodeValidator::MAX_GENERATED_IMAGES],
                 'use_brand_voice' => ['sometimes', 'boolean'],
                 'use_brand_visuals' => ['sometimes', 'boolean'],
+                'style' => ['sometimes', Rule::in(array_column(ContentStyle::cases(), 'value'))],
             ],
             NodeType::Delay->value => [
                 'duration' => ['required', 'integer', 'min:1'],

@@ -60,6 +60,49 @@ it('updates nodes and connections via PUT', function () {
     expect($automation->fresh()->nodes)->toHaveCount(3);
 });
 
+it('persists the generate node style through a save round-trip', function () {
+    $automation = Automation::factory()->for($this->workspace)->create();
+
+    $payload = [
+        'nodes' => [
+            ['id' => 'n1', 'type' => 'trigger', 'position' => ['x' => 0, 'y' => 0], 'data' => ['trigger_type' => 'schedule', 'cron' => '0 9 * * *']],
+            ['id' => 'n2', 'type' => 'generate', 'position' => ['x' => 200, 'y' => 0], 'data' => [
+                'accounts' => [['social_account_id' => 'acc-1']],
+                'prompt_template' => 'hi',
+                'style' => 'tweet_card',
+            ]],
+        ],
+        'connections' => [['id' => 'e1', 'source' => 'n1', 'target' => 'n2']],
+    ];
+
+    $this->actingAs($this->user)
+        ->put(route('app.automations.update', $automation->id), $payload)
+        ->assertRedirect();
+
+    $node = collect($automation->fresh()->nodes)->firstWhere('type', 'generate');
+    expect($node['data']['style'])->toBe('tweet_card');
+});
+
+it('rejects an unknown generate node style', function () {
+    $automation = Automation::factory()->for($this->workspace)->create();
+
+    $payload = [
+        'nodes' => [
+            ['id' => 'n1', 'type' => 'trigger', 'position' => ['x' => 0, 'y' => 0], 'data' => ['trigger_type' => 'schedule', 'cron' => '0 9 * * *']],
+            ['id' => 'n2', 'type' => 'generate', 'position' => ['x' => 200, 'y' => 0], 'data' => [
+                'accounts' => [['social_account_id' => 'acc-1']],
+                'prompt_template' => 'hi',
+                'style' => 'not_a_real_style',
+            ]],
+        ],
+        'connections' => [['id' => 'e1', 'source' => 'n1', 'target' => 'n2']],
+    ];
+
+    $this->actingAs($this->user)
+        ->put(route('app.automations.update', $automation->id), $payload)
+        ->assertSessionHasErrors('nodes.1.data.style');
+});
+
 it('persists every trigger schedule editor field through a save round-trip', function (array $scheduleData) {
     $automation = Automation::factory()->for($this->workspace)->create();
 
