@@ -7,6 +7,7 @@ namespace App\Actions\SocialAccount;
 use App\Enums\SocialAccount\Platform;
 use App\Enums\SocialAccount\Status;
 use App\Events\TelegramChannelConnected;
+use App\Events\TelegramConnectFailed;
 use App\Models\SocialAccount;
 use App\Models\Workspace;
 use App\Services\Social\Telegram\TelegramApi;
@@ -34,6 +35,8 @@ class ConnectTelegramChannel
             ->exists();
 
         if ($isNewAccount && self::networkAlreadyConnected($workspace, $chatId)) {
+            TelegramConnectFailed::dispatch($workspace->id, $nonce, 'network_taken');
+
             return null;
         }
 

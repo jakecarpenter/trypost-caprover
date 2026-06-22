@@ -96,6 +96,7 @@ return [
         'new_code' => 'Generar un nuevo código',
         'retry' => 'Reintentar',
         'error_generic' => 'No se pudo iniciar la conexión. Inténtalo de nuevo.',
+        'network_taken' => 'Este workspace ya tiene un canal de Telegram conectado. Desconéctalo primero.',
     ],
 
     'facebook' => [

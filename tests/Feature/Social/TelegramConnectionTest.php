@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Enums\SocialAccount\Platform;
 use App\Enums\UserWorkspace\Role;
 use App\Events\TelegramChannelConnected;
+use App\Events\TelegramConnectFailed;
 use App\Models\Post;
 use App\Models\PostPlatform;
 use App\Models\SocialAccount;
@@ -119,6 +120,7 @@ it('links a private channel that has no username', function () {
 
 it('does not connect a second telegram channel when one is already connected', function () {
     config(['trypost.self_hosted' => false]);
+    Event::fake([TelegramConnectFailed::class]);
 
     SocialAccount::factory()->telegram()->create([
         'workspace_id' => $this->workspace->id,
@@ -135,6 +137,12 @@ it('does not connect a second telegram channel when one is already connected', f
     expect(
         SocialAccount::where('platform', Platform::Telegram)->where('platform_user_id', '-1001234567890')->exists()
     )->toBeFalse();
+
+    Event::assertDispatched(
+        TelegramConnectFailed::class,
+        fn (TelegramConnectFailed $event): bool => $event->workspaceId === $this->workspace->id
+            && $event->reason === 'network_taken',
+    );
 });
 
 it('connects a second telegram channel in self-hosted mode', function () {

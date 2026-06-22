@@ -72,6 +72,22 @@ useWorkspaceEcho<{ nonce: string }>(
     },
 );
 
+useWorkspaceEcho<{ nonce: string; reason: string }>(
+    '.telegram.connect.failed',
+    (payload) => {
+        if (phase.value !== 'ready' || payload.nonce !== nonce.value) {
+            return;
+        }
+
+        phase.value = 'error';
+        clearExpiry();
+        errorMessage.value =
+            payload.reason === 'network_taken'
+                ? trans('accounts.telegram.network_taken')
+                : trans('accounts.telegram.error_generic');
+    },
+);
+
 const start = async () => {
     phase.value = 'loading';
     errorMessage.value = '';
