@@ -58,5 +58,7 @@ return [
         'share_feedback' => 'Dar feedback',
         'last_updates' => 'Últimas actualizaciones',
         'docs' => 'Documentación',
+        'referral' => 'Gana 30% de comisión',
+        'stay_updated' => 'Mantente al día',
     ],
 ];

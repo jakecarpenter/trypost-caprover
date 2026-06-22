@@ -58,5 +58,7 @@ return [
         'share_feedback' => 'Share feedback',
         'last_updates' => 'Last Updates',
         'docs' => 'Documentation',
+        'referral' => 'Earn 30% referral',
+        'stay_updated' => 'Stay updated',
     ],
 ];

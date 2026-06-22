@@ -4,13 +4,17 @@ import {
     IconAffiliate,
     IconAlertTriangle,
     IconBolt,
+    IconBook,
+    IconBrandX,
     IconCalendar,
     IconChartBar,
     IconChevronRight,
     IconClock,
     IconFileCheck,
     IconFileText,
+    IconGift,
     IconHash,
+    IconMessageCircle,
     IconPhoto,
     IconPencil,
     IconPlus,
@@ -22,6 +26,7 @@ import { computed } from 'vue';
 
 import { create as createPost, index as postsIndex } from '@/actions/App/Http/Controllers/App/PostController';
 import NavMain from '@/components/NavMain.vue';
+import NavSupport from '@/components/NavSupport.vue';
 import NavUser from '@/components/NavUser.vue';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -144,6 +149,29 @@ const workspaceNavItems = computed<NavItem[]>(() => [
         : []),
 ]);
 
+const supportNavItems = computed<NavItem[]>(() => [
+    {
+        title: trans('sidebar.support.share_feedback'),
+        href: 'https://github.com/trypost-it/trypost/discussions',
+        icon: IconMessageCircle,
+    },
+    {
+        title: trans('sidebar.support.referral'),
+        href: 'https://affiliates.trypost.it/',
+        icon: IconGift,
+    },
+    {
+        title: trans('sidebar.support.stay_updated'),
+        href: 'https://x.com/trypostit',
+        icon: IconBrandX,
+    },
+    {
+        title: trans('sidebar.support.docs'),
+        href: 'https://trypost.it/docs',
+        icon: IconBook,
+    },
+]);
+
 const switchWorkspace = (workspaceId: string) => {
     router.post(switchMethod.url(workspaceId), {}, {
         preserveScroll: true,
@@ -217,6 +245,7 @@ const handleCreateWorkspace = () => {
             <NavMain v-if="currentWorkspace" :items="mainNavItems" />
             <NavMain v-if="currentWorkspace" :items="postsNavItems" :label="$t('sidebar.groups.posts')" />
             <NavMain v-if="currentWorkspace && workspaceNavItems.length" :items="workspaceNavItems" :label="$t('sidebar.groups.workspace')" />
+            <NavSupport v-if="currentWorkspace" :items="supportNavItems" :label="$t('sidebar.groups.support')" />
         </SidebarContent>
 
         <SidebarFooter>
