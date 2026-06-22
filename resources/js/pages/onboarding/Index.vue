@@ -13,6 +13,7 @@ import {
 import { trans } from 'laravel-vue-i18n';
 import type { FunctionalComponent } from 'vue';
 
+import { Button } from '@/components/ui/button';
 import { store } from '@/routes/app/onboarding';
 
 const props = defineProps<{
@@ -22,14 +23,18 @@ const props = defineProps<{
 
 const form = useForm({ persona: props.selected ?? '' });
 
-const icons: Record<string, FunctionalComponent> = {
-    creator: IconUser,
-    freelancer: IconBriefcase,
-    startup: IconRocket,
-    agency: IconBuildingSkyscraper,
-    small_business: IconBuildingStore,
-    other: IconDots,
+const personaMeta: Record<string, { icon: FunctionalComponent; color: string }> = {
+    creator: { icon: IconUser, color: 'text-rose-600' },
+    freelancer: { icon: IconBriefcase, color: 'text-amber-600' },
+    startup: { icon: IconRocket, color: 'text-violet-700' },
+    agency: { icon: IconBuildingSkyscraper, color: 'text-blue-700' },
+    small_business: { icon: IconBuildingStore, color: 'text-emerald-600' },
+    other: { icon: IconDots, color: 'text-sky-600' },
 };
+
+const personaIcon = (value: string): FunctionalComponent => personaMeta[value]?.icon ?? IconDots;
+
+const personaColor = (value: string): string => personaMeta[value]?.color ?? 'text-foreground';
 
 const personaLabel = (value: string): string => trans(`onboarding.personas.${value}`);
 
@@ -81,7 +86,11 @@ const submit = (): void => {
                     @click="select(persona)"
                 >
                     <span class="inline-flex size-10 items-center justify-center rounded-2xl border-2 border-foreground bg-card shadow-2xs">
-                        <component :is="icons[persona] ?? IconDots" class="size-5 text-foreground" stroke-width="2" />
+                        <component
+                            :is="personaIcon(persona)"
+                            :class="[personaColor(persona), 'size-5']"
+                            stroke-width="2.25"
+                        />
                     </span>
                     <span class="text-base font-bold tracking-tight text-foreground">
                         {{ personaLabel(persona) }}
@@ -96,18 +105,16 @@ const submit = (): void => {
             </div>
 
             <div class="mx-auto mt-10 flex w-full max-w-sm flex-col items-center gap-3">
-                <button
+                <Button
                     type="button"
+                    size="lg"
+                    class="w-full rounded-full"
                     :disabled="!form.persona || form.processing"
-                    class="inline-flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-full border-2 border-foreground bg-foreground px-4 py-3 text-sm font-semibold text-background shadow-2xs transition-shadow hover:shadow-xs disabled:cursor-not-allowed disabled:opacity-60"
                     @click="submit"
                 >
                     {{ $t('onboarding.continue') }}
                     <IconArrowRight class="size-4" />
-                </button>
-                <p class="text-center text-xs text-foreground/60">
-                    {{ $t('onboarding.trial_note') }}
-                </p>
+                </Button>
             </div>
         </div>
     </section>

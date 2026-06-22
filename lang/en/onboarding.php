@@ -6,7 +6,6 @@ return [
     'title' => 'Welcome to TryPost',
     'description' => 'Tell us what best describes you so we can tailor your experience.',
     'continue' => 'Continue',
-    'trial_note' => 'Try it free for 7 days, no commitment. You won\'t be charged during your trial and can cancel anytime.',
     'personas' => [
         'creator' => 'Creator',
         'freelancer' => 'Freelancer',
@@ -14,5 +13,10 @@ return [
         'agency' => 'Agency',
         'small_business' => 'Small business',
         'other' => 'Other',
+    ],
+    'connect' => [
+        'title' => 'Connect your first network',
+        'description' => 'Link at least one social account to start scheduling. You can add more anytime.',
+        'must_connect' => 'Connect at least one network to continue.',
     ],
 ];

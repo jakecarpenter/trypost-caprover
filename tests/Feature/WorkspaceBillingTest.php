@@ -143,6 +143,6 @@ test('store creates an additional workspace with no count limit', function () {
         'name' => 'Second workspace',
     ]);
 
-    $response->assertRedirect(route('app.accounts', ['openDialog' => 'true']));
+    $response->assertRedirect(route('app.accounts'));
     expect($this->account->workspaces()->count())->toBe(2);
 });

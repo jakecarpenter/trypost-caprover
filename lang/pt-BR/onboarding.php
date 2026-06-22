@@ -6,7 +6,6 @@ return [
     'title' => 'Bem-vindo ao TryPost',
     'description' => 'Conte o que melhor te descreve para personalizarmos sua experiência.',
     'continue' => 'Continuar',
-    'trial_note' => 'Experimente grátis por 7 dias, sem compromisso. Você não será cobrado durante o teste e pode cancelar quando quiser.',
     'personas' => [
         'creator' => 'Criador',
         'freelancer' => 'Freelancer',
@@ -14,5 +13,10 @@ return [
         'agency' => 'Agência',
         'small_business' => 'Pequena empresa',
         'other' => 'Outro',
+    ],
+    'connect' => [
+        'title' => 'Conecte sua primeira rede',
+        'description' => 'Vincule pelo menos uma conta social para começar a agendar. Você pode adicionar mais quando quiser.',
+        'must_connect' => 'Conecte pelo menos uma rede para continuar.',
     ],
 ];

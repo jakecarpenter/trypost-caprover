@@ -4,37 +4,15 @@ return [
     'title' => 'Conexiones',
     'page_title' => 'Cuentas Sociales',
     'description' => 'Resumen de todas tus cuentas sociales conectadas',
-    'add_social' => 'Agregar Red Social',
-    'add_social_title' => 'Conectar una Cuenta Social',
-    'add_social_description' => 'Conecta una cuenta social a TryPost para empezar a publicar',
     'connect_cta' => 'Conectar',
-    'no_accounts' => 'No hay cuentas conectadas todavía',
-    'no_accounts_description' => 'Conecta tus redes sociales para empezar a programar y publicar posts',
-    'no_search_results' => 'Ninguna cuenta coincide con tu búsqueda',
-    'try_different_search' => 'Prueba otra palabra clave o limpia la búsqueda.',
-    'search' => 'Buscar cuentas...',
-    'added' => 'Agregada :date',
 
     'not_connected' => 'No conectado',
     'connect' => 'Conectar',
     'connection_lost' => 'Conexión perdida',
+    'reconnect' => 'Reconectar',
     'reconnect_account' => 'Reconectar cuenta',
     'view_profile' => 'Ver perfil',
     'disconnect' => 'Desconectar',
-
-    'table' => [
-        'account' => 'Cuenta',
-        'platform' => 'Plataforma',
-        'status' => 'Estado',
-        'last_used' => 'Último uso',
-        'added' => 'Añadida',
-        'active' => 'Activa',
-    ],
-    'never_used' => 'Nunca usada',
-    'status' => [
-        'connected' => 'Conectada',
-        'disconnected' => 'Desconectada',
-    ],
 
     'descriptions' => [
         'linkedin' => 'Conecta tu perfil personal de LinkedIn',

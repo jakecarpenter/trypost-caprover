@@ -43,32 +43,19 @@ class SocialController extends Controller
 
         $this->authorize('view', $workspace);
 
-        $accounts = $workspace->socialAccounts()
-            ->when(
-                $request->input('search'),
-                fn ($query, $search) => $query->where(function ($q) use ($search): void {
-                    $q->where('display_name', 'ilike', "%{$search}%")
-                        ->orWhere('username', 'ilike', "%{$search}%")
-                        ->orWhere('platform', 'ilike', "%{$search}%");
-                }),
-            )
-            ->orderBy('id')
-            ->paginate(config('app.pagination.default'));
-
         $platforms = collect(SocialPlatform::enabled())->map(fn ($platform) => [
             'value' => $platform->value,
             'label' => $platform->label(),
             'color' => $platform->color(),
+            'network' => $platform->network(),
         ])->values();
 
         return Inertia::render('accounts/Index', [
             'workspace' => $workspace,
-            'accounts' => Inertia::scroll(fn () => SocialAccountResource::collection($accounts)),
             'platforms' => $platforms,
-            'filters' => [
-                'search' => $request->input('search', ''),
-            ],
-            'openDialog' => $request->boolean('openDialog'),
+            'connectedAccounts' => SocialAccountResource::collection(
+                $workspace->socialAccounts()->orderBy('id')->get(),
+            )->resolve(),
         ]);
     }
 
@@ -204,7 +191,7 @@ class SocialController extends Controller
 
     protected function getRedirectRoute(): string
     {
-        return session('social_connect_onboarding', false) ? 'onboarding.connect' : 'accounts';
+        return session('social_connect_onboarding', false) ? 'app.onboarding.connect' : 'app.accounts';
     }
 
     /**

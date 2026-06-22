@@ -114,7 +114,7 @@ class WorkspaceController extends Controller
             }
         }
 
-        return redirect()->route('app.accounts', ['openDialog' => 'true'])
+        return redirect()->route('app.accounts')
             ->with('success', __('workspaces.create.success'));
     }
 

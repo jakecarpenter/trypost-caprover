@@ -38,7 +38,21 @@ test('accounts index shows platforms and connected accounts', function () {
         ->component('accounts/Index', false)
         ->has('workspace')
         ->has('platforms')
+        ->has('platforms.0.network')
+        ->has('connectedAccounts', 1)
     );
+});
+
+test('an unsubscribed account can disconnect during onboarding (no active subscription required)', function () {
+    config(['trypost.self_hosted' => false]);
+
+    $account = SocialAccount::factory()->create(['workspace_id' => $this->workspace->id]);
+
+    $response = $this->actingAs($this->user)->delete(route('app.accounts.disconnect', $account));
+
+    $response->assertRedirect();
+    $response->assertSessionMissing('errors');
+    expect(SocialAccount::find($account->id))->toBeNull();
 });
 
 test('accounts index redirects if no workspace', function () {

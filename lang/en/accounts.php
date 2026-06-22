@@ -4,37 +4,15 @@ return [
     'title' => 'Connections',
     'page_title' => 'Social Accounts',
     'description' => 'Overview of all your connected social accounts',
-    'add_social' => 'Add Social',
-    'add_social_title' => 'Connect a Social Account',
-    'add_social_description' => 'Connect a social account to TryPost to start posting',
     'connect_cta' => 'Connect',
-    'no_accounts' => 'No accounts connected yet',
-    'no_accounts_description' => 'Connect your social networks to start scheduling and publishing posts',
-    'no_search_results' => 'No accounts match your search',
-    'try_different_search' => 'Try a different keyword or clear the search.',
-    'search' => 'Search accounts...',
-    'added' => 'Added :date',
 
     'not_connected' => 'Not connected',
     'connect' => 'Connect',
     'connection_lost' => 'Connection lost',
+    'reconnect' => 'Reconnect',
     'reconnect_account' => 'Reconnect account',
     'view_profile' => 'View profile',
     'disconnect' => 'Disconnect',
-
-    'table' => [
-        'account' => 'Account',
-        'platform' => 'Platform',
-        'status' => 'Status',
-        'last_used' => 'Last used',
-        'added' => 'Added',
-        'active' => 'Active',
-    ],
-    'never_used' => 'Never used',
-    'status' => [
-        'connected' => 'Connected',
-        'disconnected' => 'Disconnected',
-    ],
 
     'descriptions' => [
         'linkedin' => 'Connect your LinkedIn personal profile',
