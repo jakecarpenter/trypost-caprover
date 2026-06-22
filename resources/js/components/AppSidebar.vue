@@ -4,7 +4,6 @@ import {
     IconAffiliate,
     IconAlertTriangle,
     IconBolt,
-    IconBook,
     IconBrandX,
     IconCalendar,
     IconChartBar,
@@ -14,6 +13,7 @@ import {
     IconFileText,
     IconGift,
     IconHash,
+    IconLifebuoy,
     IconPhoto,
     IconPencil,
     IconPlus,
@@ -162,7 +162,7 @@ const supportNavItems = computed(() => [
     {
         title: trans('sidebar.support.docs'),
         href: 'https://trypost.it/docs',
-        icon: IconBook,
+        icon: IconLifebuoy,
     },
 ]);
 
@@ -239,7 +239,7 @@ const handleCreateWorkspace = () => {
             <NavMain v-if="currentWorkspace" :items="mainNavItems" />
             <NavMain v-if="currentWorkspace" :items="postsNavItems" :label="$t('sidebar.groups.posts')" />
             <NavMain v-if="currentWorkspace && workspaceNavItems.length" :items="workspaceNavItems" :label="$t('sidebar.groups.workspace')" />
-            <NavSupport v-if="currentWorkspace" :items="supportNavItems" :label="$t('sidebar.groups.support')" />
+            <NavSupport v-if="currentWorkspace" :items="supportNavItems" />
         </SidebarContent>
 
         <SidebarFooter>
