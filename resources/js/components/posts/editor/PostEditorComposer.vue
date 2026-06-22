@@ -46,9 +46,11 @@ const props = withDefaults(
         platformLimits: PlatformLimit[];
         mediaIssues: Record<string, MediaIssue[]>;
         allowAiRegenerate?: boolean;
+        readOnly?: boolean;
     }>(),
     {
         allowAiRegenerate: true,
+        readOnly: false,
     },
 );
 
@@ -186,6 +188,7 @@ const onMediaDragEnd = () => {
 const GRID_COLS = 4;
 
 const onMediaKeydown = async (event: KeyboardEvent, index: number) => {
+    if (props.readOnly) return;
     if (media.value.length < 2) return;
     if (! event.altKey) return;
 
@@ -215,7 +218,7 @@ const canRegenerateWithAi = (item: MediaItem): boolean => props.allowAiRegenerat
     <div class="mx-auto max-w-2xl px-6 py-10">
         <div class="relative">
             <!-- Media grid (top) — always shown so "Add" tile is discoverable -->
-            <div class="mb-6">
+            <div v-if="!readOnly || media.length" class="mb-6">
                 <div class="grid grid-cols-4 gap-2">
                     <div
                         v-for="(item, index) in media"
@@ -228,7 +231,7 @@ const canRegenerateWithAi = (item: MediaItem): boolean => props.allowAiRegenerat
                             mediaIssues[item.id] ? '!border-rose-500' : '',
                         ]"
                         tabindex="0"
-                        :draggable="media.length > 1"
+                        :draggable="!readOnly && media.length > 1"
                         @click="openPreview(item)"
                         @dragstart="onMediaDragStart($event, index)"
                         @dragover="onMediaDragOver($event, index)"
@@ -289,7 +292,7 @@ const canRegenerateWithAi = (item: MediaItem): boolean => props.allowAiRegenerat
                         </TooltipProvider>
 
                         <span
-                            v-if="media.length > 1"
+                            v-if="media.length > 1 && !readOnly"
                             class="absolute left-1.5 top-1.5 inline-flex size-6 cursor-grab items-center justify-center rounded-md border-2 border-foreground bg-card text-foreground opacity-0 shadow-2xs transition-opacity group-hover:opacity-100 group-focus:opacity-100"
                         >
                             <IconGripVertical class="size-3.5" />
@@ -306,6 +309,7 @@ const canRegenerateWithAi = (item: MediaItem): boolean => props.allowAiRegenerat
                         </button>
 
                         <button
+                            v-if="!readOnly"
                             type="button"
                             class="absolute right-1.5 top-1.5 inline-flex size-6 cursor-pointer items-center justify-center rounded-md border-2 border-foreground bg-card text-foreground opacity-0 shadow-2xs transition-all hover:bg-rose-100 hover:text-rose-700 group-hover:opacity-100 group-focus:opacity-100"
                             @click.stop="removeMedia(item.id)"
@@ -315,6 +319,7 @@ const canRegenerateWithAi = (item: MediaItem): boolean => props.allowAiRegenerat
                     </div>
 
                     <button
+                        v-if="!readOnly"
                         type="button"
                         class="flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-foreground/25 text-foreground/60 transition-colors hover:border-foreground hover:bg-foreground/5 hover:text-foreground"
                         @click="mediaPickerDialog?.open()"
@@ -326,7 +331,7 @@ const canRegenerateWithAi = (item: MediaItem): boolean => props.allowAiRegenerat
             </div>
 
             <!-- Toolbar: between photos and textarea -->
-            <div class="mb-4 flex items-center gap-2">
+            <div v-if="!readOnly" class="mb-4 flex items-center gap-2">
                 <Popover v-model:open="emojiOpen">
                     <PopoverAnchor as-child>
                         <TooltipProvider>
@@ -432,7 +437,8 @@ const canRegenerateWithAi = (item: MediaItem): boolean => props.allowAiRegenerat
                 </div>
                 <textarea
                     v-model="content"
-                    :placeholder="$t('posts.edit.caption_placeholder')"
+                    :readonly="readOnly"
+                    :placeholder="readOnly ? '' : $t('posts.edit.caption_placeholder')"
                     class="relative block w-full resize-none border-0 bg-transparent p-0 font-sans text-base leading-[1.7] shadow-none outline-none placeholder:text-foreground/40"
                     style="min-height: 280px; field-sizing: content;"
                 />

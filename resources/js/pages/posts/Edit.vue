@@ -394,11 +394,7 @@ usePostEcho(post.value.id, '.post.comment.created', (e: any) => {
                     class="flex h-full"
                     :class="{ 'pointer-events-none select-none opacity-60': isScheduled }"
                 >
-                    <div
-                        class="w-full overflow-y-auto lg:w-2/3 lg:border-r-2 lg:border-foreground"
-                        :class="{ 'pointer-events-none select-none opacity-60': !canCreatePost }"
-                        :inert="!canCreatePost"
-                    >
+                    <div class="w-full overflow-y-auto lg:w-2/3 lg:border-r-2 lg:border-foreground">
                         <PostEditorComposer
                             v-model:content="content"
                             v-model:media="media"
@@ -406,6 +402,7 @@ usePostEcho(post.value.id, '.post.comment.created', (e: any) => {
                             :platform-limits="platformLimits"
                             :media-issues="mediaIssues"
                             :allow-ai-regenerate="!isLocked"
+                            :read-only="!canCreatePost"
                             @open-ai-generate="isAiGenerateOpen = true"
                             @open-ai-review="isAiReviewOpen = true"
                             @open-ai-regenerate-image="onOpenAiRegenerateImage"
