@@ -20,6 +20,9 @@ class BlueskyPublisher
 {
     use HasSocialHttpClient;
 
+    /** Times to retry a transiently-failing video transcode before giving up. */
+    private const VIDEO_UPLOAD_ATTEMPTS = 3;
+
     public function publish(PostPlatform $postPlatform): array
     {
         $this->validateContentLength($postPlatform);
@@ -206,6 +209,12 @@ class BlueskyPublisher
 
         $tempFile = tempnam(sys_get_temp_dir(), 'bsky_video_');
 
+        if ($tempFile === false) {
+            Log::error('Bluesky could not create temp file for video upload', ['url' => $url]);
+
+            return null;
+        }
+
         try {
             $downloadResponse = Http::withOptions(['sink' => $tempFile])->timeout(600)->get($url);
 
@@ -240,55 +249,32 @@ class BlueskyPublisher
 
             // The upload token is consumed by the video service to write the
             // blob back to the user's PDS, so its audience is the PDS itself.
+            // Minted once (valid 30 min) and reused across retries below.
             $uploadToken = $this->getServiceAuth($account, $pds, "did:web:{$pdsHost}", BlueskyLexicon::UPLOAD_BLOB);
 
             if ($uploadToken === null) {
                 return null;
             }
 
-            $name = bin2hex(random_bytes(8)).'.mp4';
-            $uploadUrl = "{$videoService}/xrpc/".BlueskyLexicon::VIDEO_UPLOAD
-                .'?did='.rawurlencode($did).'&name='.rawurlencode($name);
+            // The transcoder occasionally fails a job transiently
+            // (JOB_STATE_FAILED "Failed to process video") even for valid input,
+            // so retry the upload+poll a couple of times before giving up.
+            for ($attempt = 1; $attempt <= self::VIDEO_UPLOAD_ATTEMPTS; $attempt++) {
+                $blob = $this->attemptVideoUpload($account, $pds, $videoService, $did, $uploadToken, $tempFile);
 
-            $stream = fopen($tempFile, 'r');
+                if ($blob !== null) {
+                    return $blob;
+                }
 
-            $response = $this->socialHttp()->withToken($uploadToken)
-                ->withHeaders(['Content-Type' => 'video/mp4'])
-                ->withBody($stream, 'video/mp4')
-                ->post($uploadUrl);
-
-            if (is_resource($stream)) {
-                fclose($stream);
+                if ($attempt < self::VIDEO_UPLOAD_ATTEMPTS) {
+                    Log::warning('Bluesky video upload attempt failed, retrying', [
+                        'attempt' => $attempt,
+                        'url' => $url,
+                    ]);
+                }
             }
 
-            $jobStatus = data_get($response->json(), 'jobStatus');
-
-            // A re-upload of identical bytes returns 409 with the already
-            // finished job, whose blob we can embed directly.
-            if ($response->failed() && $response->status() !== 409) {
-                Log::error('Bluesky video upload failed', [
-                    'status' => $response->status(),
-                    'body' => $this->redactResponseBody($response->body()),
-                ]);
-
-                return null;
-            }
-
-            if (data_get($jobStatus, 'blob')) {
-                return data_get($jobStatus, 'blob');
-            }
-
-            $jobId = data_get($jobStatus, 'jobId');
-
-            if (! is_string($jobId) || $jobId === '') {
-                Log::error('Bluesky video upload returned no jobId', [
-                    'body' => $this->redactResponseBody($response->body()),
-                ]);
-
-                return null;
-            }
-
-            return $this->pollVideoJob($account, $pds, $videoService, $jobId);
+            return null;
         } catch (Exception $e) {
             Log::error('Bluesky video upload exception', [
                 'error' => $e->getMessage(),
@@ -297,8 +283,70 @@ class BlueskyPublisher
 
             return null;
         } finally {
-            @unlink($tempFile);
+            if (is_string($tempFile)) {
+                @unlink($tempFile);
+            }
         }
+    }
+
+    /**
+     * A single upload-and-poll attempt against the video service. Returns the
+     * processed blob, or null if this attempt failed (so the caller can retry).
+     */
+    private function attemptVideoUpload(SocialAccount $account, string $pds, string $videoService, string $did, string $uploadToken, string $tempFile): ?array
+    {
+        $stream = fopen($tempFile, 'r');
+
+        if ($stream === false) {
+            Log::error('Bluesky could not open video file for upload', ['file' => $tempFile]);
+
+            return null;
+        }
+
+        $name = bin2hex(random_bytes(8)).'.mp4';
+        $uploadUrl = "{$videoService}/xrpc/".BlueskyLexicon::VIDEO_UPLOAD
+            .'?did='.rawurlencode($did).'&name='.rawurlencode($name);
+
+        $response = $this->socialHttp()->withToken($uploadToken)
+            ->withHeaders(['Content-Type' => 'video/mp4'])
+            ->withBody($stream, 'video/mp4')
+            ->post($uploadUrl);
+
+        if (is_resource($stream)) {
+            fclose($stream);
+        }
+
+        // uploadVideo returns the jobStatus object directly (top-level),
+        // while getJobStatus wraps it under a `jobStatus` key — accept both.
+        $body = $response->json();
+        $jobStatus = data_get($body, 'jobStatus') ?: $body;
+
+        // A re-upload of identical bytes returns 409 with the already
+        // finished job, whose blob we can embed directly.
+        if ($response->failed() && $response->status() !== 409) {
+            Log::error('Bluesky video upload failed', [
+                'status' => $response->status(),
+                'body' => $this->redactResponseBody($response->body()),
+            ]);
+
+            return null;
+        }
+
+        if (data_get($jobStatus, 'blob')) {
+            return data_get($jobStatus, 'blob');
+        }
+
+        $jobId = data_get($jobStatus, 'jobId');
+
+        if (! is_string($jobId) || $jobId === '') {
+            Log::error('Bluesky video upload returned no jobId', [
+                'body' => $this->redactResponseBody($response->body()),
+            ]);
+
+            return null;
+        }
+
+        return $this->pollVideoJob($account, $pds, $videoService, $jobId);
     }
 
     /**
@@ -322,7 +370,20 @@ class BlueskyPublisher
             $response = $this->socialHttp()->withToken($jobToken)
                 ->get($statusUrl, ['jobId' => $jobId]);
 
-            $jobStatus = data_get($response->json(), 'jobStatus');
+            // Bail on a hard error (e.g. expired/invalid token) instead of
+            // sleeping to the timeout and masking the real failure.
+            if ($response->failed()) {
+                Log::error('Bluesky getJobStatus failed', [
+                    'jobId' => $jobId,
+                    'status' => $response->status(),
+                    'body' => $this->redactResponseBody($response->body()),
+                ]);
+
+                return null;
+            }
+
+            $body = $response->json();
+            $jobStatus = data_get($body, 'jobStatus') ?: $body;
             $state = data_get($jobStatus, 'state');
 
             if ($state === 'JOB_STATE_COMPLETED' && data_get($jobStatus, 'blob')) {
@@ -396,8 +457,12 @@ class BlueskyPublisher
                 $directory = (string) config('trypost.platforms.bluesky.plc_directory');
                 $docUrl = "{$directory}/".rawurlencode($did);
             } elseif (str_starts_with($did, 'did:web:')) {
-                $host = substr($did, strlen('did:web:'));
-                $docUrl = "https://{$host}/.well-known/did.json";
+                // Per the did:web spec, colon-separated segments map to a host
+                // plus optional path; a bare host uses /.well-known/did.json.
+                $segments = array_map('rawurldecode', explode(':', substr($did, strlen('did:web:'))));
+                $host = array_shift($segments);
+                $path = $segments === [] ? '/.well-known/did.json' : '/'.implode('/', $segments).'/did.json';
+                $docUrl = "https://{$host}{$path}";
             }
 
             if ($docUrl !== null) {

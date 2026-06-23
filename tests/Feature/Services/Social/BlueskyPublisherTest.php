@@ -619,7 +619,8 @@ function fakeBlueskyVideoPipeline(string $jobState = 'JOB_STATE_COMPLETED', bool
         }
 
         if (str_contains($url, 'app.bsky.video.uploadVideo')) {
-            return Http::response(['jobStatus' => ['jobId' => 'job-123', 'state' => 'JOB_STATE_CREATED']], 200);
+            // uploadVideo returns the jobStatus object directly (not wrapped).
+            return Http::response(['jobId' => 'job-123', 'did' => 'did:plc:testuser123', 'state' => 'JOB_STATE_CREATED'], 200);
         }
 
         if (str_contains($url, 'app.bsky.video.getJobStatus')) {
@@ -719,5 +720,67 @@ test('bluesky publisher publishes text-only when video processing fails', functi
     Http::assertSent(function ($request) {
         return str_contains($request->url(), 'createRecord')
             && ! isset($request['record']['embed']);
+    });
+});
+
+test('bluesky publisher retries a transient video transcode failure', function () {
+    $this->post->update([
+        'media' => [[
+            'id' => 'test-video-id',
+            'path' => 'media/2026-01/test-video.mp4',
+            'url' => 'https://example.com/media/2026-01/test-video.mp4',
+            'mime_type' => 'video/mp4',
+            'original_filename' => 'test.mp4',
+        ]],
+    ]);
+
+    $jobCalls = 0;
+    Http::fake(function ($request) use (&$jobCalls) {
+        $url = $request->url();
+
+        if (str_contains($url, 'plc.directory')) {
+            return Http::response(['service' => [[
+                'id' => '#atproto_pds',
+                'type' => 'AtprotoPersonalDataServer',
+                'serviceEndpoint' => 'https://pds.example.host',
+            ]]], 200);
+        }
+        if (str_contains($url, 'getServiceAuth')) {
+            return Http::response(['token' => 'service-auth-token'], 200);
+        }
+        if (str_contains($url, 'app.bsky.video.uploadVideo')) {
+            return Http::response(['jobId' => 'job-123', 'state' => 'JOB_STATE_CREATED'], 200);
+        }
+        if (str_contains($url, 'app.bsky.video.getJobStatus')) {
+            $jobCalls++;
+            // First attempt's job fails transiently; the retry succeeds.
+            if ($jobCalls === 1) {
+                return Http::response(['jobStatus' => ['jobId' => 'job-123', 'state' => 'JOB_STATE_FAILED', 'message' => 'transient']], 200);
+            }
+
+            return Http::response(['jobStatus' => [
+                'jobId' => 'job-123', 'state' => 'JOB_STATE_COMPLETED',
+                'blob' => ['$type' => 'blob', 'ref' => ['$link' => 'bafretry456'], 'mimeType' => 'video/mp4', 'size' => 2048],
+            ]], 200);
+        }
+        if (str_contains($url, 'createRecord')) {
+            return Http::response(['uri' => 'at://did:plc:testuser123/app.bsky.feed.post/3retry', 'cid' => 'bafretry'], 200);
+        }
+
+        return Http::response(str_repeat('v', 2048), 200);
+    });
+
+    $this->publisher->publish($this->postPlatform);
+
+    expect($jobCalls)->toBeGreaterThanOrEqual(2);
+    Http::assertSent(function ($request) {
+        if (! str_contains($request->url(), 'createRecord')) {
+            return false;
+        }
+        $embed = $request['record']['embed'] ?? null;
+
+        return $embed
+            && $embed['$type'] === 'app.bsky.embed.video'
+            && data_get($embed, 'video.ref.$link') === 'bafretry456';
     });
 });
