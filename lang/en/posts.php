@@ -342,6 +342,7 @@ return [
             'too_few_files' => 'Add at least :min files for this format.',
             'no_videos' => 'Only images are allowed for this format.',
             'no_images' => 'Only videos are allowed for this format.',
+            'no_mixed_media' => "Images and videos can't be combined in the same post.",
             'no_gifs' => 'GIFs are not supported here.',
             'video_too_large' => 'Video exceeds the size limit for this platform.',
             'video_too_long' => 'Video must be under :seconds seconds for this format.',

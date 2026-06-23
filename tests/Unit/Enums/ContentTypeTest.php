@@ -86,6 +86,14 @@ test('content type supports image correctly', function () {
     expect(ContentType::YouTubeShort->supportsImage())->toBeFalse();
 });
 
+test('content type supports mixed media correctly', function () {
+    // A Bluesky embed is images XOR video, so it can't carry both.
+    expect(ContentType::BlueskyPost->supportsMixedMedia())->toBeFalse();
+    // Multi-attachment messengers can mix an image and a video.
+    expect(ContentType::DiscordMessage->supportsMixedMedia())->toBeTrue();
+    expect(ContentType::TelegramPost->supportsMixedMedia())->toBeTrue();
+});
+
 test('content type requires media correctly', function () {
     expect(ContentType::InstagramReel->requiresMedia())->toBeTrue();
     expect(ContentType::TikTokVideo->requiresMedia())->toBeTrue();

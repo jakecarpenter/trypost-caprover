@@ -217,6 +217,20 @@ enum ContentType: string
     }
 
     /**
+     * Whether a single post may carry images and a video together. Most
+     * targets accept only one or the other; this is conservative and lists
+     * only the types we've confirmed reject mixed media (e.g. a Bluesky post
+     * embed is `images` XOR `video`, never both).
+     */
+    public function supportsMixedMedia(): bool
+    {
+        return match ($this) {
+            self::BlueskyPost => false,
+            default => true,
+        };
+    }
+
+    /**
      * Whether this content type carries a text caption visible to viewers.
      * Stories are image-overlay only — viewers don't see a separate caption.
      */

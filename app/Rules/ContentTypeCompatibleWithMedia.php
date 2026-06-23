@@ -61,6 +61,10 @@ class ContentTypeCompatibleWithMedia implements DataAwareRule, ValidationRule
         if ($hasVideo && ! $contentType->supportsVideo()) {
             $fail("{$contentType->label()} does not support videos.");
         }
+
+        if ($hasImage && $hasVideo && ! $contentType->supportsMixedMedia()) {
+            $fail("{$contentType->label()} can't combine an image and a video in the same post.");
+        }
     }
 
     /**

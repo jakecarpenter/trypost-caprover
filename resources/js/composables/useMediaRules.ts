@@ -7,6 +7,7 @@ export interface MediaRules {
     acceptVideos: boolean;
     requiresMedia: boolean;
     acceptsGif: boolean;
+    forbidsMixedMedia?: boolean;
     maxImageBytes?: number;
     maxVideoBytes?: number;
     maxVideoDurationSec?: number;
@@ -131,10 +132,11 @@ const CONTENT_TYPE_RULES: Record<string, MediaRules> = {
         maxImageBytes: 8 * MB, maxVideoBytes: 1 * GB, maxVideoDurationSec: 5 * 60,
     },
 
-    // Bluesky — accepts GIF; tight image size (auto-resized by backend)
+    // Bluesky — accepts GIF; tight image size (auto-resized by backend).
+    // The embed is images XOR video, so the two can't be combined in one post.
     bluesky_post: {
         maxFiles: 4, acceptImages: true, acceptVideos: true, requiresMedia: false,
-        acceptsGif: true,
+        acceptsGif: true, forbidsMixedMedia: true,
         maxVideoBytes: 100 * MB, maxVideoDurationSec: 60,
     },
 

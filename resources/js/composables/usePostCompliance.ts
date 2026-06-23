@@ -99,6 +99,7 @@ export const getMediaIncompatibilityReason = (
     if (rules.requiresMedia && total === 0) return trans('posts.edit.compliance.requires_media');
     if (!rules.acceptVideos && videos.length > 0) return trans('posts.edit.compliance.no_videos');
     if (!rules.acceptImages && images.length > 0) return trans('posts.edit.compliance.no_images');
+    if (rules.forbidsMixedMedia && videos.length > 0 && images.length > 0) return trans('posts.edit.compliance.no_mixed_media');
     if (!rules.acceptsGif && gifs.length > 0) return trans('posts.edit.compliance.no_gifs');
     if (total > rules.maxFiles) return trans('posts.edit.compliance.too_many_files', { max: String(rules.maxFiles) });
     if (rules.minFiles && total < rules.minFiles) return trans('posts.edit.compliance.too_few_files', { min: String(rules.minFiles) });

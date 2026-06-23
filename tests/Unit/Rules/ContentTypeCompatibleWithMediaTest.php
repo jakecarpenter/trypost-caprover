@@ -94,6 +94,48 @@ test('detects media type from mime when type field is missing', function () {
     expect($errors)->toHaveCount(1);
 });
 
+test('bluesky rejects an image and a video in the same post', function () {
+    $media = [
+        ['type' => MediaType::Image->value, 'mime_type' => 'image/jpeg'],
+        ['type' => MediaType::Video->value, 'mime_type' => 'video/mp4'],
+    ];
+
+    $errors = runMediaRule(ContentType::BlueskyPost->value, $media);
+
+    expect($errors)->toHaveCount(1);
+    expect($errors[0])->toContain("can't combine an image and a video");
+});
+
+test('bluesky still accepts an image-only or video-only post', function () {
+    $image = [['type' => MediaType::Image->value, 'mime_type' => 'image/jpeg']];
+    $video = [['type' => MediaType::Video->value, 'mime_type' => 'video/mp4']];
+
+    expect(runMediaRule(ContentType::BlueskyPost->value, $image))->toBe([]);
+    expect(runMediaRule(ContentType::BlueskyPost->value, $video))->toBe([]);
+});
+
+test('bluesky rejects an animated gif combined with a video', function () {
+    // A GIF counts as an image, so gif + video is still mixed media.
+    $media = [
+        ['type' => MediaType::Image->value, 'mime_type' => 'image/gif'],
+        ['type' => MediaType::Video->value, 'mime_type' => 'video/mp4'],
+    ];
+
+    $errors = runMediaRule(ContentType::BlueskyPost->value, $media);
+
+    expect($errors)->toHaveCount(1);
+    expect($errors[0])->toContain("can't combine an image and a video");
+});
+
+test('a mixed-media content type accepts an image and a video together', function () {
+    $media = [
+        ['type' => MediaType::Image->value, 'mime_type' => 'image/jpeg'],
+        ['type' => MediaType::Video->value, 'mime_type' => 'video/mp4'],
+    ];
+
+    expect(runMediaRule(ContentType::DiscordMessage->value, $media))->toBe([]);
+});
+
 test('does nothing for invalid content type values', function () {
     expect(runMediaRule('not_a_real_content_type', []))->toBe([]);
 });

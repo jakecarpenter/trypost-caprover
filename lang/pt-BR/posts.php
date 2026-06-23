@@ -342,6 +342,7 @@ return [
             'too_few_files' => 'Adicione pelo menos :min arquivos para este formato.',
             'no_videos' => 'Apenas imagens são permitidas neste formato.',
             'no_images' => 'Apenas vídeos são permitidos neste formato.',
+            'no_mixed_media' => 'Não é possível combinar imagem e vídeo na mesma publicação.',
             'no_gifs' => 'GIFs não são suportados aqui.',
             'video_too_large' => 'Vídeo excede o limite de tamanho desta plataforma.',
             'video_too_long' => 'Vídeo deve ter menos de :seconds segundos neste formato.',
