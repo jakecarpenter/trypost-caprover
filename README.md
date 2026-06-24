@@ -99,30 +99,3 @@ Tired of paying $30–$200/month per user for a scheduler? Tired of your content
 | **Self-host** | Free forever. [Installation guide &rarr;](https://trypost.it/docs/getting-started/installation) |
 | **Run with AI assistants** | [Connect Claude / Cursor / ChatGPT via MCP &rarr;](https://trypost.it/docs/mcp) |
 
-## Contributing
-
-We love contributions, no matter how small. Pick an [issue](https://github.com/trypost-it/trypost/issues), say hi in [Discussions](https://github.com/trypost-it/trypost/discussions), or just open a PR with what you'd like to see.
-
-If TryPost is useful to you, **a star helps more people find it.** That's the most valuable contribution if you're short on time.
-
-## License
-
-[GNU Affero General Public License v3.0](LICENSE.md) — use, modify, fork, self-host, and redistribute, including commercially. If you run a modified version as a network service, you need to make your changes available to its users (AGPL §13).
-
----
-
-<p align="center">
-  Built openly by the community. <a href="https://github.com/trypost-it/trypost/stargazers">Star us on GitHub</a> and tell a friend.
-</p>
-
----
-
-## Star History
-
-<p align="center">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=trypostit/trypost&type=date&theme=dark&legend=top-left" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=trypostit/trypost&type=date&legend=top-left" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=trypostit/trypost&type=date&legend=top-left" />
- </picture>
-</p>
