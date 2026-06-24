@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "dockerfileLines": [
-    "FROM php:8.2-apache",
+    "FROM php:8.3-apache",
     "WORKDIR /var/www/html",
     "COPY . .",
     "RUN apt-get update",
