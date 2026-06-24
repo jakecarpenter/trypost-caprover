@@ -12,5 +12,7 @@ enum Persona: string
     case Startup = 'startup';
     case Agency = 'agency';
     case SmallBusiness = 'small_business';
+    case Marketer = 'marketer';
+    case OnlineStore = 'online_store';
     case Other = 'other';
 }

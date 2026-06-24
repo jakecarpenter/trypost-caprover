@@ -13,6 +13,8 @@ return [
         'startup' => 'Startup',
         'agency' => 'Agency',
         'small_business' => 'Small business',
+        'marketer' => 'Marketer',
+        'online_store' => 'Online store',
         'other' => 'Other',
     ],
     'connect' => [

@@ -6,7 +6,7 @@ use App\Enums\User\Persona;
 
 test('persona values are stable', function () {
     expect(array_map(fn (Persona $persona): string => $persona->value, Persona::cases()))
-        ->toBe(['creator', 'freelancer', 'developer', 'startup', 'agency', 'small_business', 'other']);
+        ->toBe(['creator', 'freelancer', 'developer', 'startup', 'agency', 'small_business', 'marketer', 'online_store', 'other']);
 });
 
 test('every persona has an onboarding label in every locale', function (string $locale) {
