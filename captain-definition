@@ -9,7 +9,6 @@
     "RUN docker-php-ext-install pdo pdo_mysql zip",
     "RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer",
     "COPY --from=composer/composer:latest-bin /composer /usr/bin/composer",
-    "RUN composer dump-autoload --no-scripts",
     "RUN composer install --no-dev --ignore-platform-reqs --optimize-autoloader -vvv --no-interaction",
     "RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache",
     "EXPOSE 80"
